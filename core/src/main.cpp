@@ -1,4 +1,6 @@
-
+#include <dearimgui/imgui.h>
+#include <dearimgui/imgui_impl_glfw.h>
+#include <dearimgui/imgui_impl_opengl3.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -51,6 +53,18 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplOpenGL3_Init();
 
     // build and compile our shader program
     if (!std::filesystem::exists("../resources/shaders/vertex.glsl") ||
@@ -152,8 +166,10 @@ int main()
     ourShader.setInt("texture2", 1);
 
     // blend ratio
-    int blendRatioLocation = glGetUniformLocation(ourShader.ID, "blendRatio");
-    float blendRatio = 0.5f;
+    int t1_location = glGetUniformLocation(ourShader.ID, "t1");
+    float t1 = 0.5f;    
+    int t2_location = glGetUniformLocation(ourShader.ID, "t2");
+    float t2 = 0.5f;
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -168,14 +184,17 @@ int main()
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
 
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-            blendRatio += 0.01f;
-            if (blendRatio > 1.0f) blendRatio = 1.0f;
-        }
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            blendRatio -= 0.01f;
-            if (blendRatio < 0.0f) blendRatio = 0.0f;
-        }
+        // gui
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        // ImGui::ShowDemoWindow(); // Show demo window! :)
+        ImGui::Text("Hello, world %d", 123);
+        // if (ImGui::Button("Save"))
+            
+        // ImGui::InputText("string", buf, IM_ARRAYSIZE(buf));
+        ImGui::SliderFloat("float", &t1, 0.0f, 1.0f);
+        ImGui::SliderFloat("float2", &t2, 0.0f, 1.0f);
 
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -189,15 +208,24 @@ int main()
 
         // render container
         ourShader.use();
-        glUniform1f(blendRatioLocation, blendRatio); // Update blendRatio in the shader
+        glUniform1f(t1_location, t1);
+        glUniform1f(t2_location, t2);
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        // render gui
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     // optional: de-allocate all resources once they've outlived their purpose:
     glDeleteVertexArrays(1, &VAO);

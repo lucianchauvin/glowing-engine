@@ -11,12 +11,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_subdirectory(ext/glfw-3.4)
 
 # glfw includes + other includes
-include_directories(ext/glfw-3.4/include ext/include)
+include_directories(ext/include ext/glfw-3.4/include ext/dearimgui)
 
 
 set(SOURCES
     src/main.cpp
     src/glad.c
+    ext/include/dearimgui/imgui.cpp
+    ext/include/dearimgui/imgui_draw.cpp
+    ext/include/dearimgui/imgui_widgets.cpp
+    ext/include/dearimgui/imgui_tables.cpp
+    ext/include/dearimgui/imgui_impl_glfw.cpp
+    ext/include/dearimgui/imgui_impl_opengl3.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
