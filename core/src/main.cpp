@@ -151,6 +151,9 @@ int main()
     // or set it via the texture class
     ourShader.setInt("texture2", 1);
 
+    // blend ratio
+    int blendRatioLocation = glGetUniformLocation(ourShader.ID, "blendRatio");
+    float blendRatio = 0.5f;
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -165,6 +168,15 @@ int main()
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
 
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            blendRatio += 0.01f;
+            if (blendRatio > 1.0f) blendRatio = 1.0f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            blendRatio -= 0.01f;
+            if (blendRatio < 0.0f) blendRatio = 0.0f;
+        }
+
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -177,6 +189,8 @@ int main()
 
         // render container
         ourShader.use();
+        glUniform1f(blendRatioLocation, blendRatio); // Update blendRatio in the shader
+
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
