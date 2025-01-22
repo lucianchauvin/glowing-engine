@@ -11,12 +11,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_subdirectory(ext/glfw-3.4)
 
 # glfw includes + other includes
-include_directories(ext/include ext/glfw-3.4/include ext/dearimgui)
-
+include_directories(
+    ext/include
+    ext/glfw-3.4/include
+    ext/dearimgui
+)
 
 set(SOURCES
     src/main.cpp
-    src/glad.c
+    ext/include/glad/glad.c
     ext/include/dearimgui/imgui.cpp
     ext/include/dearimgui/imgui_draw.cpp
     ext/include/dearimgui/imgui_widgets.cpp
