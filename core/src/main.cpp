@@ -227,18 +227,6 @@ int main()
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
 
-        // gui
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        // ImGui::ShowDemoWindow(); // Show demo window! :)
-        ImGui::Text("Hello, world %d", 123);
-        // if (ImGui::Button("Save"))
-            
-        // ImGui::InputText("string", buf, IM_ARRAYSIZE(buf));
-        ImGui::SliderFloat("float", &t1, 0.0f, 1.0f);
-        ImGui::SliderFloat("float2", &t2, 0.0f, 1.0f);
-
         // render
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -249,6 +237,8 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
+        glUniform1f(t1_location, t1);
+        glUniform1f(t2_location, t2);
 
         // activate shader
         ourShader.use();
@@ -275,7 +265,16 @@ int main()
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-        
+        // gui
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        // ImGui::ShowDemoWindow(); // Show demo window! :)
+        ImGui::Text("Hello, world %d", 123);
+        // if (ImGui::Button("Save"))
+        // ImGui::InputText("string", buf, IM_ARRAYSIZE(buf));
+        ImGui::SliderFloat("float", &t1, 0.0f, 1.0f);
+        ImGui::SliderFloat("float2", &t2, 0.0f, 1.0f);
         // render gui
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
