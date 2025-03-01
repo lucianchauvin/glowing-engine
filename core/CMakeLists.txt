@@ -14,6 +14,7 @@ add_subdirectory(ext/glfw-3.4)
 include_directories(
     ext/glfw-3.4/include
     ext
+    src/
 )
 
 set(SOURCES
