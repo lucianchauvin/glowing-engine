@@ -77,8 +77,8 @@ bool check_floor_collision(const glm::vec3& position, float height);
 // initialize random cubes
 void initrandom_cubes() {
     std::mt19937 rng(static_cast<unsigned int>(time(nullptr)));
-    std::uniform_real_distribution<float> posDistX(-FLOOR_SIZE/2 + 1.0f, FLOOR_SIZE/2 - 1.0f);
-    std::uniform_real_distribution<float> posDistZ(-FLOOR_SIZE/2 + 1.0f, FLOOR_SIZE/2 - 1.0f);
+    std::uniform_real_distribution<float> pos_dist_x(-FLOOR_SIZE/2 + 1.0f, FLOOR_SIZE/2 - 1.0f);
+    std::uniform_real_distribution<float> pos_dist_z(-FLOOR_SIZE/2 + 1.0f, FLOOR_SIZE/2 - 1.0f);
     std::uniform_real_distribution<float> color_dist(0.0f, 1.0f);
     std::uniform_real_distribution<float> scale_dist(0.5f, 2.0f);
     
@@ -86,9 +86,9 @@ void initrandom_cubes() {
     
     for (int i = 0; i < NUM_RANDOM_CUBES; i++) {
         random_cubes[i].position = glm::vec3(
-            posDistX(rng),
+            pos_dist_x(rng),
             FLOOR_Y + scale_dist(rng) / 2.0f, // place on top of floor
-            posDistZ(rng)
+            pos_dist_z(rng)
         );
         random_cubes[i].color = glm::vec3(
             color_dist(rng),
@@ -105,13 +105,10 @@ void update_player_physics(float deltaTime) {
     if (!player_physics.isOnGround) {
         player_physics.velocity.y -= GRAVITY * deltaTime;
     }
-    
     // move player
     glm::vec3 new_position = camera.Position + player_physics.velocity * deltaTime;
-    
     // check floor collision
     bool floor_collision = check_floor_collision(new_position, PLAYER_HEIGHT);
-    
     if (floor_collision) {
         player_physics.isOnGround = true;
         player_physics.velocity.y = 0.0f;
@@ -119,7 +116,6 @@ void update_player_physics(float deltaTime) {
     } else {
         player_physics.isOnGround = false;
     }
-    
     // update camera position
     camera.Position = new_position;
 }
@@ -132,7 +128,6 @@ bool check_floor_collision(const glm::vec3& position, float height) {
 // generate floor vertices
 float* generate_floor_vertices() {
     float* floor_vertices = new float[30]; // 6 vertices * 5 components (position + tex coords)
-    
     // floor vertices (position, texture coords)
     float temp[] = {
         -FLOOR_SIZE/2, FLOOR_Y, -FLOOR_SIZE/2,  0.0f, 0.0f,
@@ -170,11 +165,8 @@ int main() {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetCharCallback(window, char_callback);
-
-
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
     // glad: load all OpenGL function pointers
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -182,9 +174,7 @@ int main() {
         return -1;
     }
     // configure global opengl state
-    // -----------------------------
     glEnable(GL_DEPTH_TEST);
-
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -193,7 +183,7 @@ int main() {
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
 
-    // Setup Platform/Renderer backends
+    // setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     ImGui_ImplOpenGL3_Init();
 
@@ -284,7 +274,6 @@ int main() {
 
     // load and create textures
     unsigned int texture1, texture2, floorTexture;
-    
     // texture 1
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1); 
@@ -306,7 +295,6 @@ int main() {
         std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
-    
     // texture 2
     glGenTextures(1, &texture2);
     glBindTexture(GL_TEXTURE_2D, texture2);
@@ -327,7 +315,6 @@ int main() {
         std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
-    
     // floor texture
     glGenTextures(1, &floorTexture);
     glBindTexture(GL_TEXTURE_2D, floorTexture);
@@ -349,7 +336,7 @@ int main() {
         floorTexture = texture1;
     }
     stbi_image_free(data);
-
+    
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
     // either set it manually like so:
