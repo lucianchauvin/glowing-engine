@@ -42,8 +42,8 @@ float lastFrame = 0.0f;
 /*const*/ float GRAVITY = 9.8f;
 /*const*/ float JUMP_FORCE = 3.0f;
 /*const*/ float FRICTION = .937f;
-/*const*/ float ACCELERATION = 128.0f;
-/*const*/ float MAX_VELOCITY = 5.3f;
+/*const*/ float ACCELERATION = 47.0f;
+/*const*/ float MAX_VELOCITY = 4.3f;
 /*const*/ float PLAYER_HEIGHT = 1.8f;
 
 const float GRID_SIZE = 10;
