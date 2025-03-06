@@ -1,5 +1,3 @@
-#include <camera.h>
-
 #include <dearimgui/imgui.h>
 #include <dearimgui/imgui_impl_glfw.h>
 #include <dearimgui/imgui_impl_opengl3.h>
@@ -13,57 +11,32 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#include <shader.h>
 
 #include <iostream>
 #include <filesystem>
 #include <random>
 #include <ctime>
 
+#include <controller.h>
+#include <shader.h>
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void process_input(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
-
-// camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool toggle_mouse_lock = true;
+const unsigned int SCR_WIDTH = 1800;
+const unsigned int SCR_HEIGHT = 1000;
 
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
-/*const*/ float GRAVITY = 9.8f;
-/*const*/ float JUMP_FORCE = 3.0f;
-/*const*/ float FRICTION = .937f;
-/*const*/ float ACCELERATION = 47.0f;
-/*const*/ float MAX_VELOCITY = 4.3f;
-/*const*/ float PLAYER_HEIGHT = 1.8f;
-
-const float GRID_SIZE = 10;
 // floor parameters
+const float GRID_SIZE = 10;
 const float FLOOR_SIZE = GRID_SIZE * 4.0f;
-const float FLOOR_Y = -GRID_SIZE;
+const float FLOOR_Y = 0;
 
-//
-bool is_third_person = false;
-const float THIRD_PERSON_DISTANCE = 5.0f;
-glm::vec3 playerPosition(0.0f);
 std::vector<float> sphereVertices;
 std::vector<unsigned int> sphereIndices;
-
-// player physics state
-struct player_physics {
-    glm::vec3 velocity = glm::vec3(0.0f);
-    bool isOnGround = false;
-    bool isJumping = false;
-} player_physics;
 
 const int NUM_RANDOM_CUBES = 20;
 struct RandomCube {
@@ -73,13 +46,6 @@ struct RandomCube {
 };
 RandomCube* random_cubes = nullptr;
 
-bool key_toggles[256] = {false};
-static void char_callback(GLFWwindow *window, unsigned int key) {
-    key_toggles[key] = !key_toggles[key];
-};
-
-// forward declaration for collision detection
-bool check_floor_collision(const glm::vec3& position, float height);
 // generate sphere mesh
 void generateSphere(float radius, unsigned int rings, unsigned int sectors);
 
@@ -106,43 +72,6 @@ void initrandom_cubes() {
         );
         random_cubes[i].scale = scale_dist(rng);
     }
-}
-
-// function to update player physics
-void update_player_physics(float deltaTime) {
-    // apply gravity
-    if (!player_physics.isOnGround) {
-        player_physics.velocity.y -= GRAVITY * deltaTime;
-    }
-    
-    // move player
-    playerPosition += player_physics.velocity * deltaTime;
-    
-    // check floor collision
-    bool floor_collision = check_floor_collision(playerPosition, PLAYER_HEIGHT);
-    if (floor_collision) {
-        player_physics.isOnGround = true;
-        player_physics.velocity.y = 0.0f;
-        playerPosition.y = FLOOR_Y + PLAYER_HEIGHT; // snap to floor
-    } else {
-        player_physics.isOnGround = false;
-    }
-    
-    // update camera position based on view mode
-    if (is_third_person) {
-        // third person: position camera behind player
-        glm::vec3 offset = -camera.Front * THIRD_PERSON_DISTANCE;
-        camera.Position = playerPosition + offset;
-        camera.Position.y += 1.0f; // camera slightly above player head
-    } else {
-        // first person: camera is at player position
-        camera.Position = playerPosition;
-    }
-}
-
-// check collision with the floor
-bool check_floor_collision(const glm::vec3& position, float height) {
-    return position.y - height <= FLOOR_Y;
 }
 
 // generate floor vertices
@@ -180,11 +109,17 @@ int main() {
         glfwTerminate();
         return -1;
     }
+
+    Controller player;
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetCharCallback(window, char_callback);
+
+    glfwSetWindowUserPointer(window, &player);
+    glfwSetCursorPosCallback(window, Controller::mouse_callback);
+    glfwSetScrollCallback(window, Controller::scroll_callback);
+    glfwSetCharCallback(window, Controller::char_callback);
+
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     // glad: load all OpenGL function pointers
@@ -215,7 +150,6 @@ int main() {
     }
     Shader ourShader("../resources/shaders/vertex.glsl", "../resources/shaders/fragment.glsl");
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
     float vertices[] = {
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
          0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -262,7 +196,6 @@ int main() {
 
     // initialize random cubes and player
     initrandom_cubes();
-    camera.Position = glm::vec3(0.0f, FLOOR_Y + PLAYER_HEIGHT, 0.0f);
     
     // generate floor vertices
     float* floor_vertices = generate_floor_vertices();
@@ -370,7 +303,6 @@ int main() {
     int t2_location = glGetUniformLocation(ourShader.ID, "t2");
     float t2 = 0.5f;
 
-
     unsigned int sphereVAO = 0, sphereVBO = 0, sphereEBO = 0;    
     // generate sphere mesh
     generateSphere(0.5f, 16, 16);  // radius, rings, sectors
@@ -408,17 +340,10 @@ int main() {
         lastFrame = currentFrame;
 
         // input
-        process_input(window);
+        player.process_input(window, deltaTime);
         
         // update player physics
-        update_player_physics(deltaTime);
-
-        if (key_toggles[(unsigned) 't']) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } 
-        else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
+        player.update_player_physics(deltaTime);
 
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -439,11 +364,11 @@ int main() {
         glUniform3f(color_location, 1.0f, 1.0f, 1.0f);
 
         // pass projection matrix to shader (note that in this case it could change every frame)
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
 
         // camera/view transformation
-        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 view = player.camera.GetViewMatrix();
         ourShader.setMat4("view", view);
         
         // draw floor
@@ -476,58 +401,57 @@ int main() {
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        // draw player sphere (only visible in third person)
-        if (is_third_person) {
+        if (player.is_third_person) {
             // explicitly bind the sphere VAO
             glBindVertexArray(sphereVAO);
             
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texture1);
             
-            model = glm::mat4(1.0f);
-            glm::vec3 pos = playerPosition;
-            pos.y--;
-            model = glm::translate(model, pos);
-            ourShader.setMat4("model", model);
-            
-            // player sphere color (red)
+ 
+            ourShader.setMat4("model", glm::translate(glm::mat4(1.0f), player.player_physics.player_position));
             glUniform3f(color_location, 1.0f, 0.2f, 0.2f);
-            
             glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
-            
-            // rebind the original VAO for next frame
+
+            glm::vec3 pos = player.player_physics.player_position;
+            pos.y += player.PLAYER_HEIGHT;
+            ourShader.setMat4("model", glm::scale(glm::translate(glm::mat4(1.0f), pos), glm::vec3(0.25f, 0.25f, 0.25f)));
+            glUniform3f(color_location, 1.0f, 0.2f, 0.2f);
+            glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
+
             glBindVertexArray(VAO);
         }
-        
-        // gui
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        
-        ImGui::Begin("Controls");
-        ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
-        ImGui::Text("Position: (%.1f, %.1f, %.1f)", camera.Position.x, camera.Position.y, camera.Position.z);
-        ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player_physics.velocity.x, player_physics.velocity.y, player_physics.velocity.z);
-        ImGui::Text("On Ground: %s", player_physics.isOnGround ? "Yes" : "No");
-        ImGui::Checkbox("Wireframe [t]", &key_toggles[(unsigned)'t']);
-        ImGui::SliderFloat("Texture 1 Blend", &t1, 0.0f, 1.0f);
-        ImGui::SliderFloat("Texture 2 Blend", &t2, 0.0f, 1.0f);
-        ImGui::Text("Camera Mode: %s", is_third_person ? "Third Person" : "First Person");
-        ImGui::Text("Press TAB to toggle camera mode");
-        ImGui::End();
 
-        ImGui::Begin("Settings");
-        ImGui::SliderFloat("GRAVITY", &GRAVITY, 0.1f, 20.0f);
-        ImGui::SliderFloat("JUMP_FORCE", &JUMP_FORCE, 1.0f, 10.0f);
-        ImGui::SliderFloat("FRICTION", &FRICTION, 0.5f, 1.0f);
-        ImGui::SliderFloat("ACCELERATION", &ACCELERATION, 1.0f, 200.0f);
-        ImGui::SliderFloat("MAX_VELOCITY", &MAX_VELOCITY, 0.1f, 10.0f);
-        ImGui::SliderFloat("PLAYER_HEIGHT", &PLAYER_HEIGHT, 1.0f, 10.0f);
-        ImGui::End();
         
-        // render gui
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // // gui
+        // ImGui_ImplOpenGL3_NewFrame();
+        // ImGui_ImplGlfw_NewFrame();
+        // ImGui::NewFrame();
+        
+        // ImGui::Begin("Controls");
+        // ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
+        // ImGui::Text("Position: (%.1f, %.1f, %.1f)", camera.Position.x, camera.Position.y, camera.Position.z);
+        // ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player_physics.velocity.x, player_physics.velocity.y, player_physics.velocity.z);
+        // ImGui::Text("On Ground: %s", player_physics.isOnGround ? "Yes" : "No");
+        // ImGui::Checkbox("Wireframe [t]", &key_toggles[(unsigned)'t']);
+        // ImGui::SliderFloat("Texture 1 Blend", &t1, 0.0f, 1.0f);
+        // ImGui::SliderFloat("Texture 2 Blend", &t2, 0.0f, 1.0f);
+        // ImGui::Text("Camera Mode: %s", is_third_person ? "Third Person" : "First Person");
+        // ImGui::Text("Press TAB to toggle camera mode");
+        // ImGui::End();
+
+        // ImGui::Begin("Settings");
+        // ImGui::SliderFloat("GRAVITY", &GRAVITY, 0.1f, 20.0f);
+        // ImGui::SliderFloat("JUMP_FORCE", &JUMP_FORCE, 1.0f, 10.0f);
+        // ImGui::SliderFloat("FRICTION", &FRICTION, 0.5f, 1.0f);
+        // ImGui::SliderFloat("ACCELERATION", &ACCELERATION, 1.0f, 200.0f);
+        // ImGui::SliderFloat("MAX_VELOCITY", &MAX_VELOCITY, 0.1f, 10.0f);
+        // ImGui::SliderFloat("PLAYER_HEIGHT", &PLAYER_HEIGHT, 1.0f, 10.0f);
+        // ImGui::End();
+        
+        // // render gui
+        // ImGui::Render();
+        // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
@@ -556,97 +480,11 @@ int main() {
     return 0;
 }
 
-void process_input(GLFWwindow *window)
-{
-    // if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    //     glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        if (toggle_mouse_lock)
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        else
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        toggle_mouse_lock = !toggle_mouse_lock;
-    }
-
-    // add this to the process_input function
-    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && !key_toggles[GLFW_KEY_TAB]) {
-        is_third_person = !is_third_person;
-        key_toggles[GLFW_KEY_TAB] = true;
-    } else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) {
-        key_toggles[GLFW_KEY_TAB] = false;
-    }
-
-    // get movement direction in camera space
-    glm::vec3 movement(0.0f);
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        movement.z += 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        movement.z -= 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        movement.x -= 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        movement.x += 1.0f;
-   
-    // normalize movement vector if the player is moving diagonally
-    if (glm::length(movement) > 0.0f) {
-        movement = glm::normalize(movement);
-    }
-
-    // can jump when on ground
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && player_physics.isOnGround) {
-        player_physics.velocity.y = JUMP_FORCE;
-        player_physics.isOnGround = false;
-        player_physics.isJumping = true;
-    }
-
-    // convert camera-relative movement to world space
-    glm::vec3 forward = glm::normalize(glm::vec3(camera.Front.x, 0.0f, camera.Front.z));
-    glm::vec3 right = glm::normalize(glm::cross(forward, camera.WorldUp));
-    
-    glm::vec3 acceleration = forward * movement.z + right * movement.x;
-    acceleration *= ACCELERATION * deltaTime;
-
-    // apply acceleration
-    player_physics.velocity.x += acceleration.x;
-    player_physics.velocity.z += acceleration.z;
-
-    // apply friction when on ground
-    if (player_physics.isOnGround) {
-        player_physics.velocity.x *= FRICTION;
-        player_physics.velocity.z *= FRICTION;
-    }
-
-    // limit horizontal velocity
-    float horizontal_speed = glm::length(glm::vec2(player_physics.velocity.x, player_physics.velocity.z));
-    if (horizontal_speed > MAX_VELOCITY) {
-        float scale = MAX_VELOCITY / horizontal_speed;
-        player_physics.velocity.x *= scale;
-        player_physics.velocity.z *= scale;
-    }
-}
-
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
-}
-
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-    lastX = xpos;
-    lastY = ypos;
-
-    camera.ProcessMouseMovement(xoffset, yoffset);
-}
-
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 // generate sphere mesh
