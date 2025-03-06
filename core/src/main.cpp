@@ -51,6 +51,13 @@ const float GRID_SIZE = 10;
 const float FLOOR_SIZE = GRID_SIZE * 4.0f;
 const float FLOOR_Y = -GRID_SIZE;
 
+//
+bool is_third_person = false;
+const float THIRD_PERSON_DISTANCE = 5.0f;
+glm::vec3 playerPosition(0.0f);
+std::vector<float> sphereVertices;
+std::vector<unsigned int> sphereIndices;
+
 // player physics state
 struct player_physics {
     glm::vec3 velocity = glm::vec3(0.0f);
@@ -73,6 +80,8 @@ static void char_callback(GLFWwindow *window, unsigned int key) {
 
 // forward declaration for collision detection
 bool check_floor_collision(const glm::vec3& position, float height);
+// generate sphere mesh
+void generateSphere(float radius, unsigned int rings, unsigned int sectors);
 
 // initialize random cubes
 void initrandom_cubes() {
@@ -105,19 +114,30 @@ void update_player_physics(float deltaTime) {
     if (!player_physics.isOnGround) {
         player_physics.velocity.y -= GRAVITY * deltaTime;
     }
+    
     // move player
-    glm::vec3 new_position = camera.Position + player_physics.velocity * deltaTime;
+    playerPosition += player_physics.velocity * deltaTime;
+    
     // check floor collision
-    bool floor_collision = check_floor_collision(new_position, PLAYER_HEIGHT);
+    bool floor_collision = check_floor_collision(playerPosition, PLAYER_HEIGHT);
     if (floor_collision) {
         player_physics.isOnGround = true;
         player_physics.velocity.y = 0.0f;
-        new_position.y = FLOOR_Y + PLAYER_HEIGHT; // snap to floor
+        playerPosition.y = FLOOR_Y + PLAYER_HEIGHT; // snap to floor
     } else {
         player_physics.isOnGround = false;
     }
-    // update camera position
-    camera.Position = new_position;
+    
+    // update camera position based on view mode
+    if (is_third_person) {
+        // third person: position camera behind player
+        glm::vec3 offset = -camera.Front * THIRD_PERSON_DISTANCE;
+        camera.Position = playerPosition + offset;
+        camera.Position.y += 1.0f; // camera slightly above player head
+    } else {
+        // first person: camera is at player position
+        camera.Position = playerPosition;
+    }
 }
 
 // check collision with the floor
@@ -349,10 +369,37 @@ int main() {
     float t1 = 0.5f;    
     int t2_location = glGetUniformLocation(ourShader.ID, "t2");
     float t2 = 0.5f;
-    
+
+
+    unsigned int sphereVAO = 0, sphereVBO = 0, sphereEBO = 0;    
+    // generate sphere mesh
+    generateSphere(0.5f, 16, 16);  // radius, rings, sectors
+
+    // sphere vao setup - use separate VAO/VBO/EBO for the sphere
+    glGenVertexArrays(1, &sphereVAO);
+    glGenBuffers(1, &sphereVBO);
+    glGenBuffers(1, &sphereEBO);
+
+    glBindVertexArray(sphereVAO);
+        
+    glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+    glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(float), &sphereVertices[0], GL_STATIC_DRAW);
+        
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndices.size() * sizeof(unsigned int), &sphereIndices[0], GL_STATIC_DRAW);
+        
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // texture coord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    // important: restore the original VAO binding after setting up the sphere
+    glBindVertexArray(VAO);
+
     // custom color uniform
     int color_location = glGetUniformLocation(ourShader.ID, "customColor");
-
+    
     // render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -428,6 +475,29 @@ int main() {
             
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+
+        // draw player sphere (only visible in third person)
+        if (is_third_person) {
+            // explicitly bind the sphere VAO
+            glBindVertexArray(sphereVAO);
+            
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, texture1);
+            
+            model = glm::mat4(1.0f);
+            glm::vec3 pos = playerPosition;
+            pos.y--;
+            model = glm::translate(model, pos);
+            ourShader.setMat4("model", model);
+            
+            // player sphere color (red)
+            glUniform3f(color_location, 1.0f, 0.2f, 0.2f);
+            
+            glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
+            
+            // rebind the original VAO for next frame
+            glBindVertexArray(VAO);
+        }
         
         // gui
         ImGui_ImplOpenGL3_NewFrame();
@@ -442,6 +512,8 @@ int main() {
         ImGui::Checkbox("Wireframe [t]", &key_toggles[(unsigned)'t']);
         ImGui::SliderFloat("Texture 1 Blend", &t1, 0.0f, 1.0f);
         ImGui::SliderFloat("Texture 2 Blend", &t2, 0.0f, 1.0f);
+        ImGui::Text("Camera Mode: %s", is_third_person ? "Third Person" : "First Person");
+        ImGui::Text("Press TAB to toggle camera mode");
         ImGui::End();
 
         ImGui::Begin("Settings");
@@ -471,6 +543,10 @@ int main() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
 
+    glDeleteVertexArrays(1, &sphereVAO);
+    glDeleteBuffers(1, &sphereVBO);
+    glDeleteBuffers(1, &sphereEBO);
+
     delete[] random_cubes;
     delete[] floor_vertices;
     delete[] combined_vertices;
@@ -491,6 +567,14 @@ void process_input(GLFWwindow *window)
         else
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         toggle_mouse_lock = !toggle_mouse_lock;
+    }
+
+    // add this to the process_input function
+    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && !key_toggles[GLFW_KEY_TAB]) {
+        is_third_person = !is_third_person;
+        key_toggles[GLFW_KEY_TAB] = true;
+    } else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) {
+        key_toggles[GLFW_KEY_TAB] = false;
     }
 
     // get movement direction in camera space
@@ -563,4 +647,44 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+// generate sphere mesh
+void generateSphere(float radius, unsigned int rings, unsigned int sectors) {
+    sphereVertices.clear();
+    sphereIndices.clear();
+    
+    float const R = 1.0f/(float)(rings-1);
+    float const S = 1.0f/(float)(sectors-1);
+    
+    for(unsigned int r = 0; r < rings; r++) {
+        for(unsigned int s = 0; s < sectors; s++) {
+            float const y = sin(-M_PI_2 + M_PI * r * R);
+            float const x = cos(2*M_PI * s * S) * sin(M_PI * r * R);
+            float const z = sin(2*M_PI * s * S) * sin(M_PI * r * R);
+            
+            // position
+            sphereVertices.push_back(x * radius);
+            sphereVertices.push_back(y * radius);
+            sphereVertices.push_back(z * radius);
+            
+            // texture coordinates
+            sphereVertices.push_back(s*S);
+            sphereVertices.push_back(r*R);
+            
+            // add indices
+            if(r < rings-1 && s < sectors-1) {
+                unsigned int curRow = r * sectors;
+                unsigned int nextRow = (r + 1) * sectors;
+                
+                sphereIndices.push_back(curRow + s);
+                sphereIndices.push_back(nextRow + s);
+                sphereIndices.push_back(nextRow + s + 1);
+                
+                sphereIndices.push_back(curRow + s);
+                sphereIndices.push_back(nextRow + s + 1);
+                sphereIndices.push_back(curRow + s + 1);
+            }
+        }
+    }
 }
