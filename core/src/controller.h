@@ -13,7 +13,7 @@ class Controller {
 // private:
 public:
     /*const*/ float GRAVITY = 9.8f;
-    /*const*/ float JUMP_FORCE = 3.0f;
+    /*const*/ float JUMP_FORCE = 30.0f;
     /*const*/ float FRICTION = .937f;
     /*const*/ float ACCELERATION = 47.0f;
     /*const*/ float MAX_VELOCITY = 4.3f;
@@ -32,7 +32,7 @@ public:
     // player physics state
     struct player_physics {
         glm::vec3 velocity = glm::vec3(0.0f);
-        glm::vec3 player_position = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 player_position = glm::vec3(0.0f, 5.0f, 0.0f);
         bool isOnGround = false;
         bool isJumping = false;
     } player_physics;
@@ -118,11 +118,11 @@ public:
             movement.x += 1.0f;
     
         // normalize movement vector if the player is moving diagonally
-        if (glm::length(movement) > 0.0f) {
+        if (glm::length(movement) > 0.0f) //{
             movement = glm::normalize(movement);
-        } else {
-            player_physics.isJumping = true;
-        }
+        // } else {
+        //     player_physics.isJumping = true;
+        // }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && player_physics.isOnGround) {
             player_physics.velocity.y = JUMP_FORCE;
@@ -157,8 +157,8 @@ public:
     }
 
     // check collision with the floor
-    bool check_floor_collision(const glm::vec3& position, float height) {
-        return position.y - height <= FLOOR_Y;
+    bool check_floor_collision(const glm::vec3& position) {
+        return position.y <= FLOOR_Y;
     }
 
     void update_player_physics(float deltaTime) {
@@ -171,11 +171,12 @@ public:
         player_physics.player_position += player_physics.velocity * deltaTime;
         
         // check floor collision
-        bool floor_collision = check_floor_collision(player_physics.player_position, PLAYER_HEIGHT);
+        bool floor_collision = check_floor_collision(player_physics.player_position);
         if (floor_collision) {
             player_physics.isOnGround = true;
             player_physics.velocity.y = 0.0f;
             player_physics.player_position.y = FLOOR_Y; // snap to floor
+            player_physics.isJumping = false;
         } else {
             player_physics.isOnGround = false;
         }
