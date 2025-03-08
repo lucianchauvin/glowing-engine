@@ -38,7 +38,7 @@ int main() {
             for (int k = 0; k < 10; k++) {
                 glm::vec3 pos   = glm::vec3(2.0f * i, 2.0f * k + 2, -2.0f * j); 
                 glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.0f);
+                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * k);
                 Entity e(&sphere, pos, scale, color);
                 scene.include(e);
             }
