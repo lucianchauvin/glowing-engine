@@ -5,7 +5,6 @@
 #include <shader.h>
 #include <scene.h>
 
-
 class Controller {
 // private:
 public:
@@ -32,6 +31,7 @@ public:
         glm::vec3 player_position = glm::vec3(0.0f, 5.0f, 0.0f);
         bool isOnGround = false;
         bool isJumping = false;
+        bool dashing = false;
     } player_physics;
     bool key_toggles[256] = {false};
 
@@ -48,11 +48,11 @@ public:
         lastX = xpos;
         lastY = ypos;
         
-        camera.ProcessMouseMovement(xoffset, yoffset);
+        camera.process_mouse_movement(xoffset, yoffset);
     }
     
     void scroll_callback_impl(GLFWwindow* window, double xoffset, double yoffset) {
-        camera.ProcessMouseScroll(static_cast<float>(yoffset));
+        camera.process_mouse_scroll(static_cast<float>(yoffset));
     }
 
     static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -105,13 +105,17 @@ public:
         }
 
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            glm::vec3 pos   = camera.position + glm::vec3(0.0f, -1.0f, 0.0f) + camera.Front * 5.0f; 
-            glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-            glm::vec3 color = glm::vec3(0.0, 0.0f, 0.0f);
-            Entity e(model, pos, scale, color);
-            scene.include(e);
+            // cast ray ito 
+            glm::vec3 hit_pos = glm::vec3(0.0f);
+            int hits = scene.cast_ray(camera.position, camera.front, hit_pos);
+            
+            if (hits != 0) {
+                glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+                glm::vec3 color = glm::vec3(0.0, 0.0f, 0.0f);
+                Entity e(model, hit_pos, scale, color, true, 0.2f);
+                scene.include(e);
+            }
         }
-
         // get movement direction in camera space
         glm::vec3 movement(0.0f);
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -122,37 +126,28 @@ public:
             movement.x -= 1.0f;
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             movement.x += 1.0f;
-    
         // normalize movement vector if the player is moving diagonally
         if (glm::length(movement) > 0.0f) //{
             movement = glm::normalize(movement);
-        // } else {
-        //     player_physics.isJumping = true;
-        // }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && player_physics.isOnGround) {
             player_physics.velocity.y = JUMP_FORCE;
             player_physics.isOnGround = false;
             player_physics.isJumping = true;
         }
-
         // convert camera-relative movement to world space
-        glm::vec3 forward = glm::normalize(glm::vec3(camera.Front.x, 0.0f, camera.Front.z));
-        glm::vec3 right = glm::normalize(glm::cross(forward, camera.WorldUp));
-        
+        glm::vec3 forward = glm::normalize(glm::vec3(camera.front.x, 0.0f, camera.front.z));
+        glm::vec3 right = glm::normalize(glm::cross(forward, camera.world_up));
         glm::vec3 acceleration = forward * movement.z + right * movement.x;
         acceleration *= ACCELERATION * deltaTime;
-
         // apply acceleration
         player_physics.velocity.x += acceleration.x;
         player_physics.velocity.z += acceleration.z;
-
         // apply friction when on ground
         if (player_physics.isOnGround) {
             player_physics.velocity.x *= FRICTION;
             player_physics.velocity.z *= FRICTION;
         }
-
         // limit horizontal velocity
         float horizontal_speed = glm::length(glm::vec2(player_physics.velocity.x, player_physics.velocity.z));
         if (horizontal_speed > MAX_VELOCITY) {
@@ -160,8 +155,16 @@ public:
             player_physics.velocity.x *= scale;
             player_physics.velocity.z *= scale;
         }
-    }
 
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            player_physics.velocity.x += camera.front.x * 150.0f;
+            player_physics.velocity.y += camera.front.y * 10.0f;
+            player_physics.velocity.z += camera.front.z * 150.0f;
+            player_physics.dashing = true;
+        } else {
+            player_physics.dashing = false;
+        }
+    }
     // check collision with the floor
     bool check_floor_collision(const glm::vec3& position) {
         return position.y <= FLOOR_Y;
@@ -190,7 +193,7 @@ public:
         // update camera position based on view mode
         if (is_third_person) {
             // third person: position camera behind player
-            glm::vec3 offset = -camera.Front * THIRD_PERSON_DISTANCE;
+            glm::vec3 offset = -camera.front * THIRD_PERSON_DISTANCE;
             camera.position = player_physics.player_position + offset;
             camera.position.y += 1.0f; // camera slightly above player head
         } else {

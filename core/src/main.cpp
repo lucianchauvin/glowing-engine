@@ -22,7 +22,6 @@ float lastFrame = 0.0f;
 
 int main() {
     Controller player;
-
     Renderer renderer;
     if (!renderer.init(SCR_WIDTH, SCR_HEIGHT, "GLOW", player)) {
         return -1;
@@ -31,16 +30,26 @@ int main() {
     Scene scene;
     Model plane;
     plane.load_mesh("../resources/models/plane.obj");
-    plane.init();
     Model sphere;
     sphere.load_mesh("../resources/models/bunny.obj");
-    sphere.init();
     
     for (int i = 0; i < 10; i++) {
-        glm::vec3 pos   = glm::vec3(2.0f * i, 1.0f, 0.0f); 
+        for (int j = 0; j < 10; j++) {
+            for (int k = 0; k < 10; k++) {
+                glm::vec3 pos   = glm::vec3(2.0f * i, 2.0f * k + 2, -2.0f * j); 
+                glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.0f);
+                Entity e(&sphere, pos, scale, color);
+                scene.include(e);
+            }
+        }
+    }
+
+    for (int i = 0; i < 10; i++) {
+        glm::vec3 pos   = glm::vec3(2.0f * i - 5, 2.0f, 0.0f); 
         glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec3 color = glm::vec3(.05f * i, 0.0f, 0.0f);
-        Entity e(&sphere, pos, scale, color);
+        glm::vec3 color = glm::vec3(.05f * i, 0.5f, 0.2f);
+        Entity e(&sphere, pos, scale, color, true, 3.0f);
         scene.include(e);
     }
 
@@ -69,14 +78,17 @@ int main() {
         float currentFrame = renderer.get_time();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-
         // input
         player.process_input(renderer.window, deltaTime, scene, &sphere);
         // update player physics
         player.update_player_physics(deltaTime);
+        
+        if (player.player_physics.dashing) {
+            Entity e(&sphere, player.player_physics.player_position, glm::vec3(0.1f), glm::vec3(0.0f, 0.3f, 0.2f), true, 3.0f);
+            scene.include(e);
+        }
         // render scene
-        // renderer.render_scene(player);
-        renderer.render_scene(player, scene);
+        renderer.render_scene(player, scene, deltaTime);
 
         // // gui
         ImGui_ImplOpenGL3_NewFrame();
@@ -86,7 +98,7 @@ int main() {
         ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
         ImGui::Text("Position: (%.1f, %.1f, %.1f)", player.player_physics.player_position.x, player.player_physics.player_position.y, player.player_physics.player_position.z);
         ImGui::Text("Camera Position: (%.1f, %.1f, %.1f)", player.camera.position.x, player.camera.position.y, player.camera.position.z);
-        ImGui::Text("Facing: (%.1f, %.1f, %.1f)", player.camera.Front.x, player.camera.Front.y, player.camera.Front.z);
+        ImGui::Text("Facing: (%.1f, %.1f, %.1f)", player.camera.front.x, player.camera.front.y, player.camera.front.z);
         ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player.player_physics.velocity.x, player.player_physics.velocity.y, player.player_physics.velocity.z);
         ImGui::Text("On Ground: %s", player.player_physics.isOnGround ? "Yes" : "No");
         ImGui::End();

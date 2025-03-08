@@ -62,6 +62,8 @@ public:
                 }
             }
         }
+
+        init();
     }
     // void fitToUnitBox();
     void init() {
