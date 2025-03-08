@@ -1,2 +1,3 @@
 core/build/
 .cache/
+.vscode/tasks.json
