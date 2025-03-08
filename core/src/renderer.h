@@ -18,23 +18,14 @@
 #include "scene.h"
 #include "controller.h"
 
-// floor parameters
-const float GRID_SIZE = 10;
-const float FLOOR_SIZE = GRID_SIZE * 4.0f;
-const float FLOOR_Y = 0;
-
 class Renderer {
 public:
     Renderer(){};
     ~Renderer(){};
 
-    float get_time() {
-        return static_cast<float>(glfwGetTime());
-    }
+    float get_time() { return static_cast<float>(glfwGetTime()); }
 
-    bool open() {
-        return !glfwWindowShouldClose(window);
-    }
+    bool open() { return !glfwWindowShouldClose(window); }
 
     bool init(int width, int height, const char* title, Controller& player) {
         scr_width = width;
@@ -44,12 +35,7 @@ public:
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    
-    // #ifdef __APPLE__
-    //     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    // #endif
-    
-        // glfw window creation
+
         window = glfwCreateWindow(width, height, title, NULL, NULL);
         if (window == NULL) {
             std::cout << "Failed to create GLFW window" << std::endl;
@@ -66,11 +52,9 @@ public:
         glfwSetCursorPosCallback(window, Controller::mouse_callback);
         glfwSetScrollCallback(window, Controller::scroll_callback);
         glfwSetCharCallback(window, Controller::char_callback);
-
         // tell GLFW to capture our mouse
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         // glad: load all OpenGL function pointers
-        // ---------------------------------------
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
             std::cout << "Failed to initialize GLAD" << std::endl;
             return false;
@@ -78,21 +62,18 @@ public:
         // configure global opengl state
         glEnable(GL_DEPTH_TEST);
         // SHADERS
-        // SHADERS
-        // SHADERS
-        // build and compile our shader program
-        if (!std::filesystem::exists("../resources/shaders/vertex.glsl") ||
-            !std::filesystem::exists("../resources/shaders/fragment.glsl")) {
-            std::cerr << "Shader files not found! Ensure they're in the 'shaders/' directory relative to the executable." << std::endl;
-            return false;
-        }
-        ourShader.init("../resources/shaders/vertex.glsl", "../resources/shaders/fragment.glsl");
-        ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
-        // either set it manually like so:
-        glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
-        // or set it via the texture class
-        ourShader.setInt("texture2", 1);
-        color_location = glGetUniformLocation(ourShader.ID, "customColor");
+        /*shader manager?*/ // build and compile our shader program
+        /*shader manager?*/ if (!std::filesystem::exists("../resources/shaders/vertex.glsl") ||
+        /*shader manager?*/     !std::filesystem::exists("../resources/shaders/fragment.glsl")) {
+        /*shader manager?*/     std::cerr << "Shader files not found! Ensure they're in the 'shaders/' directory relative to the executable." << std::endl;
+        /*shader manager?*/     return false;
+        /*shader manager?*/ }
+        /*shader manager?*/ ourShader.init("../resources/shaders/vertex.glsl", "../resources/shaders/fragment.glsl");
+        /*shader manager?*/ ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
+        /*shader manager?*/ // either set it manually like so:
+        /*shader manager?*/ glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
+        /*shader manager?*/ // or set it via the texture class
+        /*shader manager?*/ ourShader.setInt("texture2", 1);
 
         setup_buffers();
         load_textures();
@@ -104,8 +85,7 @@ public:
         glGenBuffers(1, &VBO);
         glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-        return true;
+        return true; // ?
     }
 
     bool load_textures() {
@@ -175,7 +155,7 @@ public:
         return true;
     }
 
-    void render_scene(Controller player, Scene scene) {
+    void render_scene(Controller player, Scene& scene, float deltaTime) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
         ourShader.use();
@@ -183,25 +163,47 @@ public:
         ourShader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
         ourShader.setVec3("viewPos", player.camera.position);
         ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        ourShader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.Zoom), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
-        glm::mat4 view = player.camera.GetViewMatrix();
+        glm::mat4 view = player.camera.get_view_matrix();
         ourShader.setMat4("view", view);
 
-        for (Entity entity : scene.entites) {
+        for (Entity entity : scene.entities) {
             glm::mat4 model = entity.get_model_matrix();
-            ourShader.setVec3("customColor", entity.get_color());
             ourShader.setMat4("model", model);
+            ourShader.setVec3("objectColor", entity.get_color());
             entity.draw(ourShader);
         }
 
+        ourShader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
+        ourShader.setVec3("viewPos", player.camera.position);
+        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        std::vector<int> idxs;
+        int i = 0;
+        for (Entity& entity : scene.timed_entities) {
+            printf("[BEFORE] %f\n", entity.ttl);
+            glm::mat4 model = entity.get_model_matrix();
+            ourShader.setMat4("model", model);
+            ourShader.setVec3("objectColor", glm::vec3(1.0f, 0.0f, 1.0f) * (entity.ttl / entity.max_ttl));
+            
+            if (!entity.draw(ourShader, deltaTime)) {
+                printf("REMOVE!!\n");
+                idxs.push_back(i);
+            }
+            
+            printf("[AFTER] %f\n", entity.ttl);
+            i++;
+        }
+        
+        for (int j = idxs.size() - 1; j >= 0; j--) {
+            scene.timed_entities.erase(scene.timed_entities.begin() + idxs[j]);
+        }
         // flush(); !!
     }
 
