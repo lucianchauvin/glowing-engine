@@ -181,11 +181,11 @@ public:
         if (is_third_person) {
             // third person: position camera behind player
             glm::vec3 offset = -camera.Front * THIRD_PERSON_DISTANCE;
-            camera.Position = player_physics.player_position + offset;
-            camera.Position.y += 1.0f; // camera slightly above player head
+            camera.position = player_physics.player_position + offset;
+            camera.position.y += 1.0f; // camera slightly above player head
         } else {
             // first person: camera is at player position
-            camera.Position = player_physics.player_position + PLAYER_HEIGHT;
+            camera.position = player_physics.player_position + PLAYER_HEIGHT;
         }
     }
 };
