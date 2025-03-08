@@ -1,21 +1,32 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include <map>
+#include <vector>
+#include <filesystem>
+#include <random>
+#include <ctime>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <map>
-
+#include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include "shader.h"
-#include "Scene.h"
+#include "scene.h"
+#include "controller.h"
+
+// floor parameters
+const float GRID_SIZE = 10;
+const float FLOOR_SIZE = GRID_SIZE * 4.0f;
+const float FLOOR_Y = 0;
 
 class Renderer {
 public:
-    Renderer();
-    ~Renderer();
+    Renderer(){};
+    ~Renderer(){};
 
     float get_time() {
         return static_cast<float>(glfwGetTime());
@@ -25,7 +36,10 @@ public:
         return !glfwWindowShouldClose(window);
     }
 
-    bool init(int width, int height, const char* title) {
+    bool init(int width, int height, const char* title, Controller player) {
+        scr_width = width;
+        scr_height = height;
+
         glfwInit();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -36,20 +50,22 @@ public:
     // #endif
     
         // glfw window creation
-        GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+        window = glfwCreateWindow(width, height, title, NULL, NULL);
         if (window == NULL) {
             std::cout << "Failed to create GLFW window" << std::endl;
             glfwTerminate();
-            return -1;
+            return false;
+        } else {
+            std::cout << "GLFW window created successfully" << std::endl;
         }
 
         glfwMakeContextCurrent(window);
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-        // glfwSetWindowUserPointer(window, &player);
-        // glfwSetCursorPosCallback(window, Controller::mouse_callback);
-        // glfwSetScrollCallback(window, Controller::scroll_callback);
-        // glfwSetCharCallback(window, Controller::char_callback);
+        glfwSetWindowUserPointer(window, &player);
+        glfwSetCursorPosCallback(window, Controller::mouse_callback);
+        glfwSetScrollCallback(window, Controller::scroll_callback);
+        glfwSetCharCallback(window, Controller::char_callback);
 
         // tell GLFW to capture our mouse
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -57,7 +73,7 @@ public:
         // ---------------------------------------
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
             std::cout << "Failed to initialize GLAD" << std::endl;
-            return -1;
+            return false;
         }
         // configure global opengl state
         glEnable(GL_DEPTH_TEST);
@@ -68,35 +84,18 @@ public:
         if (!std::filesystem::exists("../resources/shaders/vertex.glsl") ||
             !std::filesystem::exists("../resources/shaders/fragment.glsl")) {
             std::cerr << "Shader files not found! Ensure they're in the 'shaders/' directory relative to the executable." << std::endl;
-            return -1;
+            return false;
         }
-        ourShader("../resources/shaders/vertex.glsl", "../resources/shaders/fragment.glsl");
+        ourShader.init("../resources/shaders/vertex.glsl", "../resources/shaders/fragment.glsl");
         ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
         // either set it manually like so:
         glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
         // or set it via the texture class
         ourShader.setInt("texture2", 1);
-        int color_location = glGetUniformLocation(ourShader.ID, "customColor");
+        color_location = glGetUniformLocation(ourShader.ID, "customColor");
 
-        setup_buffers();
-        load_textures();
 
         // TODO move to real spot
-        initrandom_cubes();
-        float* floor_vertices = generate_floor_vertices();
-        // create a single VBO for both cube and floor
-        const size_t cube_vertices_size = sizeof(vertices);
-        const size_t floor_verticesSize = 30 * sizeof(float); // 6 vertices * 5 components
-        // combine vertices
-        float* combined_vertices = new float[(cube_vertices_size + floor_verticesSize) / sizeof(float)];
-        memcpy(combined_vertices, vertices, cube_vertices_size);
-        memcpy(combined_vertices + cube_vertices_size / sizeof(float), floor_vertices, floor_verticesSize);
-        
-
-        return true;
-    }
-
-    int setup_buffers() {
         float vertices[] = {
             -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
              0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -105,9 +104,25 @@ public:
             -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
             -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
         };
+        initrandom_cubes();
+        float* floor_vertices = generate_floor_vertices();
+        // create a single VBO for both cube and floor
+        
+        cube_vertices_size = sizeof(vertices);
+        floor_verticesSize = 30 * sizeof(float); // 6 vertices * 5 components
+        // combine vertices
+        combined_vertices = new float[(cube_vertices_size + floor_verticesSize) / sizeof(float)];
+        memcpy(combined_vertices, vertices, cube_vertices_size);
+        memcpy(combined_vertices + cube_vertices_size / sizeof(float), floor_vertices, floor_verticesSize);
+        
+        setup_buffers();
+        load_textures();
+        return true;
+    }
 
+    bool setup_buffers() {
         // le cube
-        unsigned int VBO, VAO;
+        // int vao vbo
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
 
@@ -126,10 +141,9 @@ public:
         //   o
         // o   o
         //   o
-        unsigned int sphereVAO = 0, sphereVBO = 0, sphereEBO = 0;    
+        // int vao vbo
         // generate sphere mesh
         generateSphere(0.5f, 16, 16);  // radius, rings, sectors
-    
         // sphere vao setup - use separate VAO/VBO/EBO for the sphere
         glGenVertexArrays(1, &sphereVAO);
         glGenBuffers(1, &sphereVBO);
@@ -152,10 +166,10 @@ public:
         // important: restore the original VAO binding after setting up the sphere
         glBindVertexArray(VAO);
 
+        return true;
     }
 
-    int load_textures() {
-        unsigned int texture1, texture2, floorTexture;
+    bool load_textures() {
         // texture 1
         glGenTextures(1, &texture1);
         glBindTexture(GL_TEXTURE_2D, texture1); 
@@ -219,9 +233,32 @@ public:
         }
         stbi_image_free(data);
 
+        return true;
     }
 
-    void render_scene() {
+    void render_scene_2(Controller player, Scene scene) {
+        printf("yeah\n");
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
+        ourShader.use();
+
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.Zoom), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
+        ourShader.setMat4("projection", projection);
+        glm::mat4 view = player.camera.GetViewMatrix();
+        ourShader.setMat4("view", view);
+
+        for (Entity entity : scene.entites) {
+            glm::mat4 model = entity.get_model_matrix();
+            ourShader.setVec3("customColor", entity.get_color());
+            ourShader.setMat4("model", model);
+            entity.draw(ourShader);
+        }
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    void render_scene(Controller player) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
         // activate shader
@@ -231,18 +268,15 @@ public:
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
-        glUniform1f(t1_location, t1);
-        glUniform1f(t2_location, t2);
 
         // need player info
         glUniform3f(color_location, 1.0f, 1.0f, 1.0f);
         // pass projection matrix to shader (note that in this case it could change every frame)
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.Zoom), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
         // camera/view transformation
         glm::mat4 view = player.camera.GetViewMatrix();
         ourShader.setMat4("view", view);
-
 
         // draw floor
         glActiveTexture(GL_TEXTURE0);
@@ -273,28 +307,25 @@ public:
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        // if (player.is_third_person) {
-        //     // explicitly bind the sphere VAO
-        //     glBindVertexArray(sphereVAO);
+        if (player.is_third_person) {
+            // explicitly bind the sphere VAO
+            glBindVertexArray(sphereVAO);
             
-        //     glActiveTexture(GL_TEXTURE0);
-        //     glBindTexture(GL_TEXTURE_2D, texture1);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, texture1);
             
+            ourShader.setMat4("model", glm::translate(glm::mat4(1.0f), player.player_physics.player_position));
+            glUniform3f(color_location, 1.0f, 0.2f, 0.2f);
+            glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
 
-        //     ourShader.setMat4("model", glm::translate(glm::mat4(1.0f), player.player_physics.player_position));
-        //     glUniform3f(color_location, 1.0f, 0.2f, 0.2f);
-        //     glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
+            glm::vec3 pos = glm::vec3(player.player_physics.player_position);
+            pos.y += player.PLAYER_HEIGHT;
+            ourShader.setMat4("model", glm::scale(glm::translate(glm::mat4(1.0f), pos), glm::vec3(0.25f, 0.25f, 0.25f)));
+            glUniform3f(color_location, 1.0f, 0.2f, 0.2f);
+            glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
 
-        //     glm::vec3 pos = glm::vec3(player.player_physics.player_position);
-        //     pos.y += player.PLAYER_HEIGHT;
-        //     ourShader.setMat4("model", glm::scale(glm::translate(glm::mat4(1.0f), pos), glm::vec3(0.25f, 0.25f, 0.25f)));
-        //     glUniform3f(color_location, 1.0f, 0.2f, 0.2f);
-        //     glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
-
-        //     glBindVertexArray(VAO);
-        // }
-
-
+            glBindVertexArray(VAO);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -320,11 +351,21 @@ public:
 
 // private:
     GLFWwindow* window;
-    Shader ourShader;
+    int scr_width, scr_height;
 
+    Shader ourShader;
+    unsigned int VBO, VAO;
+    unsigned int sphereVAO = 0, sphereVBO = 0, sphereEBO = 0;    
+    unsigned int texture1, texture2, floorTexture;
+    int color_location;
+
+    float* combined_vertices;
     std::vector<float> sphereVertices;
     std::vector<unsigned int> sphereIndices;
-
+    float* floor_vertices;
+    size_t cube_vertices_size;
+    size_t floor_verticesSize;
+    
     const int NUM_RANDOM_CUBES = 20;
     struct RandomCube {
         glm::vec3 position;
@@ -333,9 +374,7 @@ public:
     };
     RandomCube* random_cubes = nullptr;
 
-    void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-        // make sure the viewport matches the new window dimensions; note that width and 
-        // height will be significantly larger than specified on retina displays.
+    static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
         glViewport(0, 0, width, height);
     }
 
@@ -380,7 +419,7 @@ public:
     }
 
     float* generate_floor_vertices() {
-        float* floor_vertices = new float[30]; // 6 vertices * 5 components (position + tex coords)
+        floor_vertices = new float[30]; // 6 vertices * 5 components (position + tex coords)
         // floor vertices (position, texture coords)
         float temp[] = {
             -FLOOR_SIZE/2, FLOOR_Y, -FLOOR_SIZE/2,  0.0f, 0.0f,
@@ -407,7 +446,7 @@ public:
         for (int i = 0; i < NUM_RANDOM_CUBES; i++) {
             random_cubes[i].position = glm::vec3(
                 pos_dist_x(rng),
-                FLOOR_Y + scale_dist(rng) / 2.0f, // place on top of floor
+                0 + scale_dist(rng) / 2.0f, // place on top of floor
                 pos_dist_z(rng)
             );
             random_cubes[i].color = glm::vec3(
