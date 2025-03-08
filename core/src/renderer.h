@@ -237,10 +237,19 @@ public:
     }
 
     void render_scene_2(Controller player, Scene scene) {
-        printf("yeah\n");
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
         ourShader.use();
+
+        ourShader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));  // Light source position
+        ourShader.setVec3("viewPos", player.camera.position);  // Camera position
+        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f)); // White light
+        ourShader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f)); // Default object color
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
 
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.Zoom), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
         ourShader.setMat4("projection", projection);

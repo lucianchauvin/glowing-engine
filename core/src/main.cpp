@@ -29,8 +29,9 @@ int main() {
     };
 
     Scene scene;
-    // Model plane;
-    // plane.load_mesh("../resources/models/plane.obj");
+    Model plane;
+    plane.load_mesh("../resources/models/plane.obj");
+    plane.init();
     // plane.init();
     // Model* cube;
     Model sphere;
@@ -40,9 +41,16 @@ int main() {
     for (int i = 0; i < 10; i++) {
         glm::vec3 pos   = glm::vec3(2.0f * i, 1.0f, 0.0f); 
         glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-        Entity e(&sphere, pos, scale);
+        glm::vec3 color = glm::vec3(.05f * i, 0.0f, 0.0f);
+        Entity e(&sphere, pos, scale, color);
         scene.include(e);
     }
+
+    glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
+    glm::vec3 scale = glm::vec3(10.0f, 1.0f, 10.0f);
+    glm::vec3 color = glm::vec3(0.7f, 0.7f, 0.7f);
+    Entity e(&plane, pos, scale, color);
+    scene.include(e);
 
     // Setup Dear ImGui context
     // IMGUI_CHECKVERSION();
