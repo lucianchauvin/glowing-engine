@@ -1,10 +1,6 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#include <glm/glm.hpp>
-#include <GLFW/glfw3.h>
-#include <glad/glad.h>
-
 #include <camera.h>
 #include <shader.h>
 
@@ -13,7 +9,7 @@ class Controller {
 // private:
 public:
     /*const*/ float GRAVITY = 9.8f;
-    /*const*/ float JUMP_FORCE = 30.0f;
+    /*const*/ float JUMP_FORCE = 5.0f;
     /*const*/ float FRICTION = .937f;
     /*const*/ float ACCELERATION = 47.0f;
     /*const*/ float MAX_VELOCITY = 4.3f;
