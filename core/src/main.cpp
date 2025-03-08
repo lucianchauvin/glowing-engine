@@ -32,10 +32,8 @@ int main() {
     Model plane;
     plane.load_mesh("../resources/models/plane.obj");
     plane.init();
-    // plane.init();
-    // Model* cube;
     Model sphere;
-    sphere.load_mesh("../resources/models/sphere.obj");
+    sphere.load_mesh("../resources/models/bunny.obj");
     sphere.init();
     
     for (int i = 0; i < 10; i++) {
@@ -53,15 +51,15 @@ int main() {
     scene.include(e);
 
     // Setup Dear ImGui context
-    // IMGUI_CHECKVERSION();
-    // ImGui::CreateContext();
-    // ImGuiIO& io = ImGui::GetIO();
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
     // setup Platform/Renderer backends
-    // ImGui_ImplGlfw_InitForOpenGL(window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
-    // ImGui_ImplOpenGL3_Init();
+    ImGui_ImplGlfw_InitForOpenGL(renderer.window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplOpenGL3_Init();
 
     // render loop
     int frame = 0;
@@ -73,38 +71,34 @@ int main() {
         lastFrame = currentFrame;
 
         // input
-        player.process_input(renderer.window, deltaTime);
+        player.process_input(renderer.window, deltaTime, scene, &sphere);
         // update player physics
         player.update_player_physics(deltaTime);
         // render scene
         // renderer.render_scene(player);
-        renderer.render_scene_2(player, scene);
-        // // gui
-        // ImGui_ImplOpenGL3_NewFrame();
-        // ImGui_ImplGlfw_NewFrame();
-        // ImGui::NewFrame();
-        
-        // ImGui::Begin("Controls");
-        // ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
-        // ImGui::Text("Position: (%.1f, %.1f, %.1f)", camera.Position.x, camera.Position.y, camera.Position.z);
-        // ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player_physics.velocity.x, player_physics.velocity.y, player_physics.velocity.z);
-        // ImGui::Text("On Ground: %s", player_physics.isOnGround ? "Yes" : "No");
-        // ImGui::Checkbox("Wireframe [t]", &key_toggles[(unsigned)'t']);
-        // ImGui::SliderFloat("Texture 1 Blend", &t1, 0.0f, 1.0f);
-        // ImGui::SliderFloat("Texture 2 Blend", &t2, 0.0f, 1.0f);
-        // ImGui::Text("Camera Mode: %s", is_third_person ? "Third Person" : "First Person");
-        // ImGui::Text("Press TAB to toggle camera mode");
-        // ImGui::End();
+        renderer.render_scene(player, scene);
 
-        // ImGui::Begin("Settings");
-        // ImGui::SliderFloat("GRAVITY", &GRAVITY, 0.1f, 20.0f);
-        // ImGui::SliderFloat("JUMP_FORCE", &JUMP_FORCE, 1.0f, 10.0f);
-        // ImGui::SliderFloat("FRICTION", &FRICTION, 0.5f, 1.0f);
-        // ImGui::SliderFloat("ACCELERATION", &ACCELERATION, 1.0f, 200.0f);
-        // ImGui::SliderFloat("MAX_VELOCITY", &MAX_VELOCITY, 0.1f, 10.0f);
-        // ImGui::SliderFloat("PLAYER_HEIGHT", &PLAYER_HEIGHT, 1.0f, 10.0f);
-        // ImGui::End();
+        // // gui
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();        
+        ImGui::Begin("Controls");
+        ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
+        ImGui::Text("Position: (%.1f, %.1f, %.1f)", player.player_physics.player_position.x, player.player_physics.player_position.y, player.player_physics.player_position.z);
+        ImGui::Text("Camera Position: (%.1f, %.1f, %.1f)", player.camera.position.x, player.camera.position.y, player.camera.position.z);
+        ImGui::Text("Facing: (%.1f, %.1f, %.1f)", player.camera.Front.x, player.camera.Front.y, player.camera.Front.z);
+        ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player.player_physics.velocity.x, player.player_physics.velocity.y, player.player_physics.velocity.z);
+        ImGui::Text("On Ground: %s", player.player_physics.isOnGround ? "Yes" : "No");
+        ImGui::End();
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        
+        renderer.flush();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     renderer.shutdown();
     return 0;
