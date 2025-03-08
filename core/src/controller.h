@@ -3,17 +3,18 @@
 
 #include <camera.h>
 #include <shader.h>
+#include <scene.h>
 
 
 class Controller {
 // private:
 public:
-    /*const*/ float GRAVITY = 9.8f;
-    /*const*/ float JUMP_FORCE = 5.0f;
-    /*const*/ float FRICTION = .937f;
-    /*const*/ float ACCELERATION = 47.0f;
-    /*const*/ float MAX_VELOCITY = 4.3f;
-    /*const*/ float PLAYER_HEIGHT = 1.8f;
+    float GRAVITY = 9.8f;
+    float JUMP_FORCE = 5.0f;
+    float FRICTION = .937f;
+    float ACCELERATION = 47.0f;
+    float MAX_VELOCITY = 4.3f;
+    float PLAYER_HEIGHT = 1.8f;
 
     const float FLOOR_Y = 0;
 
@@ -46,7 +47,7 @@ public:
     
         lastX = xpos;
         lastY = ypos;
-    
+        
         camera.ProcessMouseMovement(xoffset, yoffset);
     }
     
@@ -76,9 +77,10 @@ public:
     }
 
 // public:
-    void process_input(GLFWwindow *window, float deltaTime) {
-        // if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        //     glfwSetWindowShouldClose(window, true);
+    void process_input(GLFWwindow *window, float deltaTime, Scene& scene, Model* model) {
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
+            glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) 
+                glfwSetWindowShouldClose(window, true);
 
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             if (toggle_mouse_lock)
@@ -100,6 +102,14 @@ public:
         } 
         else {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            glm::vec3 pos   = camera.position + glm::vec3(0.0f, -1.0f, 0.0f) + camera.Front * 5.0f; 
+            glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+            glm::vec3 color = glm::vec3(0.0, 0.0f, 0.0f);
+            Entity e(model, pos, scale, color);
+            scene.include(e);
         }
 
         // get movement direction in camera space
@@ -185,7 +195,8 @@ public:
             camera.position.y += 1.0f; // camera slightly above player head
         } else {
             // first person: camera is at player position
-            camera.position = player_physics.player_position + PLAYER_HEIGHT;
+            camera.position = player_physics.player_position;
+            camera.position.y += PLAYER_HEIGHT;
         }
     }
 };
