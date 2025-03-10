@@ -7,6 +7,7 @@
 
 #include <model.h>
 #include <shader.h>
+#include <physics.h>
 
 class Entity {
 public:
@@ -72,6 +73,7 @@ public:
 
 private:
     Model* model;
+    Physics* physics;
     glm::vec3 position; 
     glm::vec3 rotation; 
     glm::vec3 scale;
