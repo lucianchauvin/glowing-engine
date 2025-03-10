@@ -8,14 +8,8 @@
 class Controller {
 // private:
 public:
-    float GRAVITY = 9.8f;
-    float JUMP_FORCE = 5.0f;
-    float FRICTION = .937f;
-    float ACCELERATION = 47.0f;
-    float MAX_VELOCITY = 4.3f;
     float PLAYER_HEIGHT = 1.8f;
 
-    const float FLOOR_Y = 0;
 
     // Camera
     Camera camera;

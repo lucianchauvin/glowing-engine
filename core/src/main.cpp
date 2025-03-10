@@ -11,10 +11,11 @@
 #include <shader.h>
 #include <entity.h>
 #include <scene.h>
+#include <chunk.h>
 
 // settings
-const unsigned int SCR_WIDTH = 1800;
-const unsigned int SCR_HEIGHT = 1000;
+const unsigned int SCR_WIDTH = 1600;
+const unsigned int SCR_HEIGHT = 800;
 
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
@@ -33,31 +34,41 @@ int main() {
     Model sphere;
     sphere.load_mesh("../resources/models/bunny.obj");
     
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++) {
-            for (int k = 0; k < 10; k++) {
-                glm::vec3 pos   = glm::vec3(2.0f * i, 2.0f * k + 2, -2.0f * j); 
-                glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * k);
-                Entity e(&sphere, pos, scale, color);
-                scene.include(e);
-            }
-        }
-    }
+    // for (int i = 0; i < 10; i++) {
+    //     for (int j = 0; j < 10; j++) {
+    //         for (int k = 0; k < 10; k++) {
+    //             glm::vec3 pos   = glm::vec3(2.0f * i, 2.0f * k + 2, -2.0f * j); 
+    //             glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    //             glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * k);
+    //             Entity e(&sphere, pos, scale, color);
+    //             scene.include(e);
+    //         }
+    //     }
+    // }
 
-    for (int i = 0; i < 10; i++) {
-        glm::vec3 pos   = glm::vec3(2.0f * i - 5, 2.0f, 0.0f); 
-        glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec3 color = glm::vec3(.05f * i, 0.5f, 0.2f);
-        Entity e(&sphere, pos, scale, color, true, 3.0f);
-        scene.include(e);
-    }
+    // for (int i = 0; i < 10; i++) {
+    //     glm::vec3 pos   = glm::vec3(2.0f * i - 5, 2.0f, 0.0f); 
+    //     glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    //     glm::vec3 color = glm::vec3(.05f * i, 0.5f, 0.2f);
+    //     Entity e(&sphere, pos, scale, color, true, 3.0f);
+    //     scene.include(e);
+    // }
 
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
     glm::vec3 scale = glm::vec3(10.0f, 1.0f, 10.0f);
     glm::vec3 color = glm::vec3(0.7f, 0.7f, 0.7f);
     Entity e(&plane, pos, scale, color);
     scene.include(e);
+
+    std::vector<Chunk*> chunks = std::vector<Chunk*>();
+
+    for (int x = -2; x < 30; x++) {
+        for (int z = -2; z < 30; z++) {
+            if (x == 0 && z == 0) continue;
+            Chunk* chunk = new Chunk(x, z);
+            chunks.push_back(chunk);
+        }
+    }
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -84,11 +95,11 @@ int main() {
         player.update_player_physics(deltaTime);
         
         if (player.player_physics.dashing) {
-            Entity e(&sphere, player.player_physics.player_position, glm::vec3(0.1f), glm::vec3(0.0f, 0.3f, 0.2f), true, 3.0f);
+            Entity e(&sphere, player.player_physics.player_position, glm::vec3(0.1f), glm::vec3(0.0f, 0.3f, 0.2f), true, 1.0f);
             scene.include(e);
         }
         // render scene
-        renderer.render_scene(player, scene, deltaTime);
+        renderer.render_scene(player, scene, deltaTime, chunks);
 
         // // gui
         ImGui_ImplOpenGL3_NewFrame();

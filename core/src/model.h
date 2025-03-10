@@ -13,6 +13,15 @@ using std::string, std::cerr, std::endl;
 class Model {
 public:
     Model(){};
+
+    Model(const std::vector<float> &pos, const std::vector<float> &nor) {
+        posBuf = pos;
+        norBuf = nor;
+        printf("posBuf sz: %d\n", posBuf.size());
+        printf("norBuf sz: %d\n", norBuf.size());
+        init();
+    }
+
     ~Model() {
         glDeleteBuffers(1, &posBufID);
         glDeleteBuffers(1, &norBufID);
@@ -84,6 +93,7 @@ public:
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        printf("SETUP BUFFERS\n");
     }
 
     void draw(Shader shader) const {
@@ -133,5 +143,4 @@ private:
     unsigned int norBufID = 0;
     unsigned int texBufID = 0;
 };
-
-#endif // MODEL_H
+#endif

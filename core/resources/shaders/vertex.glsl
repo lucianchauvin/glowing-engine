@@ -15,6 +15,7 @@ void main()
 {
     FragPos = vec3(model * vec4(aPos, 1.0));  // Transform to world space
     Normal = mat3(transpose(inverse(model))) * aNor;  // Correct normal transform
+    // Normal = aNor;  // Correct normal transform
 
     gl_Position = projection * view * vec4(FragPos, 1.0);
     TexCoord = aTexCoord;
