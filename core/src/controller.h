@@ -2,15 +2,12 @@
 #define CONTROLLER_H
 
 #include <camera.h>
-#include <shader.h>
 #include <scene.h>
 
 class Controller {
 // private:
 public:
     float PLAYER_HEIGHT = 1.8f;
-
-
     // Camera
     Camera camera;
     float lastX = 0.0f;
@@ -18,7 +15,6 @@ public:
     bool toggle_mouse_lock = true;
     bool is_third_person = false;
     const float THIRD_PERSON_DISTANCE = 5.0f;
-
     // player physics state
     struct player_physics {
         glm::vec3 velocity = glm::vec3(0.0f);
