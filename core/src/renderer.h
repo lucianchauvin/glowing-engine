@@ -70,12 +70,14 @@ public:
         /*shader manager?*/     std::cerr << "Shader files not found! Ensure they're in the 'shaders/' directory relative to the executable." << std::endl;
         /*shader manager?*/     return false;
         /*shader manager?*/ }
-        /*shader manager?*/ ourShader.init("../resources/shaders/vertex.glsl", "../resources/shaders/fragment.glsl");
-        /*shader manager?*/ ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
+        /*shader manager?*/ our_shader.init("../resources/shaders/vertex.glsl", "../resources/shaders/fragment.glsl");
+        /*shader manager?*/ our_shader.use(); // don't forget to activate/use the shader before setting uniforms!
         /*shader manager?*/ // either set it manually like so:
-        /*shader manager?*/ glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
+        /*shader manager?*/ glUniform1i(glGetUniformLocation(our_shader.ID, "texture1"), 0);
         /*shader manager?*/ // or set it via the texture class
-        /*shader manager?*/ ourShader.setInt("texture2", 1);
+        /*shader manager?*/ our_shader.setInt("texture2", 1);
+
+        geometry_shader.init("../resources/shaders/world_geometry_v.glsl", "../resources/shaders/world_geometry_f.glsl");
 
         setup_buffers();
         load_textures();
@@ -157,14 +159,14 @@ public:
         return true;
     }
 
-    void render_scene(Controller player, Scene& scene, float deltaTime, std::vector<Chunk*> chunks) {
+    void render_scene(Controller& player, Scene& scene, float deltaTime, std::vector<Chunk*>& chunks) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
-        ourShader.use();
+        our_shader.use();
 
-        ourShader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
-        ourShader.setVec3("viewPos", player.camera.position);
-        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
+        our_shader.setVec3("viewPos", player.camera.position);
+        our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
@@ -172,29 +174,29 @@ public:
         glBindTexture(GL_TEXTURE_2D, texture2);
 
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        ourShader.setMat4("projection", projection);
+        our_shader.setMat4("projection", projection);
         glm::mat4 view = player.camera.get_view_matrix();
-        ourShader.setMat4("view", view);
+        our_shader.setMat4("view", view);
 
         for (Entity entity : scene.entities) {
             glm::mat4 model = entity.get_model_matrix();
-            ourShader.setMat4("model", model);
-            ourShader.setVec3("objectColor", entity.get_color());
-            entity.draw(ourShader);
+            our_shader.setMat4("model", model);
+            our_shader.setVec3("objectColor", entity.get_color());
+            entity.draw(our_shader);
         }
 
-        ourShader.setVec3("lightPos", glm::vec3(0.0f, 100.0f, 0.0f));
-        ourShader.setVec3("viewPos", player.camera.position);
-        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        our_shader.setVec3("lightPos", glm::vec3(0.0f, 100.0f, 0.0f));
+        our_shader.setVec3("viewPos", player.camera.position);
+        our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
         std::vector<int> idxs;
         int i = 0;
         for (Entity& entity : scene.timed_entities) {
             // printf("[BEFORE] %f\n", entity.ttl);
             glm::mat4 model = entity.get_model_matrix();
-            ourShader.setMat4("model", model);
-            ourShader.setVec3("objectColor", glm::vec3(1.0f, 0.0f, 1.0f) * (entity.ttl / entity.max_ttl));
+            our_shader.setMat4("model", model);
+            our_shader.setVec3("objectColor", glm::vec3(1.0f, 0.0f, 1.0f) * (entity.ttl / entity.max_ttl));
             
-            if (!entity.draw(ourShader, deltaTime)) {
+            if (!entity.draw(our_shader, deltaTime)) {
                 // printf("REMOVE!!\n");
                 idxs.push_back(i);
             }
@@ -219,20 +221,29 @@ public:
             }
         } 
 
-        ourShader.setVec3("lightPos", glm::vec3(0.0f, 100.0f, 0.0f));
-        ourShader.setVec3("viewPos", player.camera.position);
-        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        ourShader.setVec3("objectColor", glm::vec3(1.0f, 0.0f, 1.0f));
+        our_shader.setVec3("lightPos", glm::vec3(0.0f, 100.0f, 0.0f));
+        our_shader.setVec3("viewPos", player.camera.position);
+        our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        our_shader.setVec3("objectColor", glm::vec3(1.0f, 0.0f, 1.0f));
         for (Chunk* c : chunks) {
             // printf("drawing chunk\n");
             glm::mat4 model = glm::mat4(1.0f);
             glm::vec2 chunk_pos = c->chunk_pos_world();
             model = glm::translate(model, glm::vec3(chunk_pos.x, -2.0f - translate_height, chunk_pos.y));
-            ourShader.setMat4("model", model);
-            c->draw(ourShader);
+            our_shader.setMat4("model", model);
+            c->draw(our_shader);
         }
 
         // flush(); !!
+    }
+
+    void render_world_geometry(Scene& scene, Controller& player) {
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
+        geometry_shader.setMat4("projection", projection);
+        glm::mat4 view = player.camera.get_view_matrix();
+        geometry_shader.setMat4("view", view);
+
+        scene.render_world_geometry(geometry_shader);
     }
 
     void flush() {
@@ -250,7 +261,7 @@ public:
     GLFWwindow* window;
     int scr_width, scr_height;
 
-    Shader ourShader;
+    Shader our_shader, geometry_shader;
     unsigned int VBO, VAO;
     unsigned int color_location;
     unsigned int texture1, texture2, floorTexture;
