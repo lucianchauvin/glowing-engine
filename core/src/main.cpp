@@ -103,6 +103,9 @@ int main() {
         if (!player.key_toggles[(unsigned) 'r'])
             renderer.render_world_geometry(scene, player);
 
+        // if (player.key_toggles[(unsigned) 'r'])
+        //     renderer.render_world_geometry(scene, player);
+
         // // gui
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

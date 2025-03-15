@@ -240,15 +240,11 @@ public:
 
     void render_world_geometry(Scene& scene, Controller& player) {
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        our_shader.setMat4("projection", projection);
+        geometry_shader.setMat4("projection", projection);
         glm::mat4 view = player.camera.get_view_matrix();
-        our_shader.setMat4("view", view);
+        geometry_shader.setMat4("view", view);
 
-        // our_shader.setVec3("lightPos", glm::vec3(0.0f, 100.0f, 0.0f));
-        // our_shader.setVec3("viewPos", player.camera.position);
-        // our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-
-        scene.render_world_geometry(our_shader);
+        scene.render_world_geometry(geometry_shader);
     }
 
     void flush() {
