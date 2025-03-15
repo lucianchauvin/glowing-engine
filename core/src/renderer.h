@@ -18,6 +18,7 @@
 #include "scene.h"
 #include "controller.h"
 #include "chunk.h"
+#include "general/colors.h"
 
 class Renderer {
 public:
@@ -62,7 +63,7 @@ public:
         }
         // configure global opengl state
         glEnable(GL_DEPTH_TEST);
-        // glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
         // SHADERS
         /*shader manager?*/ // build and compile our shader program
         /*shader manager?*/ if (!std::filesystem::exists("../resources/shaders/vertex.glsl") ||
@@ -77,7 +78,7 @@ public:
         /*shader manager?*/ // or set it via the texture class
         /*shader manager?*/ our_shader.setInt("texture2", 1);
 
-        geometry_shader.init("../resources/shaders/world_geometry_v.glsl", "../resources/shaders/world_geometry_f.glsl");
+        // geometry_shader.init("../resources/shaders/world_geometry_v.glsl", "../resources/shaders/world_geometry_f.glsl");
 
         setup_buffers();
         load_textures();

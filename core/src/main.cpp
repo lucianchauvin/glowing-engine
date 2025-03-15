@@ -34,17 +34,17 @@ int main() {
     Model sphere;
     sphere.load_mesh("../resources/models/bunny.obj");
     
-    // for (int i = 0; i < 10; i++) {
-    //     for (int j = 0; j < 10; j++) {
-    //         for (int k = 0; k < 10; k++) {
-    //             glm::vec3 pos   = glm::vec3(2.0f * i, 2.0f * k + 2, -2.0f * j); 
-    //             glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-    //             glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * k);
-    //             Entity e(&sphere, pos, scale, color);
-    //             scene.include(e);
-    //         }
-    //     }
-    // }
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            for (int k = 0; k < 10; k++) {
+                glm::vec3 pos   = glm::vec3(2.0f * i, 2.0f * k + 2, -2.0f * j); 
+                glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * k);
+                Entity e(&sphere, pos, scale, color);
+                scene.include(e);
+            }
+        }
+    }
 
     // for (int i = 0; i < 10; i++) {
     //     glm::vec3 pos   = glm::vec3(2.0f * i - 5, 2.0f, 0.0f); 
@@ -62,13 +62,13 @@ int main() {
 
     std::vector<Chunk*> chunks = std::vector<Chunk*>();
 
-    for (int x = -2; x < 30; x++) {
-        for (int z = -2; z < 30; z++) {
-            if (x == 0 && z == 0) continue;
-            Chunk* chunk = new Chunk(x, z);
-            chunks.push_back(chunk);
-        }
-    }
+    // for (int x = -2; x < 30; x++) {
+    //     for (int z = -2; z < 30; z++) {
+    //         // if (x == 0 && z == 0) continue;
+    //         Chunk* chunk = new Chunk(x, z);
+    //         chunks.push_back(chunk);
+    //     }
+    // }
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -100,6 +100,8 @@ int main() {
         }
         // render scene
         renderer.render_scene(player, scene, deltaTime, chunks);
+        if (!player.key_toggles[(unsigned) 'r'])
+            renderer.render_world_geometry(scene, player);
 
         // if (player.key_toggles[(unsigned) 'r'])
         //     renderer.render_world_geometry(scene, player);
@@ -116,7 +118,6 @@ int main() {
         ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player.player_physics.velocity.x, player.player_physics.velocity.y, player.player_physics.velocity.z);
         ImGui::Text("On Ground: %s", player.player_physics.isOnGround ? "Yes" : "No");
         ImGui::Text("drawing geom: %s", !player.key_toggles[(unsigned) 'r'] ? "Yes" : "No");
-        
         ImGui::End();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

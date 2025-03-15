@@ -28,6 +28,6 @@ void main() {
     vec4 texColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2);
     
     vec3 result = (ambient + diffuse + specular) * texColor.rgb;
-    FragColor = vec4(result, 1.0);
-    // FragColor = vec4(norm, 1.0);
+    // FragColor = vec4(result, 1.0);
+    FragColor = vec4(norm, 1.0);
 }
