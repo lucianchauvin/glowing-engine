@@ -4,12 +4,18 @@
 #include <vector>
 #include <memory>
 #include "entity.h"
+#include "shader.h"
+#include "world_geometry.h"
 
 class Scene {
 public:
     Scene() {
         entities = std::vector<Entity>();
         timed_entities = std::vector<Entity>();
+
+        world_geometry.add_wall(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 10.0f), 5.0f);
+        world_geometry.add_wall(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(10.0f, 0.0f, 10.0f), 5.0f);
+        world_geometry.setup_buffers();
     }
     ~Scene(){};
 
@@ -40,8 +46,13 @@ public:
         return hits;
     }
 
+    void render_world_geometry(Shader& shady) {
+        world_geometry.draw(shady);
+    }
+
 // private:
     std::vector<Entity> entities;
     std::vector<Entity> timed_entities;
+    World_geometry world_geometry;
 };
 #endif

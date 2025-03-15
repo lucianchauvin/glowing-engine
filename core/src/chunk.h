@@ -134,7 +134,7 @@ public:
     glm::ivec2 chunk_pos_world() const { return glm::ivec2(posX * CHUNK_SIZE_X, posZ * CHUNK_SIZE_Z); }
 
     bool in_chunk(glm::vec3& pos) { return in_chunk (pos.x, pos.z); }
-    bool in_chunk(float world_x, float world_z) const {
+    bool in_chunk(const float world_x, const float world_z) const {
         int chunk_min_x = posX * CHUNK_SIZE_X;
         int chunk_min_z = posZ * CHUNK_SIZE_Z;
         int chunk_max_x = chunk_min_x + CHUNK_SIZE_X;

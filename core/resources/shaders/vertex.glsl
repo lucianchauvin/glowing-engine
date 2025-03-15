@@ -4,8 +4,8 @@ layout (location = 1) in vec2 aTexCoord;
 layout (location = 2) in vec3 aNor; // New: Normal attribute
 
 out vec2 TexCoord;
-out vec3 FragPos;  // New: Position in world space
-out vec3 Normal;   // New: Normal in world space
+out vec3 FragPos;  // position in world space
+out vec3 Normal;   // normal in world space
 
 uniform mat4 model;
 uniform mat4 view;

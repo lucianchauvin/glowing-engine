@@ -101,6 +101,9 @@ int main() {
         // render scene
         renderer.render_scene(player, scene, deltaTime, chunks);
 
+        // if (player.key_toggles[(unsigned) 'r'])
+        //     renderer.render_world_geometry(scene, player);
+
         // // gui
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -112,6 +115,8 @@ int main() {
         ImGui::Text("Facing: (%.1f, %.1f, %.1f)", player.camera.front.x, player.camera.front.y, player.camera.front.z);
         ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player.player_physics.velocity.x, player.player_physics.velocity.y, player.player_physics.velocity.z);
         ImGui::Text("On Ground: %s", player.player_physics.isOnGround ? "Yes" : "No");
+        ImGui::Text("drawing geom: %s", !player.key_toggles[(unsigned) 'r'] ? "Yes" : "No");
+        
         ImGui::End();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
