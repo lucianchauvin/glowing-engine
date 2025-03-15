@@ -229,40 +229,35 @@ private:
     
     void add_faces_if_needed(int x, int y, int z) {
         Block_type blockType = get_block(x, y, z);
-        
-        // Vertex positions for a unit cube centered at origin
         const float vertices[8][3] = {
-            {0.0f, 0.0f, -1.0f},  // 0: bottom-left-back
-            {1.0f, 0.0f, -1.0f},  // 1: bottom-right-back
-            {1.0f, 1.0f, -1.0f},  // 2: top-right-back
-            {0.0f, 1.0f, -1.0f},  // 3: top-left-back
-            {0.0f, 0.0f, 0.0f},   // 4: bottom-left-front
-            {1.0f, 0.0f, 0.0f},   // 5: bottom-right-front
-            {1.0f, 1.0f, 0.0f},   // 6: top-right-front
-            {0.0f, 1.0f, 0.0f},   // 7: top-left-front
+            {0.0f, 0.0f, -1.0f},  // 0: left-bottom-back
+            {1.0f, 0.0f, -1.0f},  // 1: right-bottom-back
+            {1.0f, 1.0f, -1.0f},  // 2: right-top-back
+            {0.0f, 1.0f, -1.0f},  // 3: left-top-back
+            {0.0f, 0.0f, 0.0f},   // 4: left-bottom-front
+            {1.0f, 0.0f, 0.0f},   // 5: right-bottom-front
+            {1.0f, 1.0f, 0.0f},   // 6: right-top-front
+            {0.0f, 1.0f, 0.0f},   // 7: left-top-front
         };
-        
-        // Face indices: each face has 2 triangles, 3 vertices each
+        // Face indices (each face has two triangles)
         const int faces[6][6] = {
-            {3, 2, 6, 3, 6, 7},     // Top face (Y+)
-            {0, 1, 5, 0, 5, 4},     // Bottom face (Y-)
-            {4, 5, 6, 4, 6, 7},     // Front face (Z+)
-            {1, 0, 3, 1, 3, 2},     // Back face (Z-)
-            {0, 4, 7, 0, 7, 3},     // Left face (X-)
-            {5, 1, 2, 5, 2, 6}      // Right face (X+)
+            {3, 2, 6, 3, 6, 7},  // Top (Y+)
+            {0, 1, 5, 0, 5, 4},  // Bottom (Y-)
+            {4, 5, 6, 4, 6, 7},  // Front (Z+)
+            {1, 0, 3, 1, 3, 2},  // Back (Z-)
+            {0, 4, 7, 0, 7, 3},  // Left (X-)
+            {5, 1, 2, 5, 2, 6}   // Right (X+)
         };
-        
-        // Face normals
+        // Normals for each face
         const float normals[6][3] = {
-            {0.0f, 1.0f, 0.0f},     // Top (Y+)
-            {0.0f, -1.0f, 0.0f},    // Bottom (Y-)
-            {0.0f, 0.0f, 1.0f},     // Front (Z+)
-            {0.0f, 0.0f, -1.0f},    // Back (Z-)
-            {-1.0f, 0.0f, 0.0f},    // Left (X-)
-            {1.0f, 0.0f, 0.0f}      // Right (X+)
+            {0.0f, 1.0f, 0.0f},  // Top (Y+)
+            {0.0f, -1.0f, 0.0f}, // Bottom (Y-)
+            {0.0f, 0.0f, 1.0f},  // Front (Z+)
+            {0.0f, 0.0f, -1.0f}, // Back (Z-)
+            {-1.0f, 0.0f, 0.0f}, // Left (X-)
+            {1.0f, 0.0f, 0.0f}   // Right (X+)
         };
-        
-        // Neighboring positions to check for each face
+        // Neighbor positions to check each face for transparency
         const int neighbors[6][3] = {
             {0, 1, 0},   // Top (Y+)
             {0, -1, 0},  // Bottom (Y-)
@@ -272,24 +267,16 @@ private:
             {1, 0, 0}    // Right (X+)
         };
         
-        // Check each face
         for (int face = 0; face < 6; face++) {
             int nx = x + neighbors[face][0];
             int ny = y + neighbors[face][1];
             int nz = z + neighbors[face][2];
-            
-            // If the neighboring block is transparent, add this face
             if (is_transparent(nx, ny, nz)) {
-                // Add vertices, normals, and texture coordinates for this face
                 for (int i = 0; i < 6; i++) {
                     int vertexIndex = faces[face][i];
-                    
-                    // Add vertex position (offset to block position)
-                    posBuf.push_back(vertices[vertexIndex][0] + x + 0.5f);
-                    posBuf.push_back(vertices[vertexIndex][1] + y + 0.5f);
-                    posBuf.push_back(vertices[vertexIndex][2] + z + 0.5f);
-                    
-                    // Add normal
+                    posBuf.push_back(vertices[vertexIndex][0] + x);
+                    posBuf.push_back(vertices[vertexIndex][1] + y);
+                    posBuf.push_back(vertices[vertexIndex][2] + z);
                     norBuf.push_back(normals[face][0]);
                     norBuf.push_back(normals[face][1]);
                     norBuf.push_back(normals[face][2]);

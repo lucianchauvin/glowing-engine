@@ -22,21 +22,14 @@ struct World_quad {
 
 class World_geometry {
 public:
-    World_geometry() : vao_initialized(false) {}
+    World_geometry() = default;
 
     ~World_geometry() {
-        if (vao_initialized) {
-            glDeleteVertexArrays(1, &VAO);
-            glDeleteBuffers(1, &VBO);
-            glDeleteBuffers(1, &EBO);
-        }
+        glDeleteBuffers(1, &posBufID);
+        glDeleteBuffers(1, &norBufID);
+        glDeleteBuffers(1, &texBufID);
     }
 
-    void add_quad(const World_quad& quad) {
-        quads.push_back(quad);
-        is_dirty = true;
-    }
-    
     void add_wall(const glm::vec3& start, const glm::vec3& end, float height, 
                  const glm::vec3& color = color::gray, bool collidable = true) {
         glm::vec3 direction = glm::normalize(end - start);
@@ -52,7 +45,8 @@ public:
         quad.is_collidable = collidable;
         quad.calculate_normal();
         
-        add_quad(quad);
+        quads.push_back(quad);
+        is_dirty = true;
     }
 
     // void getDebugLines(std::vector<std::pair<glm::vec3, glm::vec3>>& lines, 
@@ -71,17 +65,47 @@ public:
     //     }
     // }
     // single pass kachow
-    void draw(Shader& shader) {
+    void draw(Shader& shader) const {
         if (quads.empty()) return;
         
-        if (!vao_initialized || is_dirty) {
-            setup_buffers();
+        // Bind position buffer
+        int h_pos = glGetAttribLocation(shader.ID, "aPos");
+        glEnableVertexAttribArray(h_pos);
+        glBindBuffer(GL_ARRAY_BUFFER, posBufID);
+        glVertexAttribPointer(h_pos, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
+
+        // Bind normal buffer
+        int h_nor = glGetAttribLocation(shader.ID, "aNor");
+        if(h_nor != -1 && norBufID != 0) {
+            glEnableVertexAttribArray(h_nor);
+            glBindBuffer(GL_ARRAY_BUFFER, norBufID);
+            glVertexAttribPointer(h_nor, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
         }
+
+        // Bind texcoords buffer
+        int h_tex = glGetAttribLocation(shader.ID, "aTex");
+        if(h_tex != -1 && texBufID != 0) {
+            glEnableVertexAttribArray(h_tex);
+            glBindBuffer(GL_ARRAY_BUFFER, texBufID);
+            glVertexAttribPointer(h_tex, 2, GL_FLOAT, GL_FALSE, 0, (const void *)0);
+        }
+
         
-        shader.use();
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        shader.setVec3("objectColor", color::white);
+
+        // Draw
+        int count = posBuf.size()/3; // number of indices to be rendered
+        glDrawArrays(GL_TRIANGLES, 0, count);
+
+        // Disable and unbind
+        if(h_tex != -1) {
+            glDisableVertexAttribArray(h_tex);
+        }
+        if(h_nor != -1) {
+            glDisableVertexAttribArray(h_nor);
+        }
+        glDisableVertexAttribArray(h_pos);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     
     // Check collision between a point and all world geometry
@@ -114,65 +138,49 @@ public:
     }
 
     void setup_buffers() {
-        vertex_data.clear();
-        indices.clear();
-        
-        // position (3), normal (3), color (3)
-        for (size_t i = 0; i < quads.size(); i++) {
-            const auto& quad = quads[i];
-            
-            for (int v = 0; v < 4; v++) {
-                vertex_data.push_back(quad.vertices[v].x);
-                vertex_data.push_back(quad.vertices[v].y);
-                vertex_data.push_back(quad.vertices[v].z);
-                vertex_data.push_back(quad.normal.x);
-                vertex_data.push_back(quad.normal.y);
-                vertex_data.push_back(quad.normal.z);
-                vertex_data.push_back(quad.color.r); // could think about per vertex color
-                vertex_data.push_back(quad.color.g);
-                vertex_data.push_back(quad.color.b);
+        posBuf.clear();
+        norBuf.clear();
+        texBuf.clear();
+    
+        for (const auto& quad : quads) {
+            int indices1[] = {0, 1, 2};
+            for (int i : indices1) {
+                posBuf.push_back(quad.vertices[i].x);
+                posBuf.push_back(quad.vertices[i].y);
+                posBuf.push_back(quad.vertices[i].z);
+                norBuf.push_back(quad.normal.x);
+                norBuf.push_back(quad.normal.y);
+                norBuf.push_back(quad.normal.z);
             }
-            
-            // one quad = two triangles
-            unsigned int baseIndex = i * 4;
-            indices.push_back(baseIndex);
-            indices.push_back(baseIndex + 1);
-            indices.push_back(baseIndex + 2);
-            
-            indices.push_back(baseIndex);
-            indices.push_back(baseIndex + 2);
-            indices.push_back(baseIndex + 3);
+    
+            int indices2[] = {0, 2, 3};
+            for (int i : indices2) {
+                posBuf.push_back(quad.vertices[i].x);
+                posBuf.push_back(quad.vertices[i].y);
+                posBuf.push_back(quad.vertices[i].z);
+                norBuf.push_back(quad.normal.x);
+                norBuf.push_back(quad.normal.y);
+                norBuf.push_back(quad.normal.z);
+            }
         }
-        
-        if (!vao_initialized) {
-            glGenVertexArrays(1, &VAO);
-            glGenBuffers(1, &VBO);
-            glGenBuffers(1, &EBO);
-            vao_initialized = true;
+    
+        if (posBufID == 0) glGenBuffers(1, &posBufID);
+        glBindBuffer(GL_ARRAY_BUFFER, posBufID);
+        glBufferData(GL_ARRAY_BUFFER, posBuf.size() * sizeof(float), posBuf.data(), GL_STATIC_DRAW);
+    
+        if (!norBuf.empty()) {
+            if (norBufID == 0) glGenBuffers(1, &norBufID);
+            glBindBuffer(GL_ARRAY_BUFFER, norBufID);
+            glBufferData(GL_ARRAY_BUFFER, norBuf.size() * sizeof(float), norBuf.data(), GL_STATIC_DRAW);
         }
-        
-        glBindVertexArray(VAO);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, vertex_data.size() * sizeof(float), vertex_data.data(), GL_STATIC_DRAW);
-        
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-        
-        // Position attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-        
-        // Normal attribute
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-        
-        // Color attribute
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
-        glEnableVertexAttribArray(2);
-        
-        glBindVertexArray(0);
-        is_dirty = false;
+    
+        if (!texBuf.empty()) {
+            if (texBufID == 0) glGenBuffers(1, &texBufID);
+            glBindBuffer(GL_ARRAY_BUFFER, texBufID);
+            glBufferData(GL_ARRAY_BUFFER, texBuf.size() * sizeof(float), texBuf.data(), GL_STATIC_DRAW);
+        }
+    
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     
     const std::vector<World_quad>& get_quads() const {
@@ -186,10 +194,14 @@ public:
 
 private:
     std::vector<World_quad> quads;
-    std::vector<float> vertex_data;
-    std::vector<unsigned int> indices;
-    unsigned int VAO, VBO, EBO;
-    bool vao_initialized;
+
+    std::vector<float> posBuf;
+    std::vector<float> norBuf;
+    std::vector<float> texBuf;
+    unsigned int posBufID = 0;
+    unsigned int norBufID = 0;
+    unsigned int texBufID = 0;
+
     bool is_dirty = true;
     
     bool point_in_quad(const glm::vec3& point, const World_quad& quad) {

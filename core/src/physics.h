@@ -7,8 +7,8 @@
 const float GRAVITY = 9.8f;
 const float JUMP_FORCE = 5.0f;
 const float FRICTION = 0.937f;
-const float ACCELERATION = 47.0f;
-const float MAX_VELOCITY = 4.3f;
+const float ACCELERATION = 1000.0f;//47.0f;
+const float MAX_VELOCITY = 20.0f;//4.3f;
 const float FLOOR_Y = 0;
 
 struct Collider_3d {

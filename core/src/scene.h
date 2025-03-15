@@ -13,8 +13,8 @@ public:
         entities = std::vector<Entity>();
         timed_entities = std::vector<Entity>();
 
-        world_geometry.add_wall(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 10.0f), 5.0f);
-        world_geometry.add_wall(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(10.0f, 0.0f, 10.0f), 5.0f);
+        world_geometry.add_wall(glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 1.0f), 5.0f);
+        world_geometry.add_wall(glm::vec3(-1.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 1.0f), 2.0f);
         world_geometry.setup_buffers();
     }
     ~Scene(){};
