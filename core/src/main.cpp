@@ -33,6 +33,10 @@ int main() {
     plane.load_mesh("../resources/models/plane.obj");
     Model sphere;
     sphere.load_mesh("../resources/models/bunny.obj");
+
+    Model ak47;
+    ak47.load_mesh("../resources/models/Ak_47/ak47.obj");
+
     
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 10; j++) {
@@ -103,6 +107,7 @@ int main() {
         if (!player.key_toggles[(unsigned) 'r'])
             renderer.render_world_geometry(scene, player);
 
+        renderer.draw_player_holding(player, &ak47);
         // if (player.key_toggles[(unsigned) 'r'])
         //     renderer.render_world_geometry(scene, player);
 

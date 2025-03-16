@@ -15,6 +15,7 @@ public:
 
         world_geometry.add_wall(glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 1.0f), 5.0f);
         world_geometry.add_wall(glm::vec3(-1.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 1.0f), 2.0f);
+        world_geometry.add_wall(glm::vec3(1.0f, 0.0f, -1.0f), glm::vec3(-1.0f, 0.0f, -1.0f), 1.5f);
         world_geometry.setup_buffers();
     }
     ~Scene(){};

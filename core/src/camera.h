@@ -37,6 +37,15 @@ public:
     glm::mat4 get_view_matrix() {
         return glm::lookAt(position, position + front, up);
     }
+    
+    glm::mat4 get_view_rotation_only_matrix() {
+        // We can obtain just the rotation by “looking” from origin (0) to front:
+        //   eye = (0,0,0)
+        //   center = front (the direction we’re “looking”)
+        //   up = up
+        // That yields a matrix that has no translation (camera at origin).
+        return glm::lookAt(glm::vec3(0.0f), front, up);
+    }
     // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
     void process_mouse_movement(float xoffset, float yoffset, GLboolean constrainpitch = true) {
         xoffset *= mouse_sensitivity;

@@ -74,11 +74,13 @@ public:
         /*shader manager?*/ our_shader.init("../resources/shaders/vertex.glsl", "../resources/shaders/fragment.glsl");
         /*shader manager?*/ our_shader.use(); // don't forget to activate/use the shader before setting uniforms!
         /*shader manager?*/ // either set it manually like so:
-        /*shader manager?*/ glUniform1i(glGetUniformLocation(our_shader.ID, "texture1"), 0);
+        /*shader manager?*/ glUniform1i(glGetUniformLocation(our_shader.ID, "texture1"), .5);
         /*shader manager?*/ // or set it via the texture class
-        /*shader manager?*/ our_shader.setInt("texture2", 1);
+        /*shader manager?*/ our_shader.setInt("texture2", .5);
 
-        // geometry_shader.init("../resources/shaders/world_geometry_v.glsl", "../resources/shaders/world_geometry_f.glsl");
+        geometry_shader.init("../resources/shaders/world_geometry_v.glsl", "../resources/shaders/world_geometry_f.glsl");
+        geometry_shader.use();
+        geometry_shader.setInt("texture1", 1);
 
         setup_buffers();
         load_textures();
@@ -115,6 +117,7 @@ public:
             std::cout << "Failed to load texture" << std::endl;
         }
         stbi_image_free(data);
+
         // texture 2
         glGenTextures(1, &texture2);
         glBindTexture(GL_TEXTURE_2D, texture2);
@@ -135,6 +138,7 @@ public:
             std::cout << "Failed to load texture" << std::endl;
         }
         stbi_image_free(data);
+
         // floor texture
         glGenTextures(1, &floorTexture);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
@@ -154,6 +158,26 @@ public:
             std::cout << "Failed to load floor texture, using container texture instead" << std::endl;
             // Fallback to container texture if floor texture is missing
             floorTexture = texture1;
+        }
+        stbi_image_free(data);
+
+        // dev
+        glGenTextures(1, &texture_dev);
+        glBindTexture(GL_TEXTURE_2D, texture_dev); 
+        // set the texture wrapping parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        // set texture filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // load image, create texture and generate mipmaps
+        data = stbi_load("../resources/textures/dev.png", &width, &height, &nrChannels, 0);
+        if (data) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+        else {
+            std::cout << "Failed to load dev texture" << std::endl;
         }
         stbi_image_free(data);
 
@@ -243,9 +267,52 @@ public:
         geometry_shader.setMat4("projection", projection);
         glm::mat4 view = player.camera.get_view_matrix();
         geometry_shader.setMat4("view", view);
+        
+        geometry_shader.setMat4("model", glm::mat4(1.0f));
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, texture_dev);
 
         scene.render_world_geometry(geometry_shader);
     }
+
+    void draw_player_holding(Controller& player, Model* heldModel) {
+        // (A) Early-out if there's no item
+        if (!heldModel) return;
+    
+        // (B) Disable depth test so the item never clips or hides behind walls
+        glDisable(GL_DEPTH_TEST);
+    
+        // (C) Use the same shader (or a specialized one) 
+        our_shader.use();
+    
+        // (D) Use the same projection you normally would, or you can tweak FOV for the weapon
+        // 1) Projection
+        glm::mat4 projection = glm::perspective(
+            glm::radians(player.camera.zoom),
+            (float)scr_width / (float)scr_height,
+            0.1f,
+            300.0f
+        );
+        our_shader.setMat4("projection", projection);
+
+        // 2) Get only the camera’s rotation (ignore position)
+        glm::mat4 rotationOnlyView = player.camera.get_view_rotation_only_matrix();
+        our_shader.setMat4("view", rotationOnlyView);
+
+        // 3) Build a small transform so it appears in front of the camera
+        glm::mat4 model(1.0f);
+        model = glm::translate(model, glm::vec3(0.7f, -0.4f, -1.0f)); // tune offsets
+        model = glm::scale(model, glm::vec3(0.4f));
+        our_shader.setMat4("model", model);
+
+        // 4) Draw your “held item” model
+        heldModel->draw(our_shader);
+
+        glEnable(GL_DEPTH_TEST); // re-enable for future draws
+    }
+    
+    
 
     void flush() {
         glfwSwapBuffers(window);
@@ -265,7 +332,7 @@ public:
     Shader our_shader, geometry_shader;
     unsigned int VBO, VAO;
     unsigned int color_location;
-    unsigned int texture1, texture2, floorTexture;
+    unsigned int texture1, texture2, floorTexture, texture_dev;
 
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
         glViewport(0, 0, width, height);
