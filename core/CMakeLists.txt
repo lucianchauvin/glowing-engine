@@ -10,16 +10,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add GLFW (modify path to your built GLFW folder)
 add_subdirectory(ext/glfw-3.4)
 
-# glfw includes + other includes
+# glfw includes + other includes (headers)
 include_directories(
-    ext/glfw-3.4/include
     ext
-    src/
+    ext/glfw-3.4/include
+    ext/assimp/include
+    src
+    src/general
 )
 
 set(SOURCES
     src/main.cpp
-    
+    src/scene.cpp
+    src/entity.cpp
+    src/physics.cpp
+    src/model.cpp
+
     ext/glad/glad.c
     ext/dearimgui/imgui.cpp
     ext/dearimgui/imgui_draw.cpp
@@ -31,5 +37,4 @@ set(SOURCES
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-# link glfw
 target_link_libraries(${PROJECT_NAME} glfw ${GLFW_LIBRARIES})

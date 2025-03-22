@@ -102,7 +102,7 @@ public:
             if (hits != 0) {
                 glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
                 glm::vec3 color = glm::vec3(0.0, 0.0f, 0.0f);
-                Entity e(model, hit_pos, scale, color, true, 0.2f);
+                Entity e(model, hit_pos, true, scale, color, true, 5.2f);
                 scene.include(e);
             }
         }

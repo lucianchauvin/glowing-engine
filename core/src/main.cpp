@@ -7,11 +7,12 @@
 #include <vector>
 
 #include "renderer.h"
-#include <controller.h>
-#include <shader.h>
-#include <entity.h>
-#include <scene.h>
-#include <chunk.h>
+#include "controller.h"
+#include "shader.h"
+#include "entity.h"
+#include "scene.h"
+#include "chunk.h"
+#include "physics.h"
 
 // settings
 const unsigned int SCR_WIDTH = 1600;
@@ -38,15 +39,15 @@ int main() {
     ak47.load_mesh("../resources/models/Ak_47/ak47.obj");
 
     
-    for (int i = 0; i < 10; i++) {
+    for (int i = -5; i < 5; i++) {
         for (int j = 0; j < 10; j++) {
-            for (int k = 0; k < 10; k++) {
-                glm::vec3 pos   = glm::vec3(2.0f * i, 2.0f * k + 2, -2.0f * j); 
+            // for (int k = 0; k < 10; k++) {
+                glm::vec3 pos   = glm::vec3(2.0f * i, j * 1.0f, -2.0f * j); 
                 glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * k);
-                Entity e(&sphere, pos, scale, color);
+                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f);
+                Entity e(&sphere, pos, true, scale, color);
                 scene.include(e);
-            }
+            // }
         }
     }
 
@@ -59,30 +60,28 @@ int main() {
     // }
 
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
-    glm::vec3 scale = glm::vec3(10.0f, 1.0f, 10.0f);
+    glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 color = glm::vec3(0.7f, 0.7f, 0.7f);
-    Entity e(&plane, pos, scale, color);
+    Entity e(&plane, pos, false, scale, color);
     scene.include(e);
 
     std::vector<Chunk*> chunks = std::vector<Chunk*>();
 
-    // for (int x = -2; x < 30; x++) {
-    //     for (int z = -2; z < 30; z++) {
-    //         // if (x == 0 && z == 0) continue;
-    //         Chunk* chunk = new Chunk(x, z);
-    //         chunks.push_back(chunk);
-    //     }
-    // }
+    for (int x = -2; x < 30; x++) {
+        for (int z = -2; z < 30; z++) {
+            // if (x == 0 && z == 0) continue;
+            Chunk* chunk = new Chunk(x, z);
+            chunks.push_back(chunk);
+        }
+    }
 
+    Physics physics;
+    physics.load_scene(scene);
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
-    // setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(renderer.window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplGlfw_InitForOpenGL(renderer.window, true); // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     ImGui_ImplOpenGL3_Init();
 
     // render loop
@@ -97,11 +96,13 @@ int main() {
         player.process_input(renderer.window, deltaTime, scene, &sphere);
         // update player physics
         player.update_player_physics(deltaTime);
-        
         if (player.player_physics.dashing) {
-            Entity e(&sphere, player.player_physics.player_position, glm::vec3(0.1f), glm::vec3(0.0f, 0.3f, 0.2f), true, 1.0f);
+            Entity e(&sphere, player.player_physics.player_position, true, glm::vec3(0.1f), glm::vec3(0.0f, 0.3f, 0.2f), true, 5.0f);
             scene.include(e);
         }
+
+        physics.step(deltaTime);
+
         // render scene
         renderer.render_scene(player, scene, deltaTime, chunks);
         if (!player.key_toggles[(unsigned) 'r'])
