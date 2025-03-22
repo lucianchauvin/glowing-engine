@@ -1,18 +1,32 @@
 #version 330 core
-in vec3 Normal;
-in vec3 Color; // Incoming color
-
 out vec4 FragColor;
 
-uniform vec3 lightDir = normalize(vec3(1.0, -1.0, -1.0)); // Directional light
-uniform vec3 lightColor = vec3(1.0); // White light
+in vec2 TexCoord;
+in vec3 FragPos;
+in vec3 Normal;
 
-void main()
-{
-    float diff = max(dot(normalize(Normal), -lightDir), 0.0);
-    vec3 lighting = diff * lightColor; // Basic diffuse lighting
-    vec3 finalColor = Color * lighting; // Apply lighting to color
+uniform vec3 lightPos;
+uniform vec3 viewPos;
+uniform vec3 lightColor;
+uniform vec3 objectColor;
 
-    // FragColor = vec4(finalColor, 1.0);
-    FragColor = vec4(finalColor, 1.0);
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+
+void main() {
+    // vec3 norm = normalize(Normal);
+    // vec3 lightDir = normalize(lightPos - FragPos);
+    // float diff = max(dot(norm, lightDir), 0.0);
+    // vec3 viewDir = normalize(viewPos - FragPos);
+    // vec3 reflectDir = reflect(-lightDir, norm);
+    // float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+
+    // vec3 ambient = objectColor;
+    // vec3 diffuse = diff * lightColor;
+    // vec3 specular = spec * lightColor;
+
+    // vec4 texColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2);
+    vec4 texColor = texture(texture1, TexCoord);
+    
+    FragColor = vec4(texColor.rgb, 1.0);
 }
