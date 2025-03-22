@@ -277,17 +277,13 @@ public:
     }
 
     void draw_player_holding(Controller& player, Model* heldModel) {
-        // (A) Early-out if there's no item
+        return ;
         if (!heldModel) return;
     
-        // (B) Disable depth test so the item never clips or hides behind walls
         glDisable(GL_DEPTH_TEST);
     
-        // (C) Use the same shader (or a specialized one) 
         our_shader.use();
     
-        // (D) Use the same projection you normally would, or you can tweak FOV for the weapon
-        // 1) Projection
         glm::mat4 projection = glm::perspective(
             glm::radians(player.camera.zoom),
             (float)scr_width / (float)scr_height,

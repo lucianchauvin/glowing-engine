@@ -4,12 +4,14 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-const float GRAVITY = 9.8f;
-const float JUMP_FORCE = 5.0f;
-const float FRICTION = 0.937f;
-const float ACCELERATION = 1000.0f;//47.0f;
-const float MAX_VELOCITY = 20.0f;//4.3f;
-const float FLOOR_Y = 0;
+class Scene;
+
+inline constexpr float GRAVITY       = 9.8f;
+inline constexpr float JUMP_FORCE    = 5.0f;
+inline constexpr float FRICTION      = 0.937f;
+inline constexpr float ACCELERATION  = 1000.0f; //47.0f
+inline constexpr float MAX_VELOCITY  = 20.0f;   //4.3f
+inline constexpr float FLOOR_Y       = 0.0f;
 
 struct Collider_3d {
     glm::vec3 pos;
@@ -18,50 +20,28 @@ struct Collider_3d {
     Collider_3d(glm::vec3 position, float r) : pos(position), radius(r) {}
 };
 
-struct PhysicsObject {
+struct Physics_object {
     glm::vec3 position;
     glm::vec3 velocity;
     bool isOnGround;
+    bool enabled; // todo implement
     
     Collider_3d collider;
 
-    PhysicsObject(glm::vec3 pos, float colliderRadius) : 
-    position(pos), velocity(0.0f), isOnGround(false), collider(pos, colliderRadius) {
-    }
+    Physics_object(glm::vec3 pos, float colliderRadius, bool physics_on) 
+        : position(pos),
+          velocity(0.0f),
+          isOnGround(false),
+          collider(pos, colliderRadius),
+          enabled(physics_on) {}
 };
 
 class Physics {
 public:
-    std::vector<PhysicsObject> objects;
+    std::vector<Physics_object*> objects;
 
-    void addObject(const PhysicsObject& obj) {
-        objects.push_back(obj);
-    }
-
-    void step(float deltaTime) {
-        for (auto& obj : objects) {
-            if (!obj.isOnGround) {
-                obj.velocity.y -= GRAVITY * deltaTime;  // Apply gravity
-            }
-
-            obj.velocity *= FRICTION;  // Apply friction
-
-            // Limit velocity
-            if (glm::length(obj.velocity) > MAX_VELOCITY) {
-                obj.velocity = glm::normalize(obj.velocity) * MAX_VELOCITY;
-            }
-
-            obj.position += obj.velocity * deltaTime;  // Update position
-
-            // Floor collision check
-            if (obj.position.y <= FLOOR_Y) {
-                obj.isOnGround = true;
-                obj.velocity.y = 0;
-                obj.position.y = FLOOR_Y;  // Snap to floor
-            } else {
-                obj.isOnGround = false;
-            }
-        }
-    }
+    void add_object(Physics_object* obj);
+    void load_scene(Scene& scene);
+    void step(float deltaTime);
 };
 #endif
