@@ -21,7 +21,7 @@ public:
 
     void load_mesh(const std::string &meshName);
     void init();
-    void draw(Shader shader) const;
+    void draw(Shader& shader) const;
 
 private:
     // Buffers with vertex data
@@ -33,5 +33,7 @@ private:
     unsigned int posBufID = 0;
     unsigned int norBufID = 0;
     unsigned int texBufID = 0;
+    unsigned int vaoID;
+    int numVerts;
 };
 #endif

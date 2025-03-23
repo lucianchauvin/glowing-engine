@@ -9,8 +9,10 @@ class Scene;
 inline constexpr float GRAVITY       = 9.8f;
 inline constexpr float JUMP_FORCE    = 5.0f;
 inline constexpr float FRICTION      = 0.937f;
-inline constexpr float ACCELERATION  = 1000.0f; //47.0f
-inline constexpr float MAX_VELOCITY  = 20.0f;   //4.3f
+// inline constexpr float ACCELERATION  = 1000.0f; //47.0f
+inline constexpr float ACCELERATION  = 47.0f;
+// inline constexpr float MAX_VELOCITY  = 20.0f;   //4.3f
+inline constexpr float MAX_VELOCITY  = 4.3f;
 inline constexpr float FLOOR_Y       = 0.0f;
 
 struct Collider_3d {

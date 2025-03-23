@@ -1,3 +1,11 @@
+#ifndef MESH_H
+#define MESH_H
+
+#include <vector>
+#include <string>
+
+#include "shader.h"
+
 struct Vertex {
     glm::vec3 Position;
     glm::vec3 Normal;
@@ -6,19 +14,21 @@ struct Vertex {
 
 struct Texture {
     unsigned int id;
-    string type;
+    std::string type;
+    std::string path;  // we store the path of the texture to compare with other textures
 };  
 
 class Mesh {
     public:
-        vector<Vertex>       vertices;
-        vector<unsigned int> indices;
-        vector<Texture>      textures;
+        std::vector<Vertex>       vertices;
+        std::vector<unsigned int> indices;
+        std::vector<Texture>      textures;
 
-        Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures);
-        void Draw(Shader &shader);
+        Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
+        void draw(Shader &shader);
     private:
         unsigned int VAO, VBO, EBO;
 
-        void setupMesh();
-};  
+        void setup_mesh();
+};
+#endif

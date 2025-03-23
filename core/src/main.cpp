@@ -13,6 +13,8 @@
 #include "scene.h"
 #include "chunk.h"
 #include "physics.h"
+#include "model.h"
+#include "model_ass.h"
 
 // settings
 const unsigned int SCR_WIDTH = 1600;
@@ -38,18 +40,26 @@ int main() {
     Model ak47;
     ak47.load_mesh("../resources/models/Ak_47/ak47.obj");
 
-    
-    for (int i = -5; i < 5; i++) {
-        for (int j = 0; j < 10; j++) {
-            // for (int k = 0; k < 10; k++) {
-                glm::vec3 pos   = glm::vec3(2.0f * i, j * 1.0f, -2.0f * j); 
-                glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f);
-                Entity e(&sphere, pos, true, scale, color);
-                scene.include(e);
-            // }
-        }
-    }
+    // Model_ass model_ass("../resources/models/sword/scene.gltf");
+    // Model_ass model_ass("../resources/models/gun/scene.gltf");
+    // Model_ass model_ass("../resources/models/grn_sword/scene.gltf");
+    // Model_ass model_ass("../resources/models/arms/scene.gltf");
+    // Model_ass model_ass("../resources/models/qbz/qbz.obj");
+    // Model_ass model_ass("../resources/models/shield/scene.obj");
+    Model_ass model_ass("../resources/models/backpack/backpack.obj");
+    // Model_ass model_ass("../resources/models/hogwarts/Hogwarts.obj");
+
+    // for (int i = -5; i < 5; i++) {
+    //     for (int j = 0; j < 10; j++) {
+    //         // for (int k = 0; k < 10; k++) {
+    //             glm::vec3 pos   = glm::vec3(2.0f * i, j * 1.0f, -2.0f * j); 
+    //             glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    //             glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f);
+    //             Entity e(&sphere, pos, true, scale, color);
+    //             scene.include(e);
+    //         // }
+    //     }
+    // }
 
     // for (int i = 0; i < 10; i++) {
     //     glm::vec3 pos   = glm::vec3(2.0f * i - 5, 2.0f, 0.0f); 
@@ -67,13 +77,13 @@ int main() {
 
     std::vector<Chunk*> chunks = std::vector<Chunk*>();
 
-    for (int x = -2; x < 30; x++) {
-        for (int z = -2; z < 30; z++) {
-            // if (x == 0 && z == 0) continue;
-            Chunk* chunk = new Chunk(x, z);
-            chunks.push_back(chunk);
-        }
-    }
+    // for (int x = -2; x < 30; x++) {
+    //     for (int z = -2; z < 30; z++) {
+    //         // if (x == 0 && z == 0) continue;
+    //         Chunk* chunk = new Chunk(x, z);
+    //         chunks.push_back(chunk);
+    //     }
+    // }
 
     Physics physics;
     physics.load_scene(scene);
@@ -107,10 +117,7 @@ int main() {
 
         physics.step(deltaTime);
 
-        // render scene
-        renderer.render_scene(player, scene, deltaTime, chunks);
-        if (!player.key_toggles[(unsigned) 'r'])
-            renderer.render_world_geometry(scene, player);
+        renderer.render_ass(player, model_ass);
 
         renderer.draw_player_holding(player, &ak47);
         // if (player.key_toggles[(unsigned) 'r'])

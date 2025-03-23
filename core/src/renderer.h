@@ -19,6 +19,7 @@
 #include "controller.h"
 #include "chunk.h"
 #include "general/colors.h"
+#include "model_ass.h"
 
 class Renderer {
 public:
@@ -306,7 +307,25 @@ public:
         glEnable(GL_DEPTH_TEST); // re-enable for future draws
     }
     
-    
+    void render_ass(Controller& player, Model_ass& model_ass) {
+
+        our_shader.use();
+        our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
+        our_shader.setVec3("viewPos", player.camera.position);
+        our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
+        our_shader.setMat4("projection", projection);
+        glm::mat4 view = player.camera.get_view_matrix();
+        our_shader.setMat4("view", view);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 1.0f, -2.0f));
+        our_shader.setMat4("model", model);
+
+        our_shader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        model_ass.draw(our_shader);
+    }
 
     void flush() {
         glfwSwapBuffers(window);
@@ -332,5 +351,4 @@ public:
         glViewport(0, 0, width, height);
     }
 };
-
 #endif

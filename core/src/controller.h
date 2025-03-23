@@ -13,6 +13,7 @@ public:
     float lastX = 0.0f;
     float lastY = 0.0f;
     bool toggle_mouse_lock = true;
+    bool crouched = false;
     bool is_third_person = false;
     const float THIRD_PERSON_DISTANCE = 5.0f;
     // player physics state
@@ -86,6 +87,8 @@ public:
         } else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) {
             key_toggles[GLFW_KEY_TAB] = false;
         }
+
+        crouched = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
 
         if (key_toggles[(unsigned) 't']) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -187,9 +190,15 @@ public:
             camera.position = player_physics.player_position + offset;
             camera.position.y += 1.0f; // camera slightly above player head
         } else {
-            // first person: camera is at player position
-            camera.position = player_physics.player_position;
-            camera.position.y += PLAYER_HEIGHT;
+            if (crouched) {
+                // first person: camera is at player position
+                camera.position = player_physics.player_position;
+                camera.position.y += PLAYER_HEIGHT / 2.0f;
+            } else {
+                // first person: camera is at player position
+                camera.position = player_physics.player_position;
+                camera.position.y += PLAYER_HEIGHT;
+            }
         }
     }
 };

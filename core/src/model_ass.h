@@ -1,17 +1,34 @@
+#ifndef MODEL_ASS_H
+#define MODEL_ASS_H
+
+#include <vector>
+#include <string>
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+#include "mesh.h"
+#include "shader.h"
+
 class Model_ass {
     public:
-        Model_ass(char *path) {
-            load_model(path);
+        Model_ass(const std::string &meshName) {
+            load_model(meshName);
         }
         void draw(Shader &shader);	
+
     private:
         // model data
-        vector<Mesh> meshes;
-        string directory;
+        std::vector<Texture> textures_loaded;
+        std::vector<Mesh> meshes;
+        std::string directory;
+        bool gammaCorrection;
 
-        void load_model(string path);
+        void load_model(const std::string &meshName);
         void process_node(aiNode *node, const aiScene *scene);
         Mesh process_mesh(aiMesh *mesh, const aiScene *scene);
-        vector<Texture> load_material_textures(aiMaterial *mat, aiTextureType type, 
-                                             string typeName);
+        std::vector<Texture> load_material_textures(aiMaterial *mat, aiTextureType type, std::string typeName);
+        unsigned int texutre_from_file(const char *path, const std::string &directory, bool gamma);
 };
+#endif
