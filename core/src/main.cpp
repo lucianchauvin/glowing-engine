@@ -24,6 +24,15 @@ const unsigned int SCR_HEIGHT = 800;
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
+float waveAmplitude = 0.03f;
+float waveFrequency = 5.0f;
+float waveSpeed = 2.0f;
+
+glm::vec3 clr = glm::vec3(0.0f, 0.4f, 0.0f);
+glm::vec3 emis = glm::vec3(0.0f);
+glm::vec3 fres = glm::vec3(0.0f, 0.0f, 0.0f);
+float expon = 1.0f;
+
 int main() {
     Controller player;
     Renderer renderer;
@@ -37,16 +46,17 @@ int main() {
     Model sphere;
     sphere.load_mesh("../resources/models/bunny.obj");
 
-    Model ak47;
-    ak47.load_mesh("../resources/models/Ak_47/ak47.obj");
+    // Model ak47;
+    // ak47.load_mesh("../resources/models/Ak_47/ak47.obj");
 
     // Model_ass model_ass("../resources/models/sword/scene.gltf");
     // Model_ass model_ass("../resources/models/gun/scene.gltf");
     // Model_ass model_ass("../resources/models/grn_sword/scene.gltf");
     // Model_ass model_ass("../resources/models/arms/scene.gltf");
-    // Model_ass model_ass("../resources/models/qbz/qbz.obj");
     // Model_ass model_ass("../resources/models/shield/scene.obj");
-    Model_ass model_ass("../resources/models/backpack/backpack.obj");
+    // Model_ass model_ass("../resources/models/backpack/backpack.obj");
+    Model_ass holding("../resources/models/qbz/qbz.obj");
+    Model_ass model_ass("../resources/models/ebonchill/scene.gltf");
     // Model_ass model_ass("../resources/models/hogwarts/Hogwarts.obj");
 
     // for (int i = -5; i < 5; i++) {
@@ -107,7 +117,7 @@ int main() {
         // update player physics
         player.update_player_physics(deltaTime);
         if (player.player_physics.dashing) {
-            Entity e(&sphere, player.player_physics.player_position, true, glm::vec3(0.1f), glm::vec3(0.0f, 0.3f, 0.2f), true, 5.0f);
+            Entity e(&sphere, player.player_physics.position, true, glm::vec3(0.1f), glm::vec3(0.0f, 0.3f, 0.2f), true, 5.0f);
             scene.include(e);
         }
         // render scene
@@ -118,8 +128,8 @@ int main() {
         physics.step(deltaTime);
 
         renderer.render_ass(player, model_ass);
-
-        renderer.draw_player_holding(player, &ak47);
+        renderer.draw_player_holding(player, holding, clr, emis, fres, expon);
+        
         // if (player.key_toggles[(unsigned) 'r'])
         //     renderer.render_world_geometry(scene, player);
 
@@ -129,12 +139,25 @@ int main() {
         ImGui::NewFrame();        
         ImGui::Begin("Controls");
         ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
-        ImGui::Text("Position: (%.1f, %.1f, %.1f)", player.player_physics.player_position.x, player.player_physics.player_position.y, player.player_physics.player_position.z);
+        ImGui::Text("Position: (%.1f, %.1f, %.1f)", player.player_physics.position.x, player.player_physics.position.y, player.player_physics.position.z);
         ImGui::Text("Camera Position: (%.1f, %.1f, %.1f)", player.camera.position.x, player.camera.position.y, player.camera.position.z);
         ImGui::Text("Facing: (%.1f, %.1f, %.1f)", player.camera.front.x, player.camera.front.y, player.camera.front.z);
         ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player.player_physics.velocity.x, player.player_physics.velocity.y, player.player_physics.velocity.z);
         ImGui::Text("On Ground: %s", player.player_physics.isOnGround ? "Yes" : "No");
         ImGui::Text("drawing geom: %s", !player.key_toggles[(unsigned) 'r'] ? "Yes" : "No");
+        // glm::vec3 wep_pos(0.0f, 0.0f, 0.0f);
+        // glm::vec3 wep_rot(0.0f, 0.0f, 0.0f);
+    //     ImGui::SliderFloat3("wep offset", &player.wep_pos.x, -1.0f, 3.0f);
+    //     ImGui::SliderFloat3("wep rot", &player.wep_rot.x, -90.0f, 90.0f);'
+        ImGui::SliderFloat("waveAmplitude", &waveAmplitude, -10.0, 10.0f); // 0.03f;
+        ImGui::SliderFloat("waveFrequency", &waveFrequency, -10.0, 10.0f); // 5.0f;
+        ImGui::SliderFloat("waveSpeed", &waveSpeed, -10.0, 10.0f); // 2.0f;
+        
+        // ImGui::SliderFloat("fresnelPower", &fresnelPower, -10.0, 10.0f); // 3.0f;
+        ImGui::SliderFloat3("color", &clr.x, 0.0f, 1.0f);
+        ImGui::SliderFloat3("emis", &emis.x, 0.0f, 1.0f); // 1.0f;     
+        ImGui::SliderFloat3("fresclr", &fres.x, 0.0, 1.0f); // 1.0f;     
+        ImGui::SliderFloat("exp", &expon, -5.0, 25.0f); // 1.0f;        
         ImGui::End();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

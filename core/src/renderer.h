@@ -83,6 +83,10 @@ public:
         geometry_shader.use();
         geometry_shader.setInt("texture1", 1);
 
+        weapon_shader.init("../resources/shaders/weapon_v.glsl", "../resources/shaders/weapon_f.glsl");
+        // weapon_shader2.init("../resources/shaders/weapon2_v.glsl", "../resources/shaders/weapon2_f.glsl");
+        weapon_shader2.init("../resources/shaders/fres_v.glsl", "../resources/shaders/fres_f.glsl");
+
         setup_buffers();
         load_textures();
         return true;
@@ -236,8 +240,8 @@ public:
         // chunkj stuff
         float translate_height = 0.0f;
         for (Chunk* c : chunks) {
-            if (c->in_chunk(player.player_physics.player_position)) {
-                translate_height = c->height_at(player.player_physics.player_position);
+            if (c->in_chunk(player.player_physics.position)) {
+                translate_height = c->height_at(player.player_physics.position);
                 glm::ivec2 xz = c->chunk_pos_chunk();
                 printf("player in chunk: [%d, %d]\n", xz.x, xz.y);
                 printf("height: [%f]", translate_height);
@@ -275,36 +279,55 @@ public:
         scene.render_world_geometry(geometry_shader);
     }
 
-    void draw_player_holding(Controller& player, Model* heldModel) {
-        return ;
-        if (!heldModel) return;
-    
+    void draw_player_holding(Controller& player, Model_ass& wep, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon) {
         glDisable(GL_DEPTH_TEST);
-    
-        our_shader.use();
-    
+        weapon_shader2.use();
+        
+        // 3. Projection: same as main scene or you can tweak FOV
         glm::mat4 projection = glm::perspective(
             glm::radians(player.camera.zoom),
             (float)scr_width / (float)scr_height,
-            0.1f,
-            300.0f
+            0.1f, // near
+            300.0f // far
         );
-        our_shader.setMat4("projection", projection);
+        weapon_shader2.setMat4("projection", projection);
+        
+        glm::mat4 fullView = player.camera.get_view_matrix();
+        glm::mat4 rotationOnlyView = glm::mat4(glm::mat3(fullView));
+        weapon_shader2.setMat4("view", rotationOnlyView);
+        
+        glm::mat4 model = glm::mat4(1.0f);
+        
+        model = glm::rotate(model, -glm::radians(player.camera.yaw - 90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, -glm::radians(player.camera.pitch), glm::vec3(1.0f, 0.0f, 0.0f));
+        
+        model = glm::translate(model, player.wep_pos);
+        
+        weapon_shader2.setMat4("model", model);
+        weapon_shader2.setVec3("viewPos", player.camera.position);
 
-        // 2) Get only the camera’s rotation (ignore position)
-        glm::mat4 rotationOnlyView = player.camera.get_view_rotation_only_matrix();
-        our_shader.setMat4("view", rotationOnlyView);
 
-        // 3) Build a small transform so it appears in front of the camera
-        glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(0.7f, -0.4f, -1.0f)); // tune offsets
-        model = glm::scale(model, glm::vec3(0.4f));
-        our_shader.setMat4("model", model);
+        // weapon_shader2.setVec3("lightPos", glm::vec3(5.0f, 5.0f, 5.0f));
+        float timeValue = glfwGetTime();
+        // weapon_shader2.setFloat("time", timeValue);
 
-        // 4) Draw your “held item” model
-        heldModel->draw(our_shader);
+        // // d) Wave settings
+        // weapon_shader2.setFloat("time", timeValue);
+        // weapon_shader2.setFloat("waveAmplitude", amp);
+        // weapon_shader2.setFloat("waveFrequency", frq);
+        // weapon_shader2.setFloat("waveSpeed", spd);
 
-        glEnable(GL_DEPTH_TEST); // re-enable for future draws
+        // f) Base color & camera position
+        weapon_shader2.setVec3("uColor", clr);
+        // emiss 
+        // sparkle
+        weapon_shader2.setVec3("uEmission", emis_clr); // e.g. (0, 0.6, 1.0)
+        weapon_shader2.setVec3("uFresnelColor", fres_clr);    // _Emission
+        weapon_shader2.setFloat("uFresnelExponent", expon); // _FresnelExponent
+
+        wep.draw(weapon_shader2);
+        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
     }
     
     void render_ass(Controller& player, Model_ass& model_ass) {
@@ -342,7 +365,7 @@ public:
     GLFWwindow* window;
     int scr_width, scr_height;
 
-    Shader our_shader, geometry_shader;
+    Shader our_shader, geometry_shader, weapon_shader, weapon_shader2;
     unsigned int VBO, VAO;
     unsigned int color_location;
     unsigned int texture1, texture2, floorTexture, texture_dev;

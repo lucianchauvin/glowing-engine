@@ -3,6 +3,7 @@
 
 #include <camera.h>
 #include <scene.h>
+#include <model_ass.h>
 
 class Controller {
 // private:
@@ -16,17 +17,25 @@ public:
     bool crouched = false;
     bool is_third_person = false;
     const float THIRD_PERSON_DISTANCE = 5.0f;
+
+    // Model_ass wep;
+    glm::vec3 wep_pos = glm::vec3(-0.2f, -0.1f, 0.5f);
+    glm::vec3 min_pos = glm::vec3(-0.2f, -0.1f, 0.5f);
+    glm::vec3 ads_pos = glm::vec3(-0.0001f, -.07f, 0.25f);
+    glm::vec3 wep_rot = glm::vec3(0.0f);
+    int holding = 0;
+
     // player physics state
     struct player_physics {
         glm::vec3 velocity = glm::vec3(0.0f);
-        glm::vec3 player_position = glm::vec3(0.0f, 5.0f, 0.0f);
+        glm::vec3 position = glm::vec3(0.0f, 5.0f, 0.0f);
         bool isOnGround = false;
         bool isJumping = false;
         bool dashing = false;
     } player_physics;
     bool key_toggles[256] = {false};
 
-    Controller() : camera(glm::vec3(0.0f, player_physics.player_position.y + PLAYER_HEIGHT, 0.0f)) {}
+    Controller() : camera(glm::vec3(0.0f, player_physics.position.y + PLAYER_HEIGHT, 0.0f)) {}
 
     void char_callback_impl(GLFWwindow *window, unsigned int key) {
         key_toggles[key] = !key_toggles[key];
@@ -87,6 +96,10 @@ public:
         } else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) {
             key_toggles[GLFW_KEY_TAB] = false;
         }
+
+        // ads
+        glm::vec3 target_pos = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? ads_pos : min_pos;
+        wep_pos = glm::mix(wep_pos, target_pos, deltaTime * 10.0f);
 
         crouched = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
 
@@ -170,14 +183,14 @@ public:
         }
         
         // move player
-        player_physics.player_position += player_physics.velocity * deltaTime;
+        player_physics.position += player_physics.velocity * deltaTime;
         
         // check floor collision
-        bool floor_collision = check_floor_collision(player_physics.player_position);
+        bool floor_collision = check_floor_collision(player_physics.position);
         if (floor_collision) {
             player_physics.isOnGround = true;
             player_physics.velocity.y = 0.0f;
-            player_physics.player_position.y = FLOOR_Y; // snap to floor
+            player_physics.position.y = FLOOR_Y; // snap to floor
             player_physics.isJumping = false;
         } else {
             player_physics.isOnGround = false;
@@ -187,16 +200,16 @@ public:
         if (is_third_person) {
             // third person: position camera behind player
             glm::vec3 offset = -camera.front * THIRD_PERSON_DISTANCE;
-            camera.position = player_physics.player_position + offset;
+            camera.position = player_physics.position + offset;
             camera.position.y += 1.0f; // camera slightly above player head
         } else {
             if (crouched) {
                 // first person: camera is at player position
-                camera.position = player_physics.player_position;
+                camera.position = player_physics.position;
                 camera.position.y += PLAYER_HEIGHT / 2.0f;
             } else {
                 // first person: camera is at player position
-                camera.position = player_physics.player_position;
+                camera.position = player_physics.position;
                 camera.position.y += PLAYER_HEIGHT;
             }
         }
