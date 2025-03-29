@@ -26,9 +26,8 @@ struct Physics_object {
     glm::vec3 position;
     glm::vec3 velocity;
     bool isOnGround;
-    bool enabled; // todo implement
-    
     Collider_3d collider;
+    bool enabled; // todo implement
 
     Physics_object(glm::vec3 pos, float colliderRadius, bool physics_on) 
         : position(pos),

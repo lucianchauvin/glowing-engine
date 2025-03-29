@@ -3,10 +3,20 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-Entity::Entity(Model* model, glm::vec3 position, bool physics_enabled, glm::vec3 scale, glm::vec3 color,
-               bool fade, float ttl, float max_ttl, float collider_radius
-)   : model(model), physics(position, collider_radius, physics_enabled), scale(scale), color(color),
-      fade(fade), ttl(ttl), max_ttl(max_ttl), position(position), rotation(glm::vec3(0.0f))
+Entity::Entity(
+    Model* model, 
+    glm::vec3 position, 
+    bool physics_enabled, 
+    glm::vec3 scale, 
+    glm::vec3 color,
+    bool fade, float ttl, float max_ttl, float collider_radius
+) : 
+    model(model),
+    position(position), 
+    scale(scale), color(color),
+    fade(fade), ttl(ttl), max_ttl(max_ttl), 
+    rotation(glm::vec3(0.0f)),
+    physics(position, collider_radius, physics_enabled)
 {
 }
 

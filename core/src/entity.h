@@ -31,16 +31,19 @@ public:
     bool collides(const glm::vec3& pos, const glm::vec3& dir, glm::vec3& hit_pos);
     glm::vec3 get_color();
 
+
+
+// private:
+    Model* model;
+    glm::vec3 position; 
+    glm::vec3 scale;
+    glm::vec3 color;
     bool fade;
     float ttl;
     float max_ttl;
+    glm::vec3 rotation; 
+
     Physics_object physics;
 
-private:
-    Model* model;
-    glm::vec3 position; 
-    glm::vec3 rotation; 
-    glm::vec3 scale;
-    glm::vec3 color;
 };
 #endif

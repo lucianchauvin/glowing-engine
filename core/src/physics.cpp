@@ -9,7 +9,6 @@ void Physics::add_object(Physics_object* obj) {
 
 void Physics::load_scene(Scene& scene) {
     printf("loading scene physics\n");
-    int c = 0;
     for (Entity& entity : scene.entities) {
         if (entity.physics.enabled)
             add_object(&entity.physics);

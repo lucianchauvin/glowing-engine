@@ -23,7 +23,7 @@ class Model_ass {
         std::vector<Texture> textures_loaded;
         std::vector<Mesh> meshes;
         std::string directory;
-        bool gammaCorrection;
+        // bool gammaCorrection;
 
         void load_model(const std::string &meshName);
         void process_node(aiNode *node, const aiScene *scene);

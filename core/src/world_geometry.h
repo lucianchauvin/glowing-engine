@@ -33,9 +33,9 @@ public:
 
     void add_wall(const glm::vec3& start, const glm::vec3& end, float height, 
                  const glm::vec3& color = color::gray, bool collidable = true) {
-        glm::vec3 direction = glm::normalize(end - start);
-        glm::vec3 up(0.0f, 1.0f, 0.0f);
-        glm::vec3 right = glm::cross(direction, up);
+        // glm::vec3 direction = glm::normalize(end - start);
+        // glm::vec3 up(0.0f, 1.0f, 0.0f);
+        // glm::vec3 right = glm::cross(direction, up);
         
         World_quad quad;
         quad.vertices[0] = start;

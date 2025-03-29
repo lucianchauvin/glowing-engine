@@ -228,7 +228,7 @@ private:
     // }
     
     void add_faces_if_needed(int x, int y, int z) {
-        Block_type blockType = get_block(x, y, z);
+        // Block_type blockType = get_block(x, y, z);
         const float vertices[8][3] = {
             {0.0f, 0.0f, -1.0f},  // 0: left-bottom-back
             {1.0f, 0.0f, -1.0f},  // 1: right-bottom-back

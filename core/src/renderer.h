@@ -75,9 +75,9 @@ public:
         /*shader manager?*/ our_shader.init("../resources/shaders/vertex.glsl", "../resources/shaders/fragment.glsl");
         /*shader manager?*/ our_shader.use(); // don't forget to activate/use the shader before setting uniforms!
         /*shader manager?*/ // either set it manually like so:
-        /*shader manager?*/ glUniform1i(glGetUniformLocation(our_shader.ID, "texture1"), .5);
+        // /*shader manager?*/ glUniform1i(glGetUniformLocation(our_shader.ID, "texture1"), .5);
         /*shader manager?*/ // or set it via the texture class
-        /*shader manager?*/ our_shader.setInt("texture2", .5);
+        // /*shader manager?*/ our_shader.setInt("texture2", .5);
 
         geometry_shader.init("../resources/shaders/world_geometry_v.glsl", "../resources/shaders/world_geometry_f.glsl");
         geometry_shader.use();
@@ -185,6 +185,35 @@ public:
         stbi_image_free(data);
 
         return true;
+    }
+
+    void draw_player_model(Controller& player, Model_ass& player_model) {
+        our_shader.use();
+
+        our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
+        our_shader.setVec3("viewPos", player.camera.position);
+        our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
+        our_shader.setMat4("projection", projection);
+        glm::mat4 view = player.camera.get_view_matrix();
+        our_shader.setMat4("view", view);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, player.player_physics.position);
+        model = glm::rotate(model, glm::radians(player.camera.yaw - 90), glm::vec3(0.0f, -1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(player.camera.pitch), glm::vec3(1.0f, 0.0f, 0.0f));
+        // model = glm::scale(model, glm::vec3(1.0f));
+        our_shader.setMat4("model", model);
+    
+        our_shader.setVec3("objectColor", glm::vec3(0.0f, 0.5f, 0.0f));
+    
+        player_model.draw(our_shader);
     }
 
     void render_scene(Controller& player, Scene& scene, float deltaTime, std::vector<Chunk*>& chunks) {
@@ -308,7 +337,7 @@ public:
 
 
         // weapon_shader2.setVec3("lightPos", glm::vec3(5.0f, 5.0f, 5.0f));
-        float timeValue = glfwGetTime();
+        // float timeValue = glfwGetTime();
         // weapon_shader2.setFloat("time", timeValue);
 
         // // d) Wave settings

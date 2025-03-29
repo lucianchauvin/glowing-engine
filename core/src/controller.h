@@ -35,7 +35,18 @@ public:
     } player_physics;
     bool key_toggles[256] = {false};
 
-    Controller() : camera(glm::vec3(0.0f, player_physics.position.y + PLAYER_HEIGHT, 0.0f)) {}
+    glm::quat plane_orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+    float throttle = 0.0f;
+
+    // Constants for plane simulation:
+    const float THROTTLE_ACCELERATION = 50.0f;
+    const float THROTTLE_DECELERATION = 50.0f;
+    const float MAX_THROTTLE = 300.0f;
+    const float YAW_SPEED   = 60.0f;   // degrees per second
+    const float PITCH_SPEED = 60.0f;   // degrees per second
+    const float ROLL_SPEED  = 60.0f;   // degrees per second
+
+    Controller() : camera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f)) {}
 
     void char_callback_impl(GLFWwindow *window, unsigned int key) {
         key_toggles[key] = !key_toggles[key];
@@ -214,5 +225,105 @@ public:
             }
         }
     }
+
+    void process_input_plane(GLFWwindow *window, float deltaTime, Scene &scene, Model* model) {
+        // Basic toggles
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
+            glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+                glfwSetWindowShouldClose(window, true);
+
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            if (toggle_mouse_lock)
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            else
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            toggle_mouse_lock = !toggle_mouse_lock;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && !key_toggles[GLFW_KEY_TAB]) {
+            is_third_person = !is_third_person;
+            key_toggles[GLFW_KEY_TAB] = true;
+        } else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) {
+            key_toggles[GLFW_KEY_TAB] = false;
+        }
+
+        // ADS blending remains the same
+        glm::vec3 target_pos = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS ? ads_pos : min_pos;
+        wep_pos = glm::mix(wep_pos, target_pos, deltaTime * 10.0f);
+
+        // Optional: Left mouse button for interaction/shooting
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            glm::vec3 hit_pos(0.0f);
+            int hits = scene.cast_ray(camera.position, camera.front, hit_pos);
+            if (hits != 0) {
+                glm::vec3 scale(1.0f);
+                glm::vec3 color(0.0f);
+                Entity e(model, hit_pos, true, scale, color, true, 5.2f);
+                scene.include(e);
+            }
+        }
+
+        // --- Plane-specific controls ---
+        // Throttle: Increase with W, decrease with S.
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            throttle += THROTTLE_ACCELERATION * deltaTime;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            throttle -= THROTTLE_DECELERATION * deltaTime;
+        throttle = glm::clamp(throttle, 0.0f, MAX_THROTTLE);
+
+        // Rotation inputs:
+        // Use arrow keys for pitch, Q/E for roll, and A/D for yaw.
+        float pitchInput = 0.0f;
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            pitchInput += 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            pitchInput -= 1.0f;
+
+        float rollInput = 0.0f;
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+            rollInput += 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+            rollInput -= 1.0f;
+
+        float yawInput = 0.0f;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            yawInput += 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            yawInput -= 1.0f;
+
+        // Compute rotation angles (in radians)
+        float yawAngle   = glm::radians(YAW_SPEED * yawInput * deltaTime);
+        float pitchAngle = glm::radians(PITCH_SPEED * pitchInput * deltaTime);
+        float rollAngle  = glm::radians(ROLL_SPEED * rollInput * deltaTime);
+
+        // Create quaternions for rotations.
+        glm::quat yawRot   = glm::angleAxis(yawAngle,   glm::vec3(0.0f, 1.0f, 0.0f));   // Yaw about global up
+        glm::quat pitchRot = glm::angleAxis(pitchAngle, glm::vec3(1.0f, 0.0f, 0.0f));   // Pitch about local right
+        glm::quat rollRot  = glm::angleAxis(rollAngle,  glm::vec3(0.0f, 0.0f, 1.0f));   // Roll about local forward
+
+        // Update plane orientation (adjust multiplication order as desired)
+        plane_orientation = glm::normalize(yawRot * pitchRot * rollRot * plane_orientation);
+    }
+
+    void update_plane_physics(float deltaTime) {
+        // In a plane simulation, we do not apply gravity or floor collision.
+        // Assume local forward is -Z; extract it from plane_orientation.
+        glm::vec3 forward = plane_orientation * glm::vec3(0.0f, 0.0f, -1.0f);
+        // Set velocity based on throttle.
+        player_physics.velocity = forward * throttle;
+        // Update position based on velocity.
+        player_physics.position += player_physics.velocity * deltaTime;
+
+        // Update camera position.
+        if (is_third_person) {
+            glm::vec3 offset = -forward * THIRD_PERSON_DISTANCE;
+            camera.position = player_physics.position + offset;
+            camera.position.y += 1.0f;
+        } else {
+            camera.position = player_physics.position;
+            camera.position.y += PLAYER_HEIGHT;
+        }
+    }
+    
 };
 #endif
