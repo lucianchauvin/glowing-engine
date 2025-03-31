@@ -71,7 +71,7 @@ public:
             zoom = 360.0f;
     }
 
-private:
+// private:
     // calculates the front vector from the Camera's (updated) Euler Angles
     void update_camera_vectors() {
         // calculate the new front vector

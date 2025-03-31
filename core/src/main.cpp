@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "renderer.h"
-#include "controller.h"
+#include "player.h"
 #include "shader.h"
 #include "entity.h"
 #include "scene.h"
@@ -34,7 +34,7 @@ glm::vec3 fres = glm::vec3(0.0f, 0.0f, 0.0f);
 float expon = 1.0f;
 
 int main() {
-    Controller player;
+    Player player;
     Renderer renderer;
     if (!renderer.init(SCR_WIDTH, SCR_HEIGHT, "GLOW", player)) {
         return -1;
@@ -52,7 +52,7 @@ int main() {
     // Model_ass model_ass("../resources/models/sword/scene.gltf");
     // Model_ass model_ass("../resources/models/gun/scene.gltf");
     // Model_ass model_ass("../resources/models/grn_sword/scene.gltf");
-    // Model_ass model_ass("../resources/models/arms/scene.gltf");
+    // Model_ass model_ass("../resources/models/castle/scene.gltf");
     // Model_ass model_ass("../resources/models/shield/scene.obj");
     // Model_ass model_ass("../resources/models/backpack/backpack.obj");
     Model_ass holding("../resources/models/qbz/qbz.obj");
@@ -73,19 +73,19 @@ int main() {
     // }
 
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
-    glm::vec3 scale = glm::vec3(10.0f, 1.0f, 10.0f);
+    glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
     glm::vec3 color = glm::vec3(0.7f, 0.7f, 0.7f);
     Entity e(&plane, pos, false, scale, color);
     scene.include(e);
 
     std::vector<Chunk*> chunks = std::vector<Chunk*>();
-    // for (int x = -2; x < 30; x++) {
-    //     for (int z = -2; z < 30; z++) {
-    //         // if (x == 0 && z == 0) continue;
-    //         Chunk* chunk = new Chunk(x, z);
-    //         chunks.push_back(chunk);
-    //     }
-    // }
+    for (int x = -2; x < 1; x++) {
+        for (int z = -2; z < 1; z++) {
+            // if (x == 0 && z == 0) continue;
+            Chunk* chunk = new Chunk(x, z);
+            chunks.push_back(chunk);
+        }
+    }
 
     Physics physics;
     physics.load_scene(scene);
@@ -97,32 +97,32 @@ int main() {
     ImGui_ImplOpenGL3_Init();
 
     // render loop
+    // uint step = 0;
     // int frame = 0;
     printf("RENDERING\n");
-    // uint step = 0;
     while (renderer.open()) {
 		// ++step;        // printf("[%d]", frame++);
         float currentFrame = renderer.get_time();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
         // input
-        player.process_input(renderer.window, deltaTime, scene, &sphere);
-        player.process_input_plane(renderer.window, deltaTime, scene, &sphere);
+        player.controller_step(renderer.window, deltaTime, scene, &sphere);
+
 		// update player physics
-        player.update_player_physics(deltaTime);
+        // player.update_player_physics(deltaTime);
 		// player.update_plane_physics(deltaTime);		
-        if (player.player_physics.dashing) {
-            Entity e(&sphere, player.player_physics.position, true, glm::vec3(0.1f), glm::vec3(0.0f, 0.3f, 0.2f), true, 5.0f);
-            scene.include(e);
-        }
-        
+        // if (player.player_physics.dashing) {
+        //     Entity e(&sphere, player.player_physics.position, true, glm::vec3(0.1f), glm::vec3(0.0f, 0.3f, 0.2f), true, 5.0f);
+        //     scene.include(e);
+        // }
         // physics.step(deltaTime);
-        printf("here\n");
 
         // render scene
         renderer.render_scene(player, scene, deltaTime, chunks);
-        if (!player.key_toggles[(unsigned) 'r'])
-            renderer.render_world_geometry(scene, player);
+        // if (!player.key_toggles[(unsigned) 'r'])
+        //     renderer.render_world_geometry(scene, player);
+
 		renderer.draw_player_model(player, fly);
         // renderer.render_ass(player, model_ass);
         renderer.draw_player_holding(player, holding, clr, emis, fres, expon);
@@ -141,7 +141,7 @@ int main() {
         ImGui::Text("Facing: (%.1f, %.1f, %.1f)", player.camera.front.x, player.camera.front.y, player.camera.front.z);
         ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player.player_physics.velocity.x, player.player_physics.velocity.y, player.player_physics.velocity.z);
         ImGui::Text("On Ground: %s", player.player_physics.isOnGround ? "Yes" : "No");
-        ImGui::Text("drawing geom: %s", !player.key_toggles[(unsigned) 'r'] ? "Yes" : "No");
+        // ImGui::Text("drawing geom: %s", !player.controller->key_toggles[(unsigned) 'r'] ? "Yes" : "No");
         // glm::vec3 wep_pos(0.0f, 0.0f, 0.0f);
         // glm::vec3 wep_rot(0.0f, 0.0f, 0.0f);
     //     ImGui::SliderFloat3("wep offset", &player.wep_pos.x, -1.0f, 3.0f);

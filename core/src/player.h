@@ -1,0 +1,148 @@
+#ifndef PLAYER_H
+#define PLAYER_H
+
+#include <unordered_map>
+
+#include "camera.h"
+#include "physics.h"
+#include "scene.h"
+#include "controller.h"
+#include "controller_fps.h"
+#include "controller_thirdperson.h"
+#include "controller_plane.h"
+// #include <model_ass.h>
+
+enum class ControllerType { FPS, THIRDPERSON, PLANE };
+
+class Player {
+public:
+    float PLAYER_HEIGHT = 1.8f;
+
+    Camera camera;
+    Physics_object player_physics;
+
+    std::unordered_map<ControllerType, std::unique_ptr<Controller>> controllers;
+    Controller* controller;
+
+    // std::unique_ptr<Controller> activeController
+    //  std::make_unique<Controller_plane>
+    
+    // player model
+    // player model model matrix
+    // glm::vec3 forward;
+    float model_yaw = 0.0f;
+
+    bool crouched = false;
+    bool dashing = false;
+    bool key_toggles[256] = {false};
+
+    // Model_ass wep;
+
+    Player() 
+        : camera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f)),
+          player_physics(glm::vec3(0.0f), 1.0f, true),
+          controller() 
+    {
+        controllers[ControllerType::FPS] = std::make_unique<Controller_fps>();
+        controllers[ControllerType::THIRDPERSON] = std::make_unique<Controller_thirdperson>();
+        controllers[ControllerType::PLANE] = std::make_unique<Controller_plane>();
+        controller = controllers[ControllerType::FPS].get();
+    }
+
+    // glm::mat4 () pitch yaw roll model
+
+    void controller_step(GLFWwindow* window, float deltaTime, Scene& scene, Model* model) {
+        poll_player(window);
+        controller->process_input(window, deltaTime, scene, model, player_physics, camera, model_yaw);
+        controller->update_physics(deltaTime, player_physics, camera);
+        controller->update_camera(camera, player_physics, crouched, PLAYER_HEIGHT);
+    }
+
+    static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+        Player* player = static_cast<Player*>(glfwGetWindowUserPointer(window));
+        if (player) {
+            player->mouse_callback_impl(window, xpos, ypos);
+        }
+    }
+
+    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+        Player* player = static_cast<Player*>(glfwGetWindowUserPointer(window));
+        if (player) {
+            player->scroll_callback_impl(window, xoffset, yoffset);
+        }
+    }
+
+    static void char_callback(GLFWwindow* window, unsigned int key) {
+        Player* player = static_cast<Player*>(glfwGetWindowUserPointer(window));
+        if (player) {
+            player->char_callback_impl(window, key);
+        }
+    }
+
+    glm::mat4 get_model_matrix() {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, player_physics.position);
+        model = glm::rotate(model, -glm::radians(model_yaw - 90), glm::vec3(0, 1, 0));
+        return model;
+    }
+
+private:
+    void mouse_callback_impl(GLFWwindow* window, double xpos, double ypos) { // need these guys to pass camera
+        controller->mouse_callback(window, camera, xpos, ypos, model_yaw);
+    }
+    
+    void scroll_callback_impl(GLFWwindow* window, double xoffset, double yoffset) {
+        controller->scroll_callback(window, camera, xoffset, yoffset);
+    }
+
+    void char_callback_impl(GLFWwindow* window, unsigned int key) {
+        key_toggles[key] = !key_toggles[key]; // set this key in our player key toggles
+        process_player_toggles(window); // run through local stuff based on these keytoggles
+        controller->char_callback(window, key); // set controller key toggles
+    }
+    // key toggle state that is more specific to the idea of a player than a controller
+    // think noclip mode vs plane throttle
+    void process_player_toggles(GLFWwindow* window) { 
+        // T
+        // TOGGLE WIREFRAME
+        if (key_toggles[(unsigned)'t'])
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        // R
+        // TOGGLE MOUSE
+        if (!key_toggles[(unsigned)'r'])
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        else
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+        if (key_toggles[(unsigned)'i']) {
+            printf("[CONTROLLER] setting fps \n");
+            controller = controllers[ControllerType::FPS].get();
+            key_toggles[(unsigned)'i'] = false;
+        }
+        if (key_toggles[(unsigned)'o']) {
+            printf("[CONTROLLER] setting third person\n");
+            controller = controllers[ControllerType::THIRDPERSON].get();
+            key_toggles[(unsigned)'o'] = false;
+        }
+        if (key_toggles[(unsigned)'p']) {
+            printf("[CONTROLLER] setting plane\n");
+            controller = controllers[ControllerType::PLANE].get();
+            key_toggles[(unsigned)'p'] = false;
+        }
+    }
+    // stuff we're polling for every frame that wouldnt be captured by a keycallback
+    // maybe can breakup into 'meta player' vs physics/game state?
+    void poll_player(GLFWwindow* window) {
+        // CTRL + C
+        // CLOSE WINDOW
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) 
+            glfwSetWindowShouldClose(window, true);
+        // ^ example meta player control ^
+        //            vs
+        // v    game state control      v
+        crouched = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
+    }
+};
+#endif

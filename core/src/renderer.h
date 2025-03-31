@@ -16,7 +16,7 @@
 
 #include "shader.h"
 #include "scene.h"
-#include "controller.h"
+#include "player.h"
 #include "chunk.h"
 #include "general/colors.h"
 #include "model_ass.h"
@@ -30,7 +30,7 @@ public:
 
     bool open() { return !glfwWindowShouldClose(window); }
 
-    bool init(int width, int height, const char* title, Controller& player) {
+    bool init(int width, int height, const char* title, Player& player) {
         scr_width = width;
         scr_height = height;
 
@@ -52,9 +52,9 @@ public:
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
         glfwSetWindowUserPointer(window, &player);
-        glfwSetCursorPosCallback(window, Controller::mouse_callback);
-        glfwSetScrollCallback(window, Controller::scroll_callback);
-        glfwSetCharCallback(window, Controller::char_callback);
+        glfwSetCursorPosCallback(window, Player::mouse_callback);
+        glfwSetScrollCallback(window, Player::scroll_callback);
+        glfwSetCharCallback(window, Player::char_callback);
         // tell GLFW to capture our mouse
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         // glad: load all OpenGL function pointers
@@ -187,7 +187,7 @@ public:
         return true;
     }
 
-    void draw_player_model(Controller& player, Model_ass& player_model) {
+    void draw_player_model(Player& player, Model_ass& player_model) {
         our_shader.use();
 
         our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
@@ -204,11 +204,7 @@ public:
         glm::mat4 view = player.camera.get_view_matrix();
         our_shader.setMat4("view", view);
 
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, player.player_physics.position);
-        model = glm::rotate(model, glm::radians(player.camera.yaw - 90), glm::vec3(0.0f, -1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(player.camera.pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-        // model = glm::scale(model, glm::vec3(1.0f));
+        glm::mat4 model = player.get_model_matrix();
         our_shader.setMat4("model", model);
     
         our_shader.setVec3("objectColor", glm::vec3(0.0f, 0.5f, 0.0f));
@@ -216,7 +212,7 @@ public:
         player_model.draw(our_shader);
     }
 
-    void render_scene(Controller& player, Scene& scene, float deltaTime, std::vector<Chunk*>& chunks) {
+    void render_scene(Player& player, Scene& scene, float deltaTime, std::vector<Chunk*>& chunks) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
         our_shader.use();
@@ -294,7 +290,7 @@ public:
         // flush(); !!
     }
 
-    void render_world_geometry(Scene& scene, Controller& player) {
+    void render_world_geometry(Scene& scene, Player& player) {
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
         geometry_shader.setMat4("projection", projection);
         glm::mat4 view = player.camera.get_view_matrix();
@@ -308,7 +304,7 @@ public:
         scene.render_world_geometry(geometry_shader);
     }
 
-    void draw_player_holding(Controller& player, Model_ass& wep, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon) {
+    void draw_player_holding(Player& player, Model_ass& wep, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon) {
         glDisable(GL_DEPTH_TEST);
         weapon_shader2.use();
         
@@ -327,10 +323,11 @@ public:
         
         glm::mat4 model = glm::mat4(1.0f);
         
+        // FIX player.camera.yaw pitch roll maybe geeruc
         model = glm::rotate(model, -glm::radians(player.camera.yaw - 90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::rotate(model, -glm::radians(player.camera.pitch), glm::vec3(1.0f, 0.0f, 0.0f));
         
-        model = glm::translate(model, player.wep_pos);
+        model = glm::translate(model, player.controller->get_weapon_position());
         
         weapon_shader2.setMat4("model", model);
         weapon_shader2.setVec3("viewPos", player.camera.position);
@@ -359,7 +356,7 @@ public:
         glEnable(GL_DEPTH_TEST);
     }
     
-    void render_ass(Controller& player, Model_ass& model_ass) {
+    void render_ass(Player& player, Model_ass& model_ass) {
 
         our_shader.use();
         our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
