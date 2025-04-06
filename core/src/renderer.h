@@ -297,8 +297,8 @@ public:
             c->draw(our_shader);
         }
 
-        // if (debug)
-        debug_renderer.render(debug_shader, projection, view);
+        if (!player.key_toggles[(unsigned)'r'])
+            debug_renderer.render(debug_shader, projection, view);
 
         // flush(); !!
     }
@@ -317,7 +317,7 @@ public:
         scene.render_world_geometry(geometry_shader);
     }
 
-    void draw_player_holding(Player& player, Model_ass& wep, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon) {
+    void draw_player_stuff(Player& player, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon) {
         // glDisable(GL_DEPTH_TEST);
         weapon_shader2.use();
         
@@ -328,6 +328,8 @@ public:
         glm::mat4 rotationOnlyView = glm::mat4(glm::mat3(fullView));
         weapon_shader2.setMat4("view", rotationOnlyView);
         
+
+        // REPLACE FROM HERE -------------------------------------------------------------
         glm::mat4 model = glm::mat4(1.0f);
         
         // FIX player.camera.yaw pitch roll maybe geeruc
@@ -338,6 +340,9 @@ public:
         model = glm::scale(model, glm::vec3(0.1f));
         weapon_shader2.setMat4("model", model);
         weapon_shader2.setVec3("viewPos", player.camera.position);
+
+        // HERE ------------------------------------
+        // USE WEAPON + HANDS + QUATS + ANIMATION + OH GOD 
 
         // weapon_shader2.setVec3("lightPos", glm::vec3(5.0f, 5.0f, 5.0f));
         // float timeValue = glfwGetTime();

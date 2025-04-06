@@ -53,9 +53,9 @@ public:
 
     // glm::mat4 () pitch yaw roll model
 
-    void controller_step(GLFWwindow* window, float deltaTime, Scene& scene, Model* model) {
+    void controller_step(GLFWwindow* window, float deltaTime, Scene& scene) {
         poll_player(window);
-        controller->process_input(window, deltaTime, scene, model, player_physics, camera, model_yaw);
+        controller->process_input(window, deltaTime, scene, player_physics, camera, model_yaw);
         controller->update_physics(deltaTime, player_physics, camera);
         controller->update_camera(camera, player_physics, crouched, PLAYER_HEIGHT);
     }

@@ -6,14 +6,14 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-#include "model.h"
+#include "model_ass.h"
 #include "shader.h"
 #include "physics.h"
 
 class Entity {
 public:
     Entity(
-        Model* model,
+        Model_ass* model,
         glm::vec3 position    = glm::vec3(0.0f),
         bool physics_enabled  = true,
         glm::vec3 scale       = glm::vec3(1.0f),
@@ -38,7 +38,7 @@ public:
 
 
 // private:
-    Model* model;
+    Model_ass* model;
     glm::vec3 position; 
     glm::vec3 scale;
     glm::vec3 color;

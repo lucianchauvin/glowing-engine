@@ -53,7 +53,7 @@ public:
         key_toggles[key] = !key_toggles[key];
     }
 
-    virtual void process_input(GLFWwindow* window, float deltaTime, Scene& scene, Model* model, Physics_object& player_physics, Camera& camera, float& model_yaw) override {
+    virtual void process_input(GLFWwindow* window, float deltaTime, Scene& scene, Physics_object& player_physics, Camera& camera, float& model_yaw) override {
         // Get current weapon
         Weapon* current_weapon = active_weapon;
         

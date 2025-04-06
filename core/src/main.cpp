@@ -35,32 +35,31 @@ glm::vec3 fres = glm::vec3(0.0f, 0.0f, 0.0f);
 float expon = 1.0f;
 
 int main() {
-    Audio::init();
     Renderer renderer;
     if (!renderer.init(SCR_WIDTH, SCR_HEIGHT, "GLOW")) {
         return -1;
     };
 
+    Audio::init();
+
     Player player;
     renderer.sync_callbacks(player);
-
+    
     Scene scene;
-    Model plane;
-    plane.load_mesh("../resources/models/plane.obj");
-    Model sphere;
-    sphere.load_mesh("../resources/models/cube.obj");
+    Model_ass plane("../resources/models/plane.obj");
+
+    Model_ass sphere("../resources/models/cube.obj");
+    // Model_ass sphere("../resources/models/backpack/backpack.obj");
+    // Model_ass sphere("../resources/models/castle/scene.gltf");
 
     // Model ak47;
     // ak47.load_mesh("../resources/models/Ak_47/ak47.obj");
 
     // Model_ass model_ass("../resources/models/sword/scene.gltf");
     // Model_ass model_ass("../resources/models/gun/scene.gltf");
-    // Model_ass model_ass("../resources/models/grn_sword/scene.gltf");
-    // Model_ass model_ass("../resources/models/castle/scene.gltf");
     // Model_ass model_ass("../resources/models/shield/scene.obj");
-    // Model_ass model_ass("../resources/models/backpack/backpack.obj");
+    Model_ass model_ass("../resources/models/backpack/backpack.obj");
     // Model_ass holding("../resources/models/qbz/qbz.obj");
-    Model_ass holding("../resources/models/m4a1/M4A1.obj");
     Model_ass fly("../resources/models/plane/scene.gltf");
     // Model_ass model_ass("../resources/models/ebonchill/scene.gltf");
     // Model_ass model_ass("../resources/models/hogwarts/Hogwarts.obj");
@@ -121,7 +120,7 @@ int main() {
         // updates physics according to active controller
         // updates camera
         // draws hud (weapon, etc)
-        player.controller_step(renderer.window, deltaTime, scene, &sphere);
+        player.controller_step(renderer.window, deltaTime, scene);
 
         // render scene
         renderer.render_scene(player, scene, deltaTime, chunks);
@@ -129,8 +128,8 @@ int main() {
             renderer.render_world_geometry(scene, player);
 
 		renderer.draw_player_model(player, fly);
-        // renderer.render_ass(player, model_ass);
-        renderer.draw_player_holding(player, holding, clr, emis, fres, expon);
+        renderer.render_ass(player, model_ass);
+        renderer.draw_player_stuff(player, clr, emis, fres, expon);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

@@ -68,7 +68,7 @@ public:
         key_toggles[key] = !key_toggles[key];
     }
     
-    virtual void process_input(GLFWwindow* window, float deltaTime, Scene& scene, Model* model, Physics_object& player_physics, Camera& camera, float& model_yaw) override {
+    virtual void process_input(GLFWwindow* window, float deltaTime, Scene& scene, Physics_object& player_physics, Camera& camera, float& model_yaw) override {
         glm::vec3 movement(0.0f);
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             movement.z -= 1.0f;
