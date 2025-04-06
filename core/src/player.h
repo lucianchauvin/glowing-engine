@@ -24,6 +24,8 @@ public:
     std::unordered_map<ControllerType, std::unique_ptr<Controller>> controllers;
     Controller* controller;
 
+    // Hands hands; // (   ͡°   ͜ʖ    ͡°   )
+
     // std::unique_ptr<Controller> activeController
     //  std::make_unique<Controller_plane>
     
@@ -40,12 +42,12 @@ public:
 
     Player() 
         : camera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f)),
-          player_physics(glm::vec3(0.0f), 1.0f, true),
+          player_physics(glm::vec3(0.0f), 1.0f, true, 1000.0f),
           controller() 
     {
         controllers[ControllerType::FPS] = std::make_unique<Controller_fps>();
         controllers[ControllerType::THIRDPERSON] = std::make_unique<Controller_thirdperson>();
-        controllers[ControllerType::PLANE] = std::make_unique<Controller_plane>();
+        controllers[ControllerType::PLANE] = std::make_unique<Controller_plane>(player_physics);
         controller = controllers[ControllerType::FPS].get();
     }
 
@@ -83,7 +85,22 @@ public:
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, player_physics.position);
         model = glm::rotate(model, -glm::radians(model_yaw - 90), glm::vec3(0, 1, 0));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
         return model;
+    }
+
+    void debug_hud(ImGuiIO& io) {
+        
+        ImGui::Begin("Player");
+
+        ImGui::Text("Player position: (%.1f, %.1f, %.1f)", player_physics.position.x, player_physics.position.y, player_physics.position.z);
+        ImGui::Text("Camera Position: (%.1f, %.1f, %.1f)", camera.position.x, camera.position.y, camera.position.z);
+        ImGui::Text("Camera Facing:   (%.1f, %.1f, %.1f)", camera.front.x, camera.front.y, camera.front.z);
+        ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player_physics.velocity.x, player_physics.velocity.y, player_physics.velocity.z);
+        // ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player_physics.velocity.x, player_physics.velocity.y, player_physics.velocity.z);
+        ImGui::Text("On Ground: %s", player_physics.isOnGround ? "Yes" : "No");
+        
+        ImGui::End();
     }
 
 private:
@@ -111,7 +128,7 @@ private:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         // R
         // TOGGLE MOUSE
-        if (!key_toggles[(unsigned)'r'])
+        if (!key_toggles[(unsigned)'q'])
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         else
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);

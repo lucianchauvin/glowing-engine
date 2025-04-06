@@ -2,6 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 Entity::Entity(
     Model* model, 
@@ -9,6 +10,8 @@ Entity::Entity(
     bool physics_enabled, 
     glm::vec3 scale, 
     glm::vec3 color,
+    float mass,
+    glm::quat orientation,
     bool fade, float ttl, float max_ttl, float collider_radius
 ) : 
     model(model),
@@ -16,7 +19,7 @@ Entity::Entity(
     scale(scale), color(color),
     fade(fade), ttl(ttl), max_ttl(max_ttl), 
     rotation(glm::vec3(0.0f)),
-    physics(position, collider_radius, physics_enabled)
+    physics(position, collider_radius, physics_enabled, mass, orientation)
 {
 }
 
@@ -24,8 +27,11 @@ Entity::~Entity() = default;
 
 glm::mat4 Entity::get_model_matrix() const {
     glm::mat4 modelMat(1.0f);
-    modelMat = glm::translate(modelMat, physics.position);
-    modelMat = glm::scale(modelMat, scale);
+    glm::mat4 translation = glm::translate(glm::mat4(1.0f), physics.position);
+    glm::mat4 rotation = glm::mat4_cast(physics.orientation);
+    glm::mat4 scaling = glm::scale(glm::mat4(1.0f), scale);
+
+    modelMat = translation * rotation * scaling;
     return modelMat;
 }
 

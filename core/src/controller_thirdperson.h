@@ -22,7 +22,7 @@ public:
     const float CAMERA_HEIGHT = 1.5f;
     const float CAMERA_OFFSET = 0.0f;  // Horizontal offset (0 for centered)
     const float MIN_CAMERA_DISTANCE = 2.0f;
-    const float MAX_CAMERA_DISTANCE = 15.0f;
+    const float MAX_CAMERA_DISTANCE = 1000.0f;
     const float CAMERA_SMOOTHING = 5.0f;
     const float CHARACTER_ROTATION_SPEED = 15.0f;
     const float MODEL_ROTATION_SPEED = 10.0f;  // How fast the model turns to face movement direction
@@ -57,11 +57,11 @@ public:
     
     virtual void scroll_callback(GLFWwindow* window, Camera& camera, double xoffset, double yoffset) override {
         // Adjust camera distance with scroll (WoW-style zoom)
-        target_camera_distance -= static_cast<float>(yoffset) * 1.0f;
+        target_camera_distance -= static_cast<float>(yoffset) * 2.0f;
         target_camera_distance = glm::clamp(target_camera_distance, MIN_CAMERA_DISTANCE, MAX_CAMERA_DISTANCE);
         
         // We'll still use the camera's zoom for FOV adjustments if needed
-        camera.process_mouse_scroll(yoffset);
+        // camera.process_mouse_scroll(yoffset);
     }
     
     virtual void char_callback(GLFWwindow* window, unsigned int key) override {
@@ -78,15 +78,18 @@ public:
             movement.x -= 1.0f;  // Strafe left
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             movement.x += 1.0f;  // Strafe right
+
         // Normalize movement vector for diagonal movement
         bool is_moving = glm::length(movement) > 0.0f;
         if (is_moving)
             movement = glm::normalize(movement);
+
         // Handle jumping
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && player_physics.isOnGround) {
             player_physics.velocity.y = JUMP_FORCE;
             player_physics.isOnGround = false;
         }
+
         // Convert movement direction to be relative to character facing direction (for WoW style)
         float character_yaw_radians = glm::radians(character_yaw);
         glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), character_yaw_radians, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -95,6 +98,7 @@ public:
         glm::vec3 right = glm::vec3(rotationMatrix * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
         // Calculate world space movement vector
         glm::vec3 moveDir = forward * -movement.z + right * movement.x; // Note the negative for z
+        
         // If moving, calculate the angle of movement for model orientation
         if (is_moving) {
             // Calculate the movement angle in world space
@@ -186,7 +190,8 @@ public:
     }
     
     virtual glm::vec3 get_weapon_position() const override {
-        return glm::vec3(0.0f, -999.0f, 0.0f);
+        // return glm::vec3(-0.2f, -0.1f, 0.5f);
+        return glm::vec3(-0.2f, -99999.1f, 0.5f);
     }
 };
 #endif

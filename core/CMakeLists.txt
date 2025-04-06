@@ -14,6 +14,7 @@ include_directories(
     ext
     ext/glfw-3.4/include
     ext/assimp/include
+    ext/fmodstudioapi20307linux/api/core/inc
     src
     src/general
 )
@@ -26,6 +27,8 @@ set(SOURCES
     src/model.cpp
     src/physics.cpp
     src/scene.cpp
+    src/audio.cpp
+    src/renderer_debug.cpp
 
     ext/glad/glad.c
     ext/dearimgui/imgui.cpp
@@ -38,7 +41,14 @@ set(SOURCES
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+find_library(FMOD_LIBRARY 
+    NAMES fmod
+    PATHS ${CMAKE_SOURCE_DIR}/ext/fmodstudioapi20307linux/api/core/lib/x86_64
+    NO_DEFAULT_PATH
+)
+
 target_link_libraries(${PROJECT_NAME} 
     glfw ${GLFW_LIBRARIES}
     assimp
+    ${FMOD_LIBRARY}
 )

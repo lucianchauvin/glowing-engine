@@ -13,9 +13,13 @@
 
 class Model_ass {
     public:
+        Model_ass() = default;
+
         Model_ass(const std::string &meshName) {
             load_model(meshName);
         }
+        
+        void load_model(const std::string &meshName);
         void draw(Shader &shader);	
 
     private:
@@ -25,7 +29,6 @@ class Model_ass {
         std::string directory;
         // bool gammaCorrection;
 
-        void load_model(const std::string &meshName);
         void process_node(aiNode *node, const aiScene *scene);
         Mesh process_mesh(aiMesh *mesh, const aiScene *scene);
         std::vector<Texture> load_material_textures(aiMaterial *mat, aiTextureType type, std::string typeName);

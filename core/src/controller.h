@@ -2,14 +2,20 @@
 #define CONTROLLER_H
 
 #include <GLFW/glfw3.h>
+#include <dearimgui/imgui.h>
+#include <dearimgui/imgui_impl_glfw.h>
+#include <dearimgui/imgui_impl_opengl3.h>
 
 #include <scene.h>
 #include <camera.h>
 #include <physics.h>
 #include <player.h>
+#include <shader.h>
 
 class Controller {
 public:
+    // glm::vec3 wep_pos;
+    
     virtual ~Controller() = default;    
 
     virtual void mouse_callback(GLFWwindow* window, Camera& camera, double xpos, double ypos, float& model_yaw) = 0;
@@ -21,5 +27,8 @@ public:
     virtual void update_camera(Camera& camera, const Physics_object& player_physics, bool crouched, float player_height) = 0;
 
     virtual glm::vec3 get_weapon_position() const { return glm::vec3(0.0f); } // for FPS camera
+
+    virtual void draw_hud(Shader& shader) const {};
+    virtual void debug_hud(ImGuiIO& io) {};
 };
 #endif

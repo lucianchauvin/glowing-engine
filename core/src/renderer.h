@@ -11,9 +11,11 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include "renderer_debug.h"
 #include "shader.h"
 #include "scene.h"
 #include "player.h"
@@ -27,10 +29,9 @@ public:
     ~Renderer(){};
 
     float get_time() { return static_cast<float>(glfwGetTime()); }
-
     bool open() { return !glfwWindowShouldClose(window); }
 
-    bool init(int width, int height, const char* title, Player& player) {
+    bool init(int width, int height, const char* title) {
         scr_width = width;
         scr_height = height;
 
@@ -51,10 +52,6 @@ public:
         glfwMakeContextCurrent(window);
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-        glfwSetWindowUserPointer(window, &player);
-        glfwSetCursorPosCallback(window, Player::mouse_callback);
-        glfwSetScrollCallback(window, Player::scroll_callback);
-        glfwSetCharCallback(window, Player::char_callback);
         // tell GLFW to capture our mouse
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         // glad: load all OpenGL function pointers
@@ -87,16 +84,28 @@ public:
         // weapon_shader2.init("../resources/shaders/weapon2_v.glsl", "../resources/shaders/weapon2_f.glsl");
         weapon_shader2.init("../resources/shaders/fres_v.glsl", "../resources/shaders/fres_f.glsl");
 
+        debug_shader.init("../resources/shaders/debug_v.glsl", "../resources/shaders/debug_f.glsl");
+
         setup_buffers();
         load_textures();
+
+        debug_renderer.init();
+
         return true;
     }
 
+    void sync_callbacks(Player& player) {
+        glfwSetWindowUserPointer(window, &player);
+        glfwSetCursorPosCallback(window, Player::mouse_callback);
+        glfwSetScrollCallback(window, Player::scroll_callback);
+        glfwSetCharCallback(window, Player::char_callback);
+    }
+
     bool setup_buffers() {
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        // glGenVertexArrays(1, &VAO);
+        // glGenBuffers(1, &VBO);
+        // glBindVertexArray(VAO);
+        // glBindBuffer(GL_ARRAY_BUFFER, VBO);
         return true; // ?
     }
 
@@ -236,6 +245,8 @@ public:
             our_shader.setMat4("model", model);
             our_shader.setVec3("objectColor", entity.get_color());
             entity.draw(our_shader);
+            
+            debug_renderer.add_axes(entity.physics.position, entity.physics.orientation);
         }
 
         our_shader.setVec3("lightPos", glm::vec3(0.0f, 100.0f, 0.0f));
@@ -273,7 +284,6 @@ public:
                 break;
             }
         } 
-
         our_shader.setVec3("lightPos", glm::vec3(0.0f, 100.0f, 0.0f));
         our_shader.setVec3("viewPos", player.camera.position);
         our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -286,6 +296,9 @@ public:
             our_shader.setMat4("model", model);
             c->draw(our_shader);
         }
+
+        // if (debug)
+        debug_renderer.render(debug_shader, projection, view);
 
         // flush(); !!
     }
@@ -305,16 +318,10 @@ public:
     }
 
     void draw_player_holding(Player& player, Model_ass& wep, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon) {
-        glDisable(GL_DEPTH_TEST);
+        // glDisable(GL_DEPTH_TEST);
         weapon_shader2.use();
         
-        // 3. Projection: same as main scene or you can tweak FOV
-        glm::mat4 projection = glm::perspective(
-            glm::radians(player.camera.zoom),
-            (float)scr_width / (float)scr_height,
-            0.1f, // near
-            300.0f // far
-        );
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
         weapon_shader2.setMat4("projection", projection);
         
         glm::mat4 fullView = player.camera.get_view_matrix();
@@ -324,14 +331,13 @@ public:
         glm::mat4 model = glm::mat4(1.0f);
         
         // FIX player.camera.yaw pitch roll maybe geeruc
-        model = glm::rotate(model, -glm::radians(player.camera.yaw - 90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, -glm::radians(player.camera.pitch), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, -glm::radians(player.camera.yaw + 90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(player.camera.pitch), glm::vec3(1.0f, 0.0f, 0.0f));
         
         model = glm::translate(model, player.controller->get_weapon_position());
-        
+        model = glm::scale(model, glm::vec3(0.1f));
         weapon_shader2.setMat4("model", model);
         weapon_shader2.setVec3("viewPos", player.camera.position);
-
 
         // weapon_shader2.setVec3("lightPos", glm::vec3(5.0f, 5.0f, 5.0f));
         // float timeValue = glfwGetTime();
@@ -350,10 +356,11 @@ public:
         weapon_shader2.setVec3("uEmission", emis_clr); // e.g. (0, 0.6, 1.0)
         weapon_shader2.setVec3("uFresnelColor", fres_clr);    // _Emission
         weapon_shader2.setFloat("uFresnelExponent", expon); // _FresnelExponent
+        // wep.draw(weapon_shader2);
+        player.controller->draw_hud(weapon_shader2);
 
-        wep.draw(weapon_shader2);
-        glDepthMask(GL_TRUE);
-        glEnable(GL_DEPTH_TEST);
+        // glDepthMask(GL_TRUE);
+        // glEnable(GL_DEPTH_TEST);
     }
     
     void render_ass(Player& player, Model_ass& model_ass) {
@@ -382,18 +389,18 @@ public:
     }
 
     void shutdown() {
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
+        // glDeleteVertexArrays(1, &VAO);
+        // glDeleteBuffers(1, &VBO);
         glfwTerminate();
     }
 
 // private:
     GLFWwindow* window;
     int scr_width, scr_height;
+    Renderer_debug debug_renderer;
 
-    Shader our_shader, geometry_shader, weapon_shader, weapon_shader2;
-    unsigned int VBO, VAO;
-    unsigned int color_location;
+    Shader our_shader, geometry_shader, weapon_shader, weapon_shader2, debug_shader;
+    // unsigned int VBO, VAO;
     unsigned int texture1, texture2, floorTexture, texture_dev;
 
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {

@@ -1,8 +1,10 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include <glm/glm.hpp>
 #include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include "model.h"
 #include "shader.h"
@@ -16,6 +18,8 @@ public:
         bool physics_enabled  = true,
         glm::vec3 scale       = glm::vec3(1.0f),
         glm::vec3 color       = glm::vec3(1.0f),
+        float mass = 1.0f,
+        glm::quat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
         bool fade             = false,
         float ttl             = 0.0f,
         float max_ttl         = 0.0f,

@@ -26,7 +26,11 @@ public:
     float zoom;
 
     // constructor with vectors
-    Camera(glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 world_up_ = glm::vec3(0.0f, 1.0f, 0.0f), float yaw_ = YAW, float pitch_ = PITCH) : front(glm::vec3(0.0f, 0.0f, -1.0f)), mouse_sensitivity(SENSITIVITY), zoom(ZOOM) {
+    Camera(glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), 
+           glm::vec3 world_up_ = glm::vec3(0.0f, 1.0f, 0.0f), 
+           float yaw_ = YAW, float pitch_ = PITCH) 
+        : front(glm::vec3(0.0f, 0.0f, -1.0f)), 
+        mouse_sensitivity(SENSITIVITY), zoom(ZOOM) {
         position = pos;
         world_up = world_up_;
         yaw = yaw_;
