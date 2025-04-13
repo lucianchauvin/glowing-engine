@@ -19,7 +19,7 @@ Entity::Entity(
     scale(scale), color(color),
     fade(fade), ttl(ttl), max_ttl(max_ttl), 
     rotation(glm::vec3(0.0f)),
-    physics(position, collider_radius, physics_enabled, mass, orientation, //aabb min max vec3s here)
+    physics(position, collider_radius, physics_enabled, mass, orientation)
 {
 }
 

@@ -22,6 +22,8 @@
 #include "chunk.h"
 #include "general/colors.h"
 #include "model_ass.h"
+#include "material_disney.h"
+#include "light.h"
 
 class Renderer {
 public:
@@ -86,8 +88,29 @@ public:
 
         debug_shader.init("../resources/shaders/debug_v.glsl", "../resources/shaders/debug_f.glsl");
 
-        setup_buffers();
+        disney_shader.init("../resources/shaders/disney_v.glsl", "../resources/shaders/disney_f.glsl");
+
         load_textures();
+        setup_buffers();
+
+        deferred_shader.init("../resources/shaders/deferred_v.glsl", "../resources/shaders/deferred_f.glsl");
+        deferred_lighting_shader.init("../resources/shaders/deferred_light_v.glsl", "../resources/shaders/deferred_light_f.glsl");
+
+        debug_gbuffer_shader.init("../resources/shaders/deferred_light_v.glsl", "../resources/shaders/deferred_lighting_debug_f.glsl");
+        
+        deferred_shader.use();
+        deferred_shader.setInt("texture_diffuse1", 0);
+        deferred_shader.setInt("texture_specular1", 1);
+
+        deferred_shader.use();
+        deferred_shader.setInt("texture_diffuse1", 0);
+        deferred_shader.setInt("texture_specular1", 1);
+
+        deferred_lighting_shader.use();
+        deferred_lighting_shader.setInt("g_position", 0);
+        deferred_lighting_shader.setInt("g_normal", 1);
+        deferred_lighting_shader.setInt("g_albedo_specular", 2);
+
 
         debug_renderer.init();
 
@@ -102,11 +125,80 @@ public:
     }
 
     bool setup_buffers() {
-        // glGenVertexArrays(1, &VAO);
-        // glGenBuffers(1, &VBO);
-        // glBindVertexArray(VAO);
-        // glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        return true; // ?
+        // Create and bind G-buffer framebuffer
+        glGenFramebuffers(1, &g_buffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, g_buffer);
+    
+        // 1. Position buffer
+        glGenTextures(1, &g_position);
+        glBindTexture(GL_TEXTURE_2D, g_position);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, scr_width, scr_height, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, g_position, 0);
+        
+        // 2. Normal buffer
+        glGenTextures(1, &g_normal);
+        glBindTexture(GL_TEXTURE_2D, g_normal);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, scr_width, scr_height, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, g_normal, 0);
+        
+        // 3. Color + specular buffer
+        glGenTextures(1, &g_albedo_specular);
+        glBindTexture(GL_TEXTURE_2D, g_albedo_specular);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, scr_width, scr_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, g_albedo_specular, 0);
+        
+        // Tell OpenGL which color attachments we'll use for rendering
+        unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+        glDrawBuffers(3, attachments);
+        
+        // Create and attach depth buffer
+        unsigned int rboDepth;
+        glGenRenderbuffers(1, &rboDepth);
+        glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, scr_width, scr_height);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+        
+        // Check if framebuffer is complete
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            std::cout << "Framebuffer not complete!" << std::endl;
+            return false;
+        }
+        
+        // Unbind framebuffer
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+        unsigned int quadVBO;
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        
+        // Print debug info
+        printf("Quad VAO created: %u\n", quadVAO);
+        
+        return true;
     }
 
     bool load_textures() {
@@ -200,8 +292,9 @@ public:
         our_shader.use();
 
         our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
-        our_shader.setVec3("viewPos", player.camera.position);
         our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        our_shader.setVec3("viewPos", player.camera.position);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
@@ -222,36 +315,72 @@ public:
     }
 
     void render_scene(Player& player, Scene& scene, float deltaTime, std::vector<Chunk*>& chunks) {
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
+        // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
+        // our_shader.use();
+
+        // our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
+        // our_shader.setVec3("viewPos", player.camera.position);
+        // our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, texture1);
+        // glActiveTexture(GL_TEXTURE1);
+        // glBindTexture(GL_TEXTURE_2D, texture2);
+
+        // glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
+        // our_shader.setMat4("projection", projection);
+        // glm::mat4 view = player.camera.get_view_matrix();
+        // our_shader.setMat4("view", view);
+
+        // for (Entity entity : scene.entities) {
+        //     glm::mat4 model = entity.get_model_matrix();
+        //     our_shader.setMat4("model", model);
+        //     our_shader.setVec3("objectColor", entity.get_color());
+        //     entity.draw(our_shader);
+            
+        //     debug_renderer.add_axes(entity.physics.position, entity.physics.orientation);
+        // }
+
+        // Clear the buffers
+        glClearColor(0.2f, 0.5f, 0.5f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         our_shader.use();
+        
+        our_shader.setVec3("light_position", light.position);
+        our_shader.setVec3("light_color", light.color);
+        our_shader.setFloat("light_intensity", light.intensity);
+        debug_renderer.add_sphere(light.position, 0.1f, light.color);
 
-        our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
-        our_shader.setVec3("viewPos", player.camera.position);
-        our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-
+        // Setup camera matrices
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
         our_shader.setMat4("projection", projection);
+        
         glm::mat4 view = player.camera.get_view_matrix();
         our_shader.setMat4("view", view);
-
-        for (Entity entity : scene.entities) {
+        our_shader.setVec3("view_position", player.camera.position);
+        
+        // material.apply(disney_shader);
+        for (Entity& entity : scene.entities) {
+            // Calculate and set transformation matrices
             glm::mat4 model = entity.get_model_matrix();
             our_shader.setMat4("model", model);
-            our_shader.setVec3("objectColor", entity.get_color());
+            
+            // Calculate normal matrix (inverse transpose of the model matrix)
+            glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model)));
+            our_shader.setMat3("normal_matrix", normal_matrix);
+            
+            // apply material per entity
+
+            // Draw the entity
             entity.draw(our_shader);
             
             debug_renderer.add_axes(entity.physics.position, entity.physics.orientation);
         }
 
         our_shader.setVec3("lightPos", glm::vec3(0.0f, 100.0f, 0.0f));
-        our_shader.setVec3("viewPos", player.camera.position);
         our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        our_shader.setVec3("viewPos", player.camera.position);
         std::vector<int> idxs;
         int i = 0;
         for (Entity& entity : scene.timed_entities) {
@@ -303,6 +432,116 @@ public:
         // flush(); !!
     }
 
+    void render_scene_deferred(Player& player, Scene& scene, float deltaTime) {
+        // 1. Geometry Pass: Render scene to G-buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, g_buffer);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        
+        // Prepare matrices
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), 
+                                                (float)scr_width / (float)scr_height, 
+                                                0.1f, 300.0f);
+        glm::mat4 view = player.camera.get_view_matrix();
+
+        // Use deferred geometry shader for G-buffer pass
+        deferred_shader.use();
+        deferred_shader.setMat4("projection", projection);
+        deferred_shader.setMat4("view", view);
+
+        // Render scene entities to G-buffer
+        for (Entity& entity : scene.entities) {
+            glm::mat4 model = entity.get_model_matrix();
+            deferred_shader.setMat4("model", model);
+            
+            // Calculate normal matrix (inverse transpose of the model matrix)
+            glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model)));
+            deferred_shader.setMat3("normal_matrix", normal_matrix);
+            
+            entity.draw(deferred_shader);
+        }
+
+        // 2. Lighting Pass: Render lighting using G-buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // Back to default framebuffer
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
+        
+        // Use lighting shader
+        deferred_lighting_shader.use();
+        
+        // Bind G-buffer textures
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, g_position);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, g_normal);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, g_albedo_specular);
+
+        // Set lighting uniforms
+        deferred_lighting_shader.setVec3("viewPos", player.camera.position);
+        
+        // Set light parameters
+        deferred_lighting_shader.setVec3("light.Position", light.position);
+        deferred_lighting_shader.setVec3("light.Color", light.color);
+        deferred_lighting_shader.setFloat("light.Linear", 0.09f);
+        deferred_lighting_shader.setFloat("light.Quadratic", 0.032f);
+        deferred_lighting_shader.setFloat("light.Intensity", light.intensity);
+
+        // glUniform1i(glGetUniformLocation(deferred_lighting_shader.ID, "debug_mode"), 999);
+
+        // Render a screen-filling quad
+        // render_quad();
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindVertexArray(0);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        glEnable(GL_DEPTH_TEST);
+
+        // Optional: Render debug information
+        if (!player.key_toggles[(unsigned)'r']) {
+            // debug_renderer.render(debug_shader, projection, view);
+            debug_visualize_gbuffer(player);
+        }
+    }
+
+    void debug_visualize_gbuffer(Player& player) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+        debug_gbuffer_shader.use();
+    
+        // Bind G-buffer textures
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, g_position);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, g_normal);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, g_albedo_specular);
+    
+        const char* mode_names[] = {
+            "Position", "Normal", "Albedo", "Specular", "Depth"
+        };
+        static int current_mode = 0;
+    
+        for (int i = 0; i < 4; ++i) {
+            debug_gbuffer_shader.setInt("debug_mode", i);
+    
+            int x = (i % 2) * (scr_width / 2);
+            int y = (i / 2) * (scr_height / 2);
+            glViewport(x, y, scr_width / 2, scr_height / 2);
+    
+            // render_quad();
+            glBindVertexArray(quadVAO);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            glBindVertexArray(0);    
+        }
+    
+        // Reset viewport
+        glViewport(0, 0, scr_width, scr_height);
+    }
+    
     void render_world_geometry(Scene& scene, Player& player) {
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
         geometry_shader.setMat4("projection", projection);
@@ -337,7 +576,6 @@ public:
         model = glm::rotate(model, glm::radians(player.camera.pitch), glm::vec3(1.0f, 0.0f, 0.0f));
         
         model = glm::translate(model, player.controller->get_weapon_position());
-        model = glm::scale(model, glm::vec3(0.1f));
         weapon_shader2.setMat4("model", model);
         weapon_shader2.setVec3("viewPos", player.camera.position);
 
@@ -368,35 +606,24 @@ public:
         // glEnable(GL_DEPTH_TEST);
     }
     
-    void render_ass(Player& player, Model_ass& model_ass) {
-
-        our_shader.use();
-        our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
-        our_shader.setVec3("viewPos", player.camera.position);
-        our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        our_shader.setMat4("projection", projection);
-        glm::mat4 view = player.camera.get_view_matrix();
-        our_shader.setMat4("view", view);
-
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 1.0f, -2.0f));
-        our_shader.setMat4("model", model);
-
-        our_shader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        model_ass.draw(our_shader);
-    }
-
     void flush() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     void shutdown() {
-        // glDeleteVertexArrays(1, &VAO);
-        // glDeleteBuffers(1, &VBO);
+        glDeleteFramebuffers(1, &g_buffer);
+        glDeleteTextures(1, &g_position);
+        glDeleteTextures(1, &g_normal);
+        glDeleteTextures(1, &g_albedo_specular);
+        
+        glDeleteVertexArrays(1, &quadVAO);
+        
         glfwTerminate();
+    }
+
+    static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+        glViewport(0, 0, width, height);
     }
 
 // private:
@@ -404,12 +631,19 @@ public:
     int scr_width, scr_height;
     Renderer_debug debug_renderer;
 
-    Shader our_shader, geometry_shader, weapon_shader, weapon_shader2, debug_shader;
+    Light light;
+
+    Material_disney material;
+
+    Shader our_shader, geometry_shader, weapon_shader, weapon_shader2, debug_shader, disney_shader;
     // unsigned int VBO, VAO;
     unsigned int texture1, texture2, floorTexture, texture_dev;
 
-    static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-        glViewport(0, 0, width, height);
-    }
+    // deferred pipeline
+    Shader deferred_shader, deferred_lighting_shader, debug_gbuffer_shader;
+    unsigned int g_buffer, g_position, g_normal, g_albedo_specular;
+    
+    unsigned int quadVAO;
+
 };
 #endif

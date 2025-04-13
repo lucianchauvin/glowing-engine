@@ -105,7 +105,8 @@ public:
 
 private:
     void mouse_callback_impl(GLFWwindow* window, double xpos, double ypos) { // need these guys to pass camera
-        controller->mouse_callback(window, camera, xpos, ypos, model_yaw);
+        if (!key_toggles[(unsigned)'q'])
+            controller->mouse_callback(window, camera, xpos, ypos, model_yaw);
     }
     
     void scroll_callback_impl(GLFWwindow* window, double xoffset, double yoffset) {

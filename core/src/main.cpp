@@ -13,7 +13,6 @@
 #include "scene.h"
 #include "chunk.h"
 #include "physics.h"
-#include "model.h"
 #include "model_ass.h"
 #include "audio.h"
 
@@ -25,22 +24,22 @@ const unsigned int SCR_HEIGHT = 800;
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
+// weapon
 float waveAmplitude = 0.03f;
 float waveFrequency = 5.0f;
 float waveSpeed = 2.0f;
-
 glm::vec3 clr = glm::vec3(0.0f, 0.4f, 0.0f);
 glm::vec3 emis = glm::vec3(0.0f);
 glm::vec3 fres = glm::vec3(0.0f, 0.0f, 0.0f);
 float expon = 1.0f;
 
 int main() {
+    Audio::init();
+
     Renderer renderer;
     if (!renderer.init(SCR_WIDTH, SCR_HEIGHT, "GLOW")) {
         return -1;
     };
-
-    Audio::init();
 
     Player player;
     renderer.sync_callbacks(player);
@@ -48,21 +47,9 @@ int main() {
     Scene scene;
     Model_ass plane("../resources/models/plane.obj");
 
-    Model_ass sphere("../resources/models/cube.obj");
-    // Model_ass sphere("../resources/models/backpack/backpack.obj");
-    // Model_ass sphere("../resources/models/castle/scene.gltf");
+    Model_ass sphere("../resources/models/backpack/backpack.obj");
 
-    // Model ak47;
-    // ak47.load_mesh("../resources/models/Ak_47/ak47.obj");
-
-    // Model_ass model_ass("../resources/models/sword/scene.gltf");
-    // Model_ass model_ass("../resources/models/gun/scene.gltf");
-    // Model_ass model_ass("../resources/models/shield/scene.obj");
-    Model_ass model_ass("../resources/models/backpack/backpack.obj");
-    // Model_ass holding("../resources/models/qbz/qbz.obj");
     Model_ass fly("../resources/models/plane/scene.gltf");
-    // Model_ass model_ass("../resources/models/ebonchill/scene.gltf");
-    // Model_ass model_ass("../resources/models/hogwarts/Hogwarts.obj");
 
     for (int i = -5; i < 5; i++) {
         for (int j = 0; j < 10; j++) {
@@ -86,7 +73,7 @@ int main() {
     glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
     glm::vec3 color = glm::vec3(0.7f, 0.7f, 0.7f);
     Entity e(&plane, pos, false, scale, color);
-    scene.include(e);
+    // scene.include(e);
 
     std::vector<Chunk*> chunks = std::vector<Chunk*>();
     // for (int x = -2; x < 1; x++) {
@@ -99,6 +86,7 @@ int main() {
 
     Physics physics;
     physics.load_scene(scene);
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -124,12 +112,16 @@ int main() {
 
         // render scene
         renderer.render_scene(player, scene, deltaTime, chunks);
-        // if (!player.key_toggles[(unsigned) 'r'])
-            renderer.render_world_geometry(scene, player);
+        // render scene deferred pipeline
+        // renderer.render_scene_deferred(player, scene, deltaTime);
+        // TODO: clustered forward 
 
-		renderer.draw_player_model(player, fly);
-        renderer.render_ass(player, model_ass);
-        renderer.draw_player_stuff(player, clr, emis, fres, expon);
+
+        // renderer.render_world_geometry(scene, player);
+		// renderer.draw_player_model(player, fly);
+        // renderer.draw_player_stuff(player, clr, emis, fres, expon);
+
+
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -148,6 +140,13 @@ int main() {
 
         player.debug_hud(io);
         player.controller->debug_hud(io);
+        renderer.material.draw_imgui_editor(io);
+
+        ImGui::Begin("Light");
+        ImGui::SliderFloat3("pos", &renderer.light.position.x, -10.0f, 10.0f);
+        ImGui::SliderFloat3("color", &renderer.light.color.x, 0.0f, 1.0f); // 1.0f;     
+        ImGui::SliderFloat("itensity", &renderer.light.intensity, -5.0, 25.0f); // 1.0f;        
+        ImGui::End();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

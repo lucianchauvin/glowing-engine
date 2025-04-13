@@ -11,7 +11,6 @@
 #include <physics.h>
 #include <player.h>
 #include <shader.h>
-#include <model.h>
 
 class Controller {
 public:

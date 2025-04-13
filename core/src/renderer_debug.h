@@ -32,7 +32,6 @@ public:
     void render(Shader& debug_shader, const glm::mat4& projection, const glm::mat4& view);
 
 private:
-
     std::vector<Debug_line> lines;
     unsigned int lineVBO = 0;
     unsigned int lineVAO = 0;
@@ -42,5 +41,6 @@ private:
     unsigned int sphereVAO = 0;
     unsigned int sphereEBO = 0;
     int sphereIndexCount = 0;
+    
     void build_sphere_geometry();
 };

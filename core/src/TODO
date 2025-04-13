@@ -1,0 +1,16 @@
+refactor shader into shader manager maybe? prob not worth yet
+
+weapon / holdable class
+animate weapons
+make ssimp good (bones)
+
+texuture manager for shaders
+asset manager? ^
+
+clustered forward rendering
+physics
+cars
+planes
+integrate controller into entities
+
+world representation

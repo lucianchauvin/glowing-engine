@@ -41,7 +41,8 @@ struct Physics_object {
         const glm::quat& orient = glm::quat(1.0f, 0.0f, 0.0f, 0.0f), 
         const glm::vec3& angVel = glm::vec3(0.0f), 
         const glm::mat3& inertiaVal = glm::mat3(1.0f), 
-        const glm::mat3& invInertiaVal = glm::mat3(1.0f)) 
+        const glm::mat3& invInertiaVal = glm::mat3(1.0f))
+        // add to take aabb stuff
         :   mass(m), 
             position(pos),
             orientation(orient), 

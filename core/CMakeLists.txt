@@ -29,6 +29,7 @@ set(SOURCES
     src/scene.cpp
     src/audio.cpp
     src/renderer_debug.cpp
+    src/material_disney.cpp
 
     ext/glad/glad.c
     ext/dearimgui/imgui.cpp

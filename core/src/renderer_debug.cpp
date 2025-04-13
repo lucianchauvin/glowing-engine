@@ -35,8 +35,8 @@ void Renderer_debug::build_sphere_geometry() {
     // For simplicity, let’s do a small UV sphere. 
     // You can generate as many segments as you want. Here is just a minimal example.
 
-    const int latSegments = 32;
-    const int lonSegments = 32;
+    const int latSegments = 8;
+    const int lonSegments = 8;
     const float PI = 3.14159f;
 
     std::vector<glm::vec3> positions;
@@ -212,6 +212,8 @@ void Renderer_debug::render(Shader& debug_shader, const glm::mat4& projection, c
         glm::mat4 model(1.0f);
         debug_shader.setMat4("model", model);
 
+        debug_shader.setVec3("debugColor", glm::vec3(0.0f));
+
         glDisable(GL_DEPTH_TEST);
 
         glDrawArrays(GL_LINES, 0, (GLsizei)(lines.size() * 2));
@@ -233,6 +235,8 @@ void Renderer_debug::render(Shader& debug_shader, const glm::mat4& projection, c
             model = glm::translate(model, s.center);
             model = glm::scale(model, glm::vec3(s.radius)); 
             debug_shader.setMat4("model", model);
+
+            debug_shader.setVec3("debugColor", s.color);
 
             // glDisable(GL_DEPTH_TEST); // if needed
             glDrawElements(GL_TRIANGLES, sphereIndexCount, GL_UNSIGNED_INT, 0);
