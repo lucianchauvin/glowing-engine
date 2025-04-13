@@ -4,14 +4,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <vector>
 
 #include "renderer.h"
 #include "player.h"
-#include "shader.h"
 #include "entity.h"
 #include "scene.h"
-#include "chunk.h"
 #include "physics.h"
 #include "model_ass.h"
 #include "audio.h"
@@ -73,16 +70,7 @@ int main() {
     glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
     glm::vec3 color = glm::vec3(0.7f, 0.7f, 0.7f);
     Entity e(&plane, pos, false, scale, color);
-    // scene.include(e);
-
-    std::vector<Chunk*> chunks = std::vector<Chunk*>();
-    // for (int x = -2; x < 1; x++) {
-    //     for (int z = -2; z < 1; z++) {
-    //         // if (x == 0 && z == 0) continue;
-    //         Chunk* chunk = new Chunk(x, z);
-    //         chunks.push_back(chunk);
-    //     }
-    // }
+    scene.include(e);
 
     Physics physics;
     physics.load_scene(scene);
@@ -111,7 +99,7 @@ int main() {
         player.controller_step(renderer.window, deltaTime, scene);
 
         // render scene
-        renderer.render_scene(player, scene, deltaTime, chunks);
+        renderer.render_scene(player, scene, deltaTime);
         // render scene deferred pipeline
         // renderer.render_scene_deferred(player, scene, deltaTime);
         // TODO: clustered forward 
@@ -129,13 +117,6 @@ int main() {
         
         ImGui::Begin("Info");
         ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
-        ImGui::SliderFloat("waveAmplitude", &waveAmplitude, -10.0, 10.0f); // 0.03f;
-        ImGui::SliderFloat("waveFrequency", &waveFrequency, -10.0, 10.0f); // 5.0f;
-        ImGui::SliderFloat("waveSpeed", &waveSpeed, -10.0, 10.0f); // 2.0f;
-        ImGui::SliderFloat3("color", &clr.x, 0.0f, 1.0f);
-        ImGui::SliderFloat3("emis", &emis.x, 0.0f, 1.0f); // 1.0f;     
-        ImGui::SliderFloat3("fresclr", &fres.x, 0.0, 1.0f); // 1.0f;     
-        ImGui::SliderFloat("exp", &expon, -5.0, 25.0f); // 1.0f;        
         ImGui::End();
 
         player.debug_hud(io);

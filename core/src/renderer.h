@@ -19,7 +19,6 @@
 #include "shader.h"
 #include "scene.h"
 #include "player.h"
-#include "chunk.h"
 #include "general/colors.h"
 #include "model_ass.h"
 #include "material_disney.h"
@@ -314,7 +313,7 @@ public:
         player_model.draw(our_shader);
     }
 
-    void render_scene(Player& player, Scene& scene, float deltaTime, std::vector<Chunk*>& chunks) {
+    void render_scene(Player& player, Scene& scene, float deltaTime) {
         // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
         // our_shader.use();
@@ -345,85 +344,35 @@ public:
         // Clear the buffers
         glClearColor(0.2f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        our_shader.use();
+        disney_shader.use();
         
-        our_shader.setVec3("light_position", light.position);
-        our_shader.setVec3("light_color", light.color);
-        our_shader.setFloat("light_intensity", light.intensity);
+        disney_shader.setVec3("light_position", light.position);
+        disney_shader.setVec3("light_color", light.color);
+        disney_shader.setFloat("light_intensity", light.intensity);
         debug_renderer.add_sphere(light.position, 0.1f, light.color);
 
         // Setup camera matrices
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        our_shader.setMat4("projection", projection);
+        disney_shader.setMat4("projection", projection);
         
         glm::mat4 view = player.camera.get_view_matrix();
-        our_shader.setMat4("view", view);
-        our_shader.setVec3("view_position", player.camera.position);
+        disney_shader.setMat4("view", view);
+        disney_shader.setVec3("view_position", player.camera.position);
         
-        // material.apply(disney_shader);
+        material.apply(disney_shader);
         for (Entity& entity : scene.entities) {
             // Calculate and set transformation matrices
             glm::mat4 model = entity.get_model_matrix();
-            our_shader.setMat4("model", model);
+            disney_shader.setMat4("model", model);
             
             // Calculate normal matrix (inverse transpose of the model matrix)
             glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model)));
-            our_shader.setMat3("normal_matrix", normal_matrix);
+            disney_shader.setMat3("normal_matrix", normal_matrix);
             
-            // apply material per entity
-
             // Draw the entity
-            entity.draw(our_shader);
+            entity.draw(disney_shader);
             
             debug_renderer.add_axes(entity.physics.position, entity.physics.orientation);
-        }
-
-        our_shader.setVec3("lightPos", glm::vec3(0.0f, 100.0f, 0.0f));
-        our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        our_shader.setVec3("viewPos", player.camera.position);
-        std::vector<int> idxs;
-        int i = 0;
-        for (Entity& entity : scene.timed_entities) {
-            // printf("[BEFORE] %f\n", entity.ttl);
-            glm::mat4 model = entity.get_model_matrix();
-            our_shader.setMat4("model", model);
-            our_shader.setVec3("objectColor", glm::vec3(1.0f, 0.0f, 1.0f) * (entity.ttl / entity.max_ttl));
-            
-            if (!entity.draw(our_shader, deltaTime)) {
-                // printf("REMOVE!!\n");
-                idxs.push_back(i);
-            }
-            
-            // printf("[AFTER] %f\n", entity.ttl);
-            i++;
-        }
-        
-        for (int j = idxs.size() - 1; j >= 0; j--) {
-            scene.timed_entities.erase(scene.timed_entities.begin() + idxs[j]);
-        }
-
-        // chunkj stuff
-        float translate_height = 0.0f;
-        for (Chunk* c : chunks) {
-            if (c->in_chunk(player.player_physics.position)) {
-                translate_height = c->height_at(player.player_physics.position);
-                glm::ivec2 xz = c->chunk_pos_chunk();
-                printf("player in chunk: [%d, %d]\n", xz.x, xz.y);
-                printf("height: [%f]", translate_height);
-                break;
-            }
-        } 
-        our_shader.setVec3("lightPos", glm::vec3(0.0f, 100.0f, 0.0f));
-        our_shader.setVec3("viewPos", player.camera.position);
-        our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        our_shader.setVec3("objectColor", glm::vec3(1.0f, 0.0f, 1.0f));
-        for (Chunk* c : chunks) {
-            // printf("drawing chunk\n");
-            glm::mat4 model = glm::mat4(1.0f);
-            glm::vec2 chunk_pos = c->chunk_pos_world();
-            model = glm::translate(model, glm::vec3(chunk_pos.x, -2.0f - translate_height, chunk_pos.y));
-            our_shader.setMat4("model", model);
-            c->draw(our_shader);
         }
 
         if (!player.key_toggles[(unsigned)'r'])
