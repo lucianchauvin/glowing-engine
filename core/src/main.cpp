@@ -44,20 +44,20 @@ int main() {
     Scene scene;
     Model_ass plane("../resources/models/plane.obj");
 
-    Model_ass sphere("../resources/models/backpack/backpack.obj");
+    Model_ass sphere("../resources/models/backpack/backpack.obj", 10.0f);
     // Model_ass sphere("../resources/models/lucy/scene.gltf");
-    // Model_ass sphere("../resources/models/911/scene.gltf");
+    // Model_ass sphere("../resources/models/sponza/main1_sponza/NewSponza_Main_glTF_003.gltf");
 
     Model_ass fly("../resources/models/plane/scene.gltf");
 
     for (int i = -5; i < 5; i++) {
-        // for (int j = 0; j < 10; j++) {
-            // int k = 1;
-            int j = 1;
-            for (int k = 0; k < 10; k++) {
-                glm::vec3 pos   = glm::vec3(3.0f * i, j * 1.0f, -2.0f * k); 
+        for (int j = 0; j < 10; j++) {
+    //         // int k = 1;
+    //         int j = 1;
+    //         for (int k = 0; k < 10; k++) {
+                glm::vec3 pos   = glm::vec3(6.0f * i, j * 6.0f, -6.0f * j); 
                 glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * k);
+                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * j);
                 if ((i + j) % 2) {
                     Entity e(&sphere, pos, true, scale, color);
                     scene.include(e);
@@ -65,15 +65,21 @@ int main() {
                     Entity e(&sphere, pos, true, scale, color, 1.0f, glm::rotate(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
                     scene.include(e);
                 }
-            // }
+            }
         }
-    }
+    // }
 
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
     glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
     glm::vec3 color = glm::vec3(0.7f, 0.7f, 0.7f);
     Entity e(&plane, pos, false, scale, color);
     scene.include(e);
+
+    // pos   = glm::vec3(0.0f, 30.0f, 0.0f); 
+    // scale = glm::vec3(100.0f, 100.0f, 100.0f);
+    // color = glm::vec3(1.0f, 1.0f, 1.0f);
+    // Entity e2(&sphere, pos, false, scale, color);
+    // scene.include(e2);
 
     Physics physics;
     physics.load_scene(scene);

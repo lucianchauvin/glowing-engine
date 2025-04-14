@@ -17,7 +17,7 @@ void Model_ass::draw(Shader &shader) {
         meshes[i].draw(shader);
 }  
 
-void Model_ass::load_model(const std::string &path) {
+void Model_ass::load_model(const std::string &path, float scale) {
     Assimp::Importer import;
     const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);	
 	
@@ -28,7 +28,7 @@ void Model_ass::load_model(const std::string &path) {
     directory = directory = path.substr(0, path.find_last_of('/'));
     CHECK_GL_ERROR();
     process_node(scene->mRootNode, scene);
-    normalize_model();
+    normalize_model(scale);
 }
 
 void Model_ass::process_node(aiNode *node, const aiScene *scene) {
@@ -86,7 +86,7 @@ Mesh Model_ass::process_mesh(aiMesh *mesh, const aiScene *scene) {
     return Mesh(vertices, indices, textures);
 }  
 
-void Model_ass::normalize_model() {
+void Model_ass::normalize_model(float scale) {
     // We'll gather the min/max by scanning *all* vertices in all meshes.
     glm::vec3 vmin(FLT_MAX);
     glm::vec3 vmax(-FLT_MAX);
@@ -112,13 +112,13 @@ void Model_ass::normalize_model() {
         // Avoid division by zero if the model is basically a single point
         maxDim = 1.0f;
     }
-    float scale = 1.0f / maxDim;  // so the largest dimension goes from -1 to +1
+    float scale_f = scale / maxDim;  // so the largest dimension goes from -1 to +1
 
     // 3. Shift and scale all vertex positions
     for (auto &m : meshes) {
         for (auto &v : m.vertices) {
             // Shift to center, then scale
-            v.Position = (v.Position - center) * scale;
+            v.Position = (v.Position - center) * scale_f;
         }
 
         m.update_vertex_buffer();
