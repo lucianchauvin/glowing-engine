@@ -1,10 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include <map>
-#include <vector>
 #include <filesystem>
-#include <random>
 #include <ctime>
 
 #include <glad/glad.h>
@@ -19,7 +16,6 @@
 #include "shader.h"
 #include "scene.h"
 #include "player.h"
-#include "general/colors.h"
 #include "model_ass.h"
 #include "material_disney.h"
 #include "light.h"

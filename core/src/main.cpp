@@ -45,21 +45,24 @@ int main() {
     Model_ass plane("../resources/models/plane.obj");
 
     Model_ass sphere("../resources/models/backpack/backpack.obj");
+    // Model_ass sphere("../resources/models/lucy/scene.gltf");
+    // Model_ass sphere("../resources/models/911/scene.gltf");
 
     Model_ass fly("../resources/models/plane/scene.gltf");
 
     for (int i = -5; i < 5; i++) {
-        for (int j = 0; j < 10; j++) {
-            int k = 1;
-            // for (int k = 0; k < 10; k++) {
-                glm::vec3 pos   = glm::vec3(3.0f * i, j * 3.0f, -2.0f * k); 
+        // for (int j = 0; j < 10; j++) {
+            // int k = 1;
+            int j = 1;
+            for (int k = 0; k < 10; k++) {
+                glm::vec3 pos   = glm::vec3(3.0f * i, j * 1.0f, -2.0f * k); 
                 glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
                 glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * k);
                 if ((i + j) % 2) {
                     Entity e(&sphere, pos, true, scale, color);
                     scene.include(e);
                 } else {
-                    Entity e(&sphere, pos, true, scale, color, 1.0f, glm::rotate(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
+                    Entity e(&sphere, pos, true, scale, color, 1.0f, glm::rotate(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
                     scene.include(e);
                 }
             // }

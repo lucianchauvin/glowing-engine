@@ -2,7 +2,6 @@
 #define SCENE_H
 
 #include <vector>
-#include <memory>
 #include "entity.h"
 #include "shader.h"
 #include "world_geometry.h"

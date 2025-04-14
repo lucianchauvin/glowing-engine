@@ -3,5 +3,4 @@ core/build/
 .vscode/tasks.json
 odin/
 core/ext/JoltPhysics/
-core/ext/fmodstudioapi20307linux/
 core/resources/models/
