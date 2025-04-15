@@ -1,6 +1,17 @@
-clustered forward rendering
+assetmanager? 
+    shader manager
+    texture manager
+        pbr pipeline
+        disney materials
+        + world geom 
 
-jolt drop in / part of physics class?
+world representation
+    frsutum culling (everything / entities)
+
+skeletal animation
+make ssimp good (bones)
+weapon / holdable class
+    animate weapons (same system, blending, IK)
 
 controllers
     physics (jolt?)
@@ -11,17 +22,6 @@ controllers
     interaction
     player (use)
 
-world representation
-    frsutum culling (everything / entities)
+jolt drop in / part of physics class?
 
-skeletal animation
-make ssimp good (bones)
-weapon / holdable class
-    animate weapons (same system, blending, IK)
-
-assetmanager? 
-    shader manager
-    texture manager
-        pbr pipeline
-        disney materials
-        + world geom 
+clustered forward rendering
