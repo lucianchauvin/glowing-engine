@@ -8,6 +8,8 @@ controllers
     cars
     planes
     integrate controller into entities
+    interaction
+    player (use)
 
 world representation
     frsutum culling (everything / entities)
