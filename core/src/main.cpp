@@ -44,8 +44,8 @@ int main() {
     Scene scene;
     Model_ass plane("../resources/models/plane.obj");
 
-    Model_ass sphere("../resources/models/backpack/backpack.obj", 10.0f);
-    // Model_ass sphere("../resources/models/lucy/scene.gltf");
+    // Model_ass sphere("../resources/models/backpack/backpack.obj", 10.0f);
+    Model_ass sphere("../resources/models/bunny.obj");
     // Model_ass sphere("../resources/models/sponza/main1_sponza/NewSponza_Main_glTF_003.gltf");
 
     Model_ass fly("../resources/models/plane/scene.gltf");
@@ -56,7 +56,7 @@ int main() {
     //         int j = 1;
     //         for (int k = 0; k < 10; k++) {
                 glm::vec3 pos   = glm::vec3(6.0f * i, j * 6.0f, -6.0f * j); 
-                glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+                glm::vec3 scale = glm::vec3(10.0f, 10.0f, 10.0f);
                 glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * j);
                 if ((i + j) % 2) {
                     Entity e(&sphere, pos, true, scale, color);

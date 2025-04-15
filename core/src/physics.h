@@ -5,6 +5,18 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+struct Bounding_sphere {
+    glm::vec3 center;
+    float radius;
+
+    Bounding_sphere(glm::vec3 c, float r) : center(c), radius(r) {}
+};
+
+struct AABB {
+    glm::vec3 min;
+    glm::vec3 max;
+};
+
 class Scene;
 
 inline constexpr float GRAVITY       = 9.8f;
@@ -16,13 +28,6 @@ inline constexpr float ACCELERATION  = 47.0f;
 inline constexpr float MAX_VELOCITY  = 4.3f;
 inline constexpr float FLOOR_Y       = 0.0f;
 
-struct Collider_3d {
-    glm::vec3 pos;
-    float radius;
-
-    Collider_3d(glm::vec3 position, float r) : pos(position), radius(r) {}
-};
-
 struct Physics_object {
     float mass = 1.0f;
     glm::vec3 position;
@@ -31,7 +36,7 @@ struct Physics_object {
     glm::vec3 angular_velocity;
     glm::mat3 inertia, inverse_inertia;
     bool isOnGround;
-    Collider_3d collider;
+    Bounding_sphere collider;
     bool enabled; // todo implement
 
     Physics_object(glm::vec3 pos, 

@@ -1,16 +1,23 @@
-refactor shader into shader manager maybe? prob not worth yet
-
-weapon / holdable class
-animate weapons
-make ssimp good (bones)
-
-texuture manager for shaders
-asset manager? ^
-
 clustered forward rendering
-physics
-cars
-planes
-integrate controller into entities
+
+jolt drop in / part of physics class?
+
+controllers
+    physics (jolt?)
+
+    cars
+    planes
+    integrate controller into entities
 
 world representation
+    frsutum culling (everything / entities)
+
+skeletal animation
+make ssimp good (bones)
+weapon / holdable class
+    animate weapons (same system, blending, IK)
+
+
+assetmanager? 
+    shader manager
+    texture manager
