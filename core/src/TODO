@@ -17,7 +17,9 @@ make ssimp good (bones)
 weapon / holdable class
     animate weapons (same system, blending, IK)
 
-
 assetmanager? 
     shader manager
     texture manager
+        pbr pipeline
+        disney materials
+        + world geom 
