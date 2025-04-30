@@ -78,15 +78,15 @@ public:
         geometry_shader.use();
         geometry_shader.setInt("texture1", 1);
 
-        weapon_shader.init("../resources/shaders/weapon_v.glsl", "../resources/shaders/weapon_f.glsl");
-        // weapon_shader2.init("../resources/shaders/weapon2_v.glsl", "../resources/shaders/weapon2_f.glsl");
-        weapon_shader2.init("../resources/shaders/fres_v.glsl", "../resources/shaders/fres_f.glsl");
+        // weapon_shader2.init("../resources/shaders/weapon_v.glsl", "../resources/shaders/weapon_f.glsl");
+        weapon_shader2.init("../resources/shaders/weapon2_v.glsl", "../resources/shaders/weapon2_f.glsl");
+        // weapon_shader2.init("../resources/shaders/fres_v.glsl", "../resources/shaders/fres_f.glsl");
 
         debug_shader.init("../resources/shaders/debug_v.glsl", "../resources/shaders/debug_f.glsl");
 
         disney_shader.init("../resources/shaders/disney_v.glsl", "../resources/shaders/disney_f.glsl");
 
-        load_textures();
+        // load_textures();
         setup_buffers();
 
         deferred_shader.init("../resources/shaders/deferred_v.glsl", "../resources/shaders/deferred_f.glsl");
@@ -197,92 +197,92 @@ public:
         return true;
     }
 
-    bool load_textures() {
-        // texture 1
-        glGenTextures(1, &texture1);
-        glBindTexture(GL_TEXTURE_2D, texture1); 
-        // set the texture wrapping parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // load image, create texture and generate mipmaps
-        int width, height, nrChannels;
-        stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-        unsigned char *data = stbi_load("../resources/textures/container.jpg", &width, &height, &nrChannels, 0);
-        if (data) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-        }
-        else {
-            std::cout << "Failed to load texture" << std::endl;
-        }
-        stbi_image_free(data);
-        // texture 2
-        glGenTextures(1, &texture2);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-        // set the texture wrapping parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // load image, create texture and generate mipmaps
-        data = stbi_load("../resources/textures/awesomeface.png", &width, &height, &nrChannels, 0);
-        if (data) {
-            // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-        }
-        else {
-            std::cout << "Failed to load texture" << std::endl;
-        }
-        stbi_image_free(data);
-        // floor texture
-        glGenTextures(1, &floorTexture);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        // set the texture wrapping parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // load image, create texture and generate mipmaps
-        data = stbi_load("../resources/textures/floor.jpg", &width, &height, &nrChannels, 0);
-        if (data) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-        }
-        else {
-            std::cout << "Failed to load floor texture, using container texture instead" << std::endl;
-            // Fallback to container texture if floor texture is missing
-            floorTexture = texture1;
-        }
-        stbi_image_free(data);
+    // bool load_textures() {
+    //     // texture 1
+    //     glGenTextures(1, &texture1);
+    //     glBindTexture(GL_TEXTURE_2D, texture1); 
+    //     // set the texture wrapping parameters
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //     // set texture filtering parameters
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //     // load image, create texture and generate mipmaps
+    //     int width, height, nrChannels;
+    //     stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+    //     unsigned char *data = stbi_load("../resources/textures/container.jpg", &width, &height, &nrChannels, 0);
+    //     if (data) {
+    //         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    //         glGenerateMipmap(GL_TEXTURE_2D);
+    //     }
+    //     else {
+    //         std::cout << "Failed to load texture" << std::endl;
+    //     }
+    //     stbi_image_free(data);
+    //     // texture 2
+    //     glGenTextures(1, &texture2);
+    //     glBindTexture(GL_TEXTURE_2D, texture2);
+    //     // set the texture wrapping parameters
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //     // set texture filtering parameters
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //     // load image, create texture and generate mipmaps
+    //     data = stbi_load("../resources/textures/awesomeface.png", &width, &height, &nrChannels, 0);
+    //     if (data) {
+    //         // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
+    //         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    //         glGenerateMipmap(GL_TEXTURE_2D);
+    //     }
+    //     else {
+    //         std::cout << "Failed to load texture" << std::endl;
+    //     }
+    //     stbi_image_free(data);
+    //     // floor texture
+    //     glGenTextures(1, &floorTexture);
+    //     glBindTexture(GL_TEXTURE_2D, floorTexture);
+    //     // set the texture wrapping parameters
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //     // set texture filtering parameters
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //     // load image, create texture and generate mipmaps
+    //     data = stbi_load("../resources/textures/floor.jpg", &width, &height, &nrChannels, 0);
+    //     if (data) {
+    //         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    //         glGenerateMipmap(GL_TEXTURE_2D);
+    //     }
+    //     else {
+    //         std::cout << "Failed to load floor texture, using container texture instead" << std::endl;
+    //         // Fallback to container texture if floor texture is missing
+    //         floorTexture = texture1;
+    //     }
+    //     stbi_image_free(data);
 
-        // dev
-        glGenTextures(1, &texture_dev);
-        glBindTexture(GL_TEXTURE_2D, texture_dev); 
-        // set the texture wrapping parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // load image, create texture and generate mipmaps
-        data = stbi_load("../resources/textures/dev.png", &width, &height, &nrChannels, 0);
-        if (data) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-        }
-        else {
-            std::cout << "Failed to load dev texture" << std::endl;
-        }
-        stbi_image_free(data);
+    //     // dev
+    //     glGenTextures(1, &texture_dev);
+    //     glBindTexture(GL_TEXTURE_2D, texture_dev); 
+    //     // set the texture wrapping parameters
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //     // set texture filtering parameters
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //     // load image, create texture and generate mipmaps
+    //     data = stbi_load("../resources/textures/dev.png", &width, &height, &nrChannels, 0);
+    //     if (data) {
+    //         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    //         glGenerateMipmap(GL_TEXTURE_2D);
+    //     }
+    //     else {
+    //         std::cout << "Failed to load dev texture" << std::endl;
+    //     }
+    //     stbi_image_free(data);
 
-        return true;
-    }
+    //     return true;
+    // }
 
     void draw_player_model(Player& player, Model_ass& player_model) {
         our_shader.use();

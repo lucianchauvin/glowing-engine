@@ -314,8 +314,7 @@ void Material_disney::apply(Shader& shader) const {
 }
 
 // ImGui parameter slider with color coding
-void Material_disney::draw_parameter_slider(const char* label, float* value, 
-                                        float min, float max, const char* tooltip) {
+void Material_disney::draw_parameter_slider(const char* label, float* value, float min, float max, const char* tooltip) {
     // Calculate color based on parameter value (gradient from red to green)
     ImVec4 color = ImVec4(1.0f - *value, *value, 0.2f, 1.0f);
     

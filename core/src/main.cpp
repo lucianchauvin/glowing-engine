@@ -116,7 +116,7 @@ int main() {
 
         // renderer.render_world_geometry(scene, player);
 		// renderer.draw_player_model(player, fly);
-        // renderer.draw_player_stuff(player, clr, emis, fres, expon);
+        renderer.draw_player_stuff(player, clr, emis, fres, expon);
 
 
 

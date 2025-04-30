@@ -1,6 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <memory>
 #include <unordered_map>
 
 #include "camera.h"
@@ -40,11 +41,7 @@ public:
 
     // Model_ass wep;
 
-    Player() 
-        : camera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f)),
-          player_physics(glm::vec3(0.0f), 1.0f, true, 1000.0f),
-          controller() 
-    {
+    Player() : camera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f)), player_physics(glm::vec3(0.0f), 1.0f, true, .0f), controller() {
         controllers[ControllerType::FPS] = std::make_unique<Controller_fps>();
         controllers[ControllerType::THIRDPERSON] = std::make_unique<Controller_thirdperson>();
         controllers[ControllerType::PLANE] = std::make_unique<Controller_plane>(player_physics);
@@ -161,6 +158,15 @@ private:
         //            vs
         // v    game state control      v
         crouched = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
+
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            player_physics.position.x += camera.front.x * 15.0f;
+            player_physics.position.y += camera.front.y * 8.0f;
+            player_physics.position.z += camera.front.z * 15.0f;
+            dashing = true;
+        } else {
+            dashing = false;
+        }
     }
 };
 #endif

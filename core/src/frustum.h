@@ -42,7 +42,7 @@ public:
     Frustum() = default;
 
     // Extract frustum planes from combined view-projection matrix
-    void extractPlanes(const glm::mat4& viewProjection) {
+    void update(const glm::mat4& viewProjection) {
         // Left plane
         planes[LEFT].normal.x = viewProjection[0][3] + viewProjection[0][0];
         planes[LEFT].normal.y = viewProjection[1][3] + viewProjection[1][0];
