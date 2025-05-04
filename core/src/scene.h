@@ -5,6 +5,7 @@
 #include "entity.h"
 #include "shader.h"
 #include "world_geometry.h"
+#include "skybox.h"
 
 class Scene {
 public:
@@ -19,5 +20,6 @@ public:
     std::vector<Entity> entities;
     std::vector<Entity> timed_entities;
     World_geometry world_geometry;
+    Skybox skybox;
 };
 #endif

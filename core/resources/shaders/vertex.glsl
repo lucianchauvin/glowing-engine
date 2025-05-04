@@ -3,16 +3,15 @@ layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNor;
 layout (location = 2) in vec2 aTexCoord;
 
-out vec2 TexCoord;
 out vec3 FragPos;  // position in world space
 out vec3 Normal;   // normal in world space
+out vec2 TexCoord;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-void main()
-{
+void main() {
     FragPos = vec3(model * vec4(aPos, 1.0));  // Transform to world space
     Normal = aNor; //vec3(transpose(inverse(model))) * aNor;  // Correct normal transform
     // Normal = aNor;  // Correct normal transform

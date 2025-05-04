@@ -25,7 +25,7 @@ void Model_ass::load_model(const std::string &path, float scale) {
         std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
         return;
     }
-    directory = directory = path.substr(0, path.find_last_of('/'));
+    directory = path.substr(0, path.find_last_of('/'));
     CHECK_GL_ERROR();
     process_node(scene->mRootNode, scene);
     normalize_model(scale);
@@ -74,6 +74,8 @@ Mesh Model_ass::process_mesh(aiMesh *mesh, const aiScene *scene) {
         for(unsigned int j = 0; j < face.mNumIndices; j++)
             indices.push_back(face.mIndices[j]);
     }
+
+    // todo chnage to pbr material? i guess mesh should own a material
     // process material
     if(mesh->mMaterialIndex >= 0) {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
@@ -125,8 +127,10 @@ void Model_ass::normalize_model(float scale) {
     }
 }
 
+
 std::vector<Texture> Model_ass::load_material_textures(aiMaterial *mat, aiTextureType type, std::string typeName) {
     std::vector<Texture> textures;
+
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
         aiString str;
         mat->GetTexture(type, i, &str);
@@ -150,6 +154,7 @@ std::vector<Texture> Model_ass::load_material_textures(aiMaterial *mat, aiTextur
     return textures;
 }
 
+// TODO texture class
 unsigned int Model_ass::texutre_from_file(const char *path, const std::string &directory, bool gamma) {
     std::string filename = std::string(path);
     filename = directory + '/' + filename;
@@ -183,7 +188,7 @@ unsigned int Model_ass::texutre_from_file(const char *path, const std::string &d
         stbi_image_free(data);
     }
     else {
-        // std::cout << "Texture failed to load at path: " << path << std::endl;
+        std::cout << "Model texture failed to load at path: " << path << std::endl;
         stbi_image_free(data);
     }
 

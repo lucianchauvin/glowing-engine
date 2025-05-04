@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
-
 project(CORE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
@@ -10,12 +8,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_subdirectory(ext/glfw-3.4)
 add_subdirectory(ext/assimp)
 
-# glfw includes + other includes (headers)
+# Update path for FMOD on Windows
+set(FMOD_ROOT "${CMAKE_SOURCE_DIR}/ext/FMOD Studio API Windows")
+
+# Include directories
 include_directories(
     ext
     ext/glfw-3.4/include
     ext/assimp/include
-    ext/fmodstudioapi20307linux/api/core/inc
+    "${FMOD_ROOT}/api/core/inc"  # Updated FMOD include path
     src
     src/general
 )
@@ -31,7 +32,6 @@ set(SOURCES
     src/audio.cpp
     src/renderer_debug.cpp
     src/material_disney.cpp
-
     ext/glad/glad.c
     ext/dearimgui/imgui.cpp
     ext/dearimgui/imgui_draw.cpp
@@ -39,18 +39,57 @@ set(SOURCES
     ext/dearimgui/imgui_tables.cpp
     ext/dearimgui/imgui_impl_glfw.cpp
     ext/dearimgui/imgui_impl_opengl3.cpp
+    ext/stb_image_impl.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-find_library(FMOD_LIBRARY 
-    NAMES fmod
-    PATHS ${CMAKE_SOURCE_DIR}/ext/fmodstudioapi20307linux/api/core/lib/x86_64
-    NO_DEFAULT_PATH
-)
+# Find FMOD library based on platform and architecture
+if(WIN32)
+    # Check if we're building for 32-bit or 64-bit architecture
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(FMOD_LIB_DIR "${FMOD_ROOT}/api/core/lib/x64")
+    else()
+        set(FMOD_LIB_DIR "${FMOD_ROOT}/api/core/lib/x86")
+    endif()
+    
+    # Find FMOD library (Windows uses .dll and needs .lib for linking)
+    find_library(FMOD_LIBRARY 
+        NAMES fmod_vc fmod64_vc  # Windows library naming
+        PATHS ${FMOD_LIB_DIR}
+        NO_DEFAULT_PATH
+    )
+else()
+    # Original Linux path
+    find_library(FMOD_LIBRARY 
+        NAMES fmod
+        PATHS ${CMAKE_SOURCE_DIR}/ext/fmodstudioapi20307linux/api/core/lib/x86_64
+        NO_DEFAULT_PATH
+    )
+endif()
 
+# Link libraries
 target_link_libraries(${PROJECT_NAME} 
     glfw ${GLFW_LIBRARIES}
     assimp
     ${FMOD_LIBRARY}
 )
+
+# Copy FMOD DLL to output directory (for Windows)
+if(WIN32)
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        # 64-bit
+        file(GLOB FMOD_DLLS "${FMOD_ROOT}/api/core/lib/x64/*.dll")
+    else()
+        # 32-bit
+        file(GLOB FMOD_DLLS "${FMOD_ROOT}/api/core/lib/x86/*.dll")
+    endif()
+    
+    foreach(DLL ${FMOD_DLLS})
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${DLL}
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        )
+    endforeach()
+endif()

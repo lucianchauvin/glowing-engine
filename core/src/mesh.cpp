@@ -42,6 +42,7 @@ void Mesh::setup_mesh() {
     glBindVertexArray(0); CHECK_GL_ERROR();
 }
 
+// todo gonna be way different
 void Mesh::draw(Shader &shader) {
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;

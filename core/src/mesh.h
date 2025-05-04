@@ -11,7 +11,8 @@ struct Vertex {
     glm::vec3 Normal;
     glm::vec2 TexCoords;
 };
-
+ 
+// TODO move to texture manager
 struct Texture {
     unsigned int id;
     std::string type;
@@ -28,6 +29,7 @@ class Mesh {
         
         void draw(Shader &shader);
         void update_vertex_buffer();
+
     private:
         unsigned int VAO, VBO, EBO;
 

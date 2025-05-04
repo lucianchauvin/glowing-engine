@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-
 #include "renderer.h"
 #include "player.h"
 #include "entity.h"
@@ -12,6 +11,7 @@
 #include "physics.h"
 #include "model_ass.h"
 #include "audio.h"
+#include "texture_manager.h"
 
 // settings
 const unsigned int SCR_WIDTH = 1600;
@@ -44,9 +44,11 @@ int main() {
     Scene scene;
     Model_ass plane("../resources/models/plane.obj");
 
-    // Model_ass sphere("../resources/models/backpack/backpack.obj", 10.0f);
-    Model_ass sphere("../resources/models/bunny.obj");
-    // Model_ass sphere("../resources/models/sponza/main1_sponza/NewSponza_Main_glTF_003.gltf");
+    //Model_ass sphere("../resources/models/backpack/backpack.obj", 1.0f);
+    //Model_ass sphere("../resources/models/cat/cat.obj");
+    //Model_ass sphere("../resources/models/bunny.obj");
+    Model_ass sphere("../resources/models/sword_ice/scene.gltf");
+    //Model_ass sphere("../resources/models/sponza/main1_sponza/NewSponza_Main_glTF_003.gltf");
 
     Model_ass fly("../resources/models/plane/scene.gltf");
 

@@ -9,8 +9,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
 
 #include "renderer_debug.h"
 #include "shader.h"
@@ -74,19 +72,13 @@ public:
         /*shader manager?*/ // or set it via the texture class
         // /*shader manager?*/ our_shader.setInt("texture2", .5);
 
-        geometry_shader.init("../resources/shaders/world_geometry_v.glsl", "../resources/shaders/world_geometry_f.glsl");
-        geometry_shader.use();
-        geometry_shader.setInt("texture1", 1);
-
         // weapon_shader2.init("../resources/shaders/weapon_v.glsl", "../resources/shaders/weapon_f.glsl");
         weapon_shader2.init("../resources/shaders/weapon2_v.glsl", "../resources/shaders/weapon2_f.glsl");
         // weapon_shader2.init("../resources/shaders/fres_v.glsl", "../resources/shaders/fres_f.glsl");
 
         debug_shader.init("../resources/shaders/debug_v.glsl", "../resources/shaders/debug_f.glsl");
-
         disney_shader.init("../resources/shaders/disney_v.glsl", "../resources/shaders/disney_f.glsl");
 
-        // load_textures();
         setup_buffers();
 
         deferred_shader.init("../resources/shaders/deferred_v.glsl", "../resources/shaders/deferred_f.glsl");
@@ -107,6 +99,7 @@ public:
         deferred_lighting_shader.setInt("g_normal", 1);
         deferred_lighting_shader.setInt("g_albedo_specular", 2);
 
+        skybox_shader.init("../resources/shaders/skybox_v.glsl", "../resources/shaders/skybox_f.glsl");
 
         debug_renderer.init();
 
@@ -197,93 +190,6 @@ public:
         return true;
     }
 
-    // bool load_textures() {
-    //     // texture 1
-    //     glGenTextures(1, &texture1);
-    //     glBindTexture(GL_TEXTURE_2D, texture1); 
-    //     // set the texture wrapping parameters
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    //     // set texture filtering parameters
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //     // load image, create texture and generate mipmaps
-    //     int width, height, nrChannels;
-    //     stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    //     unsigned char *data = stbi_load("../resources/textures/container.jpg", &width, &height, &nrChannels, 0);
-    //     if (data) {
-    //         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    //         glGenerateMipmap(GL_TEXTURE_2D);
-    //     }
-    //     else {
-    //         std::cout << "Failed to load texture" << std::endl;
-    //     }
-    //     stbi_image_free(data);
-    //     // texture 2
-    //     glGenTextures(1, &texture2);
-    //     glBindTexture(GL_TEXTURE_2D, texture2);
-    //     // set the texture wrapping parameters
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    //     // set texture filtering parameters
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //     // load image, create texture and generate mipmaps
-    //     data = stbi_load("../resources/textures/awesomeface.png", &width, &height, &nrChannels, 0);
-    //     if (data) {
-    //         // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
-    //         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    //         glGenerateMipmap(GL_TEXTURE_2D);
-    //     }
-    //     else {
-    //         std::cout << "Failed to load texture" << std::endl;
-    //     }
-    //     stbi_image_free(data);
-    //     // floor texture
-    //     glGenTextures(1, &floorTexture);
-    //     glBindTexture(GL_TEXTURE_2D, floorTexture);
-    //     // set the texture wrapping parameters
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    //     // set texture filtering parameters
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //     // load image, create texture and generate mipmaps
-    //     data = stbi_load("../resources/textures/floor.jpg", &width, &height, &nrChannels, 0);
-    //     if (data) {
-    //         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    //         glGenerateMipmap(GL_TEXTURE_2D);
-    //     }
-    //     else {
-    //         std::cout << "Failed to load floor texture, using container texture instead" << std::endl;
-    //         // Fallback to container texture if floor texture is missing
-    //         floorTexture = texture1;
-    //     }
-    //     stbi_image_free(data);
-
-    //     // dev
-    //     glGenTextures(1, &texture_dev);
-    //     glBindTexture(GL_TEXTURE_2D, texture_dev); 
-    //     // set the texture wrapping parameters
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    //     // set texture filtering parameters
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //     // load image, create texture and generate mipmaps
-    //     data = stbi_load("../resources/textures/dev.png", &width, &height, &nrChannels, 0);
-    //     if (data) {
-    //         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    //         glGenerateMipmap(GL_TEXTURE_2D);
-    //     }
-    //     else {
-    //         std::cout << "Failed to load dev texture" << std::endl;
-    //     }
-    //     stbi_image_free(data);
-
-    //     return true;
-    // }
-
     void draw_player_model(Player& player, Model_ass& player_model) {
         our_shader.use();
 
@@ -291,11 +197,6 @@ public:
         our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
         our_shader.setVec3("viewPos", player.camera.position);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
 
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
         our_shader.setMat4("projection", projection);
@@ -374,6 +275,8 @@ public:
 
         if (!player.key_toggles[(unsigned)'r'])
             debug_renderer.render(debug_shader, projection, view);
+        
+        render_skybox(scene.skybox, view, projection);
 
         // flush(); !!
     }
@@ -488,20 +391,6 @@ public:
         glViewport(0, 0, scr_width, scr_height);
     }
     
-    void render_world_geometry(Scene& scene, Player& player) {
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        geometry_shader.setMat4("projection", projection);
-        glm::mat4 view = player.camera.get_view_matrix();
-        geometry_shader.setMat4("view", view);
-        
-        geometry_shader.setMat4("model", glm::mat4(1.0f));
-
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, texture_dev);
-
-        scene.render_world_geometry(geometry_shader);
-    }
-
     void draw_player_stuff(Player& player, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon) {
         // glDisable(GL_DEPTH_TEST);
         weapon_shader2.use();
@@ -551,6 +440,20 @@ public:
         // glDepthMask(GL_TRUE);
         // glEnable(GL_DEPTH_TEST);
     }
+
+    void render_skybox(const Skybox& skybox, const glm::mat4& view, const glm::mat4& projection) {
+        glDepthFunc(GL_LEQUAL);
+        skybox_shader.use();
+
+        glm::mat4 viewNoTranslation = glm::mat4(glm::mat3(view));
+
+        skybox_shader.setMat4("view", viewNoTranslation);
+        skybox_shader.setMat4("projection", projection);
+
+        skybox.draw();
+
+        glDepthFunc(GL_LESS);
+    }
     
     void flush() {
         glfwSwapBuffers(window);
@@ -581,9 +484,8 @@ public:
 
     Material_disney material;
 
-    Shader our_shader, geometry_shader, weapon_shader, weapon_shader2, debug_shader, disney_shader;
-    // unsigned int VBO, VAO;
-    unsigned int texture1, texture2, floorTexture, texture_dev;
+    Shader our_shader, weapon_shader, weapon_shader2, debug_shader, disney_shader;
+    Shader skybox_shader;
 
     // deferred pipeline
     Shader deferred_shader, deferred_lighting_shader, debug_gbuffer_shader;
