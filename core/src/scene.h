@@ -2,6 +2,8 @@
 #define SCENE_H
 
 #include <vector>
+#include <string>
+
 #include "entity.h"
 #include "shader.h"
 #include "world_geometry.h"
@@ -9,7 +11,7 @@
 
 class Scene {
 public:
-    Scene();
+    Scene(std::string skybox_name);
     ~Scene();
 
     void include(Entity ntitty);

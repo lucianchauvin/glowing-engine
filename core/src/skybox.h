@@ -15,13 +15,6 @@ public:
             "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"
         };
 
-  /*      "right.jpg",
-            "left.jpg",
-            "top.jpg",
-            "bottom.jpg",
-            "front.jpg",
-            "back.jpg"*/
-
         std::vector<std::string> faces;
         std::string basePath = "../resources/textures/skyboxes/" + skybox_name + "/";
 
@@ -33,7 +26,11 @@ public:
         texture_id = loadCubemap(faces);
         setupCube();
     }
-
+    
+    void bind() const {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+    }
 
     void draw() const {
         glBindVertexArray(vao);
@@ -113,34 +110,6 @@ private:
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     }
-
-    //unsigned int loadCubemap(const std::vector<std::string>& faces) {
-    //    unsigned int texID;
-    //    glGenTextures(1, &texID);
-    //    glBindTexture(GL_TEXTURE_CUBE_MAP, texID);
-
-    //    int width, height, channels;
-    //    for (unsigned int i = 0; i < faces.size(); ++i) {
-    //        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &channels, 0);
-    //        if (data) {
-    //            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-    //                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    //            stbi_image_free(data);
-    //        }
-    //        else {
-    //            std::cerr << "Failed to load cubemap face: " << faces[i] << '\n';
-    //            stbi_image_free(data);
-    //        }
-    //    }
-
-    //    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    //    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-    //    return texID;
-    //}
 
     unsigned int loadCubemap(const std::vector<std::string>& faces) {
         unsigned int texID;

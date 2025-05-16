@@ -13,9 +13,11 @@
 #include "audio.h"
 #include "texture_manager.h"
 
+#include "skybox.h" // todo refactor
+
 // settings
-const unsigned int SCR_WIDTH = 1600;
-const unsigned int SCR_HEIGHT = 800;
+const unsigned int SCR_WIDTH = 1900;
+const unsigned int SCR_HEIGHT = 1000;
 
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
@@ -41,7 +43,7 @@ int main() {
     Player player;
     renderer.sync_callbacks(player);
     
-    Scene scene;
+    Scene scene("river");
     Model_ass plane("../resources/models/plane.obj");
 
     //Model_ass sphere("../resources/models/backpack/backpack.obj", 1.0f);
@@ -50,7 +52,7 @@ int main() {
     Model_ass sphere("../resources/models/sword_ice/scene.gltf");
     //Model_ass sphere("../resources/models/sponza/main1_sponza/NewSponza_Main_glTF_003.gltf");
 
-    Model_ass fly("../resources/models/plane/scene.gltf");
+    //Model_ass fly("../resources/models/plane/scene.gltf");
 
     for (int i = -5; i < 5; i++) {
         for (int j = 0; j < 10; j++) {
@@ -67,9 +69,9 @@ int main() {
                     Entity e(&sphere, pos, true, scale, color, 1.0f, glm::rotate(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
                     scene.include(e);
                 }
-            }
+            //}
         }
-    // }
+     }
 
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
     glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
@@ -93,6 +95,8 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(renderer.window, true); // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     ImGui_ImplOpenGL3_Init();
 
+
+    Skybox space("star");
     // render loop
     // uint step = 0;
     // int frame = 0;
@@ -118,7 +122,7 @@ int main() {
 
         // renderer.render_world_geometry(scene, player);
 		// renderer.draw_player_model(player, fly);
-        renderer.draw_player_stuff(player, clr, emis, fres, expon);
+        renderer.draw_player_stuff(player, clr, emis, fres, expon, space);
 
 
 

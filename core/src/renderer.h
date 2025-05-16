@@ -391,7 +391,7 @@ public:
         glViewport(0, 0, scr_width, scr_height);
     }
     
-    void draw_player_stuff(Player& player, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon) {
+    void draw_player_stuff(Player& player, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon, const Skybox& skybox) {
         // glDisable(GL_DEPTH_TEST);
         weapon_shader2.use();
         
@@ -435,6 +435,8 @@ public:
         weapon_shader2.setVec3("uFresnelColor", fres_clr);    // _Emission
         weapon_shader2.setFloat("uFresnelExponent", expon); // _FresnelExponent
         // wep.draw(weapon_shader2);
+        weapon_shader2.setInt("skybox", 0);
+        skybox.bind();
         player.controller->draw_hud(weapon_shader2);
 
         // glDepthMask(GL_TRUE);

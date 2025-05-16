@@ -7,9 +7,8 @@ in vec3 WorldPos;
 in vec3 Normal;
 
 // Uniforms
+uniform samplerCube skybox;
 uniform float time;
-uniform sampler2D diffuseTexture; // optional if you have a texture
-uniform bool useTexture;          // whether to sample from texture
 
 //----------------------------------------
 // Helper: Convert RGB -> HSV
@@ -64,9 +63,13 @@ vec3 hsv2rgb(vec3 c)
 void main()
 {
     // Choose any base color you want (e.g. a watery blue)
-    vec3 baseColor = vec3(0.0, 0.6, 1.0);
+    // FragColor = vec4(0.0, 0.6, 1.0, 1.0);
+    // return;
 
     // If you have a texture, you can multiply it in or blend it
+    FragColor = texture(skybox, normalize(WorldPos));
+    return;
+    /*
     if(useTexture) {
         vec3 texColor = texture(diffuseTexture, TexCoords).rgb;
         baseColor = mix(baseColor, texColor, 0.5); 
@@ -97,4 +100,5 @@ void main()
     
     // Output
     FragColor = vec4(finalColor, 1.0);
+    */
 }

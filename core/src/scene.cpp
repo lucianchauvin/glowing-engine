@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-Scene::Scene() : skybox ("star") {
+Scene::Scene(std::string skybox_name) : skybox (skybox_name) {
     entities = std::vector<Entity>();
     timed_entities = std::vector<Entity>();
 
