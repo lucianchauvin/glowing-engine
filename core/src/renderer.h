@@ -272,13 +272,19 @@ public:
             
             debug_renderer.add_axes(entity.physics.position, entity.physics.orientation);
         }
-
-        if (!player.key_toggles[(unsigned)'r'])
-            debug_renderer.render(debug_shader, projection, view);
         
         render_skybox(scene.skybox, view, projection);
 
         // flush(); !!
+    }
+    
+    void render_debug(Player& player) {
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
+        our_shader.setMat4("projection", projection);
+        glm::mat4 view = player.camera.get_view_matrix();
+        our_shader.setMat4("view", view);
+
+        debug_renderer.render(debug_shader, projection, view);
     }
 
     void render_scene_deferred(Player& player, Scene& scene, float deltaTime) {
@@ -455,6 +461,17 @@ public:
         skybox.draw();
 
         glDepthFunc(GL_LESS);
+    }
+
+    void draw_model_at(Model_ass& model, glm::vec3 pos) {
+
+    }
+
+    void debug_sphere_at(float x, float y, float z) {
+        debug_renderer.add_sphere(glm::vec3(x, y, z), 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
+    }
+    void debug_sphere_at(glm::vec3 pos) {
+        debug_renderer.add_sphere(pos, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
     }
     
     void flush() {
