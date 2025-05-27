@@ -12,6 +12,7 @@
 #include "model_ass.h"
 #include "audio.h"
 #include "texture_manager.h"
+#include "crosshair.h"
 
 #include "skybox.h" // todo refactor
 
@@ -290,6 +291,8 @@ int main() {
 
     Player player;
     renderer.sync_callbacks(player);
+
+    Crosshair crosshair(1.0f, 6.0f, 10.0f, 10.0f, 1.0f, glm::vec3(1.0f, 0.5f, 1.0f));
     
     Scene scene("sky");
     Model_ass plane("../resources/models/plane.obj");
@@ -341,7 +344,7 @@ int main() {
     // Create the settings for the body itself. Note that here you can also set other properties like the restitution / friction.
     BodyCreationSettings floor_settings(floor_shape, RVec3(0.0_r, -1.0_r, 0.0_r), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 
-    floor_settings.mRestitution = 1.1f;        // High restitution for bouncing (0.0 = no bounce, 1.0 = perfect bounce)
+    floor_settings.mRestitution = 0.8f;        // High restitution for bouncing (0.0 = no bounce, 1.0 = perfect bounce)
     floor_settings.mFriction = 0.1f;           // Low friction so the ball doesn't stick
 
     // Create the actual rigid body
@@ -399,7 +402,7 @@ int main() {
 
         RVec3 position = body_interface.GetCenterOfMassPosition(sphere_id);
         Vec3 velocity = body_interface.GetLinearVelocity(sphere_id);
-        std::cout << "Step " << step << ": Position = (" << position.GetX() << ", " << position.GetY() << ", " << position.GetZ() << "), Velocity = (" << velocity.GetX() << ", " << velocity.GetY() << ", " << velocity.GetZ() << ")" << std::endl;
+        //std::cout << "Step " << step << ": Position = (" << position.GetX() << ", " << position.GetY() << ", " << position.GetZ() << "), Velocity = (" << velocity.GetX() << ", " << velocity.GetY() << ", " << velocity.GetZ() << ")" << std::endl;
 
         // If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).
         const int cCollisionSteps = 1;
@@ -430,7 +433,7 @@ int main() {
 		// renderer.draw_player_model(player, fly);
         renderer.draw_player_stuff(player, clr, emis, fres, expon, space);
 
-
+        renderer.render_crosshair(crosshair);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -440,9 +443,10 @@ int main() {
         ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
         ImGui::End();
 
-        player.debug_hud(io);
+        player.debug_hud();
         player.controller->debug_hud(io);
         renderer.material.draw_imgui_editor(io);
+        crosshair.gui();
 
         ImGui::Begin("Light");
         ImGui::SliderFloat3("pos", &renderer.light.position.x, -10.0f, 10.0f);

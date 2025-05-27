@@ -86,8 +86,7 @@ public:
         return model;
     }
 
-    void debug_hud(ImGuiIO& io) {
-        
+    void debug_hud() {
         ImGui::Begin("Player");
 
         ImGui::Text("Player position: (%.1f, %.1f, %.1f)", player_physics.position.x, player_physics.position.y, player_physics.position.z);

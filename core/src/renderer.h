@@ -18,6 +18,7 @@
 #include "model_ass.h"
 #include "material_disney.h"
 #include "light.h"
+#include "crosshair.h"
 
 class Renderer {
 public:
@@ -100,6 +101,8 @@ public:
         deferred_lighting_shader.setInt("g_albedo_specular", 2);
 
         skybox_shader.init("../resources/shaders/skybox_v.glsl", "../resources/shaders/skybox_f.glsl");
+
+        crosshair_shader.init("../resources/shaders/crosshair_v.glsl", "../resources/shaders/crosshair_f.glsl");
 
         debug_renderer.init();
 
@@ -467,6 +470,13 @@ public:
 
     }
 
+    void render_crosshair(const Crosshair& crosshair) {
+        printf("start crosshair\n");
+        crosshair_shader.use();
+        crosshair.draw(crosshair_shader, scr_width, scr_height);
+        printf("end crosshair\n");
+    }
+
     void debug_sphere_at(float x, float y, float z) {
         debug_renderer.add_sphere(glm::vec3(x, y, z), 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
     }
@@ -505,6 +515,7 @@ public:
 
     Shader our_shader, weapon_shader, weapon_shader2, debug_shader, disney_shader;
     Shader skybox_shader;
+    Shader crosshair_shader;
 
     // deferred pipeline
     Shader deferred_shader, deferred_lighting_shader, debug_gbuffer_shader;
