@@ -36,6 +36,7 @@ include_directories(
 )
 
 set(SOURCES
+    ext/stb_image_impl.cpp
     src/entity.cpp
     src/main.cpp
     src/mesh.cpp
@@ -46,6 +47,7 @@ set(SOURCES
     src/audio.cpp
     src/renderer_debug.cpp
     src/material_disney.cpp
+    src/texture_manager.cpp
     ext/glad/glad.c
     ext/dearimgui/imgui.cpp
     ext/dearimgui/imgui_draw.cpp
@@ -53,7 +55,6 @@ set(SOURCES
     ext/dearimgui/imgui_tables.cpp
     ext/dearimgui/imgui_impl_glfw.cpp
     ext/dearimgui/imgui_impl_opengl3.cpp
-    ext/stb_image_impl.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

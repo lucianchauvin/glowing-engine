@@ -148,22 +148,22 @@ class MyContactListener : public ContactListener {
 public:
     // See: ContactListener
     virtual ValidateResult	OnContactValidate(const Body& inBody1, const Body& inBody2, RVec3Arg inBaseOffset, const CollideShapeResult& inCollisionResult) override {
-        std::cout << "Contact validate callback" << std::endl;
+        //std::cout << "Contact validate callback" << std::endl;
 
         // Allows you to ignore a contact before it is created (using layers to not make objects collide is cheaper!)
         return ValidateResult::AcceptAllContactsForThisBodyPair;
     }
 
     virtual void OnContactAdded(const Body& inBody1, const Body& inBody2, const ContactManifold& inManifold, ContactSettings& ioSettings) override {
-        std::cout << "A contact was added" << std::endl;
+        //std::cout << "A contact was added" << std::endl;
     }
 
     virtual void OnContactPersisted(const Body& inBody1, const Body& inBody2, const ContactManifold& inManifold, ContactSettings& ioSettings) override {
-        std::cout << "A contact was persisted" << std::endl;
+        //std::cout << "A contact was persisted" << std::endl;
     }
 
     virtual void OnContactRemoved(const SubShapeIDPair& inSubShapePair) override {
-        std::cout << "A contact was removed" << std::endl;
+        //std::cout << "A contact was removed" << std::endl;
     }
 };
 
@@ -171,11 +171,11 @@ public:
 class MyBodyActivationListener : public BodyActivationListener {
 public:
     virtual void OnBodyActivated(const BodyID& inBodyID, uint64 inBodyUserData) override {
-        std::cout << "A body got activated" << std::endl;
+        //std::cout << "A body got activated" << std::endl;
     }
 
     virtual void OnBodyDeactivated(const BodyID& inBodyID, uint64 inBodyUserData) override {
-        std::cout << "A body went to sleep" << std::endl;
+        //std::cout << "A body went to sleep" << std::endl;
     }
 };
 //////////////////////////////////////////
@@ -289,6 +289,8 @@ int main() {
         return -1;
     };
 
+    Texture_manager::init();
+
     Player player;
     renderer.sync_callbacks(player);
 
@@ -299,8 +301,8 @@ int main() {
 
     //Model_ass sphere("../resources/models/backpack/backpack.obj", 1.0f);
     //Model_ass sphere("../resources/models/cat/cat.obj");
-    //Model_ass sphere("../resources/models/bunny.obj");
-    Model_ass sphere("../resources/models/sword_ice/scene.gltf");
+    Model_ass sphere("../resources/models/bunny.obj");
+    //Model_ass sphere("../resources/models/sword_ice/scene.gltf");
     //Model_ass sphere("../resources/models/sponza/main1_sponza/NewSponza_Main_glTF_003.gltf");
 
     //Model_ass fly("../resources/models/plane/scene.gltf");
@@ -389,8 +391,14 @@ int main() {
 
 
     Skybox space("star");
+
+    Font font("agency");
+    Font font2("roughsplash");
+    Text screen_text(font, "abcABC", 200, 200, 200.0f, glm::vec3(0.5f, 0.2f, 0.7f));
+    Text screen_text2(font2, "LET ME OUTTTTT", 200, 600, 200.0f, glm::vec3(1.0f, 0.1f, 0.1f));
+
     // render loop
-     uint step = 0;
+    uint step = 0;
     // int frame = 0;
     printf("RENDERING\n");
     while (renderer.open()) {
@@ -434,6 +442,8 @@ int main() {
         renderer.draw_player_stuff(player, clr, emis, fres, expon, space);
 
         renderer.render_crosshair(crosshair);
+        renderer.render_hud_text(screen_text);
+        renderer.render_hud_text(screen_text2);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

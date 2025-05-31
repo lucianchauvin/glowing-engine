@@ -19,6 +19,7 @@
 #include "material_disney.h"
 #include "light.h"
 #include "crosshair.h"
+#include "text.h"
 
 class Renderer {
 public:
@@ -80,7 +81,7 @@ public:
         debug_shader.init("../resources/shaders/debug_v.glsl", "../resources/shaders/debug_f.glsl");
         disney_shader.init("../resources/shaders/disney_v.glsl", "../resources/shaders/disney_f.glsl");
 
-        setup_buffers();
+        //setup_buffers();
 
         deferred_shader.init("../resources/shaders/deferred_v.glsl", "../resources/shaders/deferred_f.glsl");
         deferred_lighting_shader.init("../resources/shaders/deferred_light_v.glsl", "../resources/shaders/deferred_light_f.glsl");
@@ -101,8 +102,8 @@ public:
         deferred_lighting_shader.setInt("g_albedo_specular", 2);
 
         skybox_shader.init("../resources/shaders/skybox_v.glsl", "../resources/shaders/skybox_f.glsl");
-
         crosshair_shader.init("../resources/shaders/crosshair_v.glsl", "../resources/shaders/crosshair_f.glsl");
+        hud_text_shader.init("../resources/shaders/text_hud_v.glsl", "../resources/shaders/text_hud_f.glsl");
 
         debug_renderer.init();
 
@@ -471,10 +472,22 @@ public:
     }
 
     void render_crosshair(const Crosshair& crosshair) {
-        printf("start crosshair\n");
         crosshair_shader.use();
         crosshair.draw(crosshair_shader, scr_width, scr_height);
-        printf("end crosshair\n");
+    }
+
+    void render_hud_text(const Text& text) {
+        glm::mat4 projection = glm::ortho(0.0f, (float)scr_width, 0.0f, (float)scr_height);
+        
+        glDisable(GL_DEPTH_TEST);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
+        text.draw(hud_text_shader, projection);
+     
+        glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
     }
 
     void debug_sphere_at(float x, float y, float z) {
@@ -516,6 +529,7 @@ public:
     Shader our_shader, weapon_shader, weapon_shader2, debug_shader, disney_shader;
     Shader skybox_shader;
     Shader crosshair_shader;
+    Shader hud_text_shader;
 
     // deferred pipeline
     Shader deferred_shader, deferred_lighting_shader, debug_gbuffer_shader;
