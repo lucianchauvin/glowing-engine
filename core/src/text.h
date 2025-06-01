@@ -12,7 +12,7 @@
 #include "texture_manager.h"
 
 class Text {
-//private:
+    //private:
 public:
 
     struct Vertex {
@@ -27,7 +27,14 @@ public:
     glm::vec3 color;
     size_t indexCount;
 
-    void buildTextMesh(const Font& font, const std::string& text, float x, float y, float scale) {
+    Font* used_font;
+    float x;
+    float y;
+    float scale;
+
+    void compute_buffers(const std::string& text) {
+        Font font = *used_font;
+
         vertices.clear();
         indices.clear();
 
@@ -35,33 +42,31 @@ public:
         float currentY = y;
         unsigned int vertexOffset = 0;
 
-        // Build vertex data for all characters
         for (char c : text) {
 
-            if (c == ' ') {
+            if (c == 32) { // space
                 currentX += 0.5f * scale;
+                continue;
             }
 
             auto it = font.characters.find(c);
             if (it == font.characters.end()) {
-                continue; // Skip unknown characters
+                printf("didnt find %hu\n", c);
+                continue;
             }
 
             const Font::Glyph& glyph = it->second;
 
-            // Calculate character quad positions
             float xpos = currentX + glyph.planeLeft * scale;
             float ypos = currentY + glyph.planeBottom * scale;
             float w = (glyph.planeRight - glyph.planeLeft) * scale;
             float h = (glyph.planeTop - glyph.planeBottom) * scale;
 
-            // Create quad vertices (bottom-left, bottom-right, top-right, top-left)
             vertices.push_back({ {xpos, ypos}, {glyph.atlasLeft, glyph.atlasBottom} });
             vertices.push_back({ {xpos + w, ypos}, {glyph.atlasRight, glyph.atlasBottom} });
             vertices.push_back({ {xpos + w, ypos + h}, {glyph.atlasRight, glyph.atlasTop} });
             vertices.push_back({ {xpos, ypos + h}, {glyph.atlasLeft, glyph.atlasTop} });
 
-            // Create indices for two triangles
             indices.push_back(vertexOffset + 0);
             indices.push_back(vertexOffset + 1);
             indices.push_back(vertexOffset + 2);
@@ -74,10 +79,19 @@ public:
         }
 
         indexCount = indices.size();
-        setupBuffers();
     }
 
-    void setupBuffers() {
+    void updateText(const std::string& text) {
+        compute_buffers(text);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(unsigned int), indices.data());
+    }
+
+    void upload_buffers() {
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
         glGenBuffers(1, &EBO);
@@ -103,8 +117,9 @@ public:
         glBindVertexArray(0);
     }
 
-    Text(const Font& font, const std::string& text, float x, float y, float scale, const glm::vec3& textColor) : color(textColor), atlas_texture_id(font.atlas_texture_id) {
-        buildTextMesh(font, text, x, y, scale);
+    Text(Font& font, const std::string& text, float x, float y, float scale, const glm::vec3& textColor) : color(textColor), atlas_texture_id(font.atlas_texture_id), used_font(&font), x(x), y(y), scale(scale) {
+        compute_buffers(text);
+        upload_buffers();
     }
 
     ~Text() {

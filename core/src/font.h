@@ -26,7 +26,14 @@ public:
         // load glyphs into datastructure
         std::ifstream json_file("../resources/fonts/" + font_name +"/" + font_name + ".json");
         nlohmann::json json_data;
-        json_file >> json_data;
+        //try {
+            json_file >> json_data;
+        /*}
+        catch (nlohmann::json::parse_error& e) {
+            std::cerr << "Parse error: " << e.what() << "\n";
+            std::cerr << "Exception id: " << e.id << "\n";
+            std::cerr << "Byte position: " << e.byte << "\n";
+        }*/
 
         for (const auto& glyph : json_data["glyphs"]) {
             int unicode = glyph["unicode"];

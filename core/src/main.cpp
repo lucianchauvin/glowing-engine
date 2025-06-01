@@ -1,4 +1,4 @@
-#include <dearimgui/imgui.h>
+﻿#include <dearimgui/imgui.h>
 #include <dearimgui/imgui_impl_glfw.h>
 #include <dearimgui/imgui_impl_opengl3.h>
 #include <glm/glm.hpp>
@@ -296,7 +296,7 @@ int main() {
 
     Crosshair crosshair(1.0f, 6.0f, 10.0f, 10.0f, 1.0f, glm::vec3(1.0f, 0.5f, 1.0f));
     
-    Scene scene("sky");
+    Scene scene("river");
     Model_ass plane("../resources/models/plane.obj");
 
     //Model_ass sphere("../resources/models/backpack/backpack.obj", 1.0f);
@@ -389,23 +389,27 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(renderer.window, true); // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     ImGui_ImplOpenGL3_Init();
 
-
     Skybox space("star");
 
-    Font font("agency");
+    Font font("tx02");
+    Text screen_text(font, "999", 0, 1, 50.0f, glm::vec3(0.5f, 0.2f, 0.7f));
     Font font2("roughsplash");
-    Text screen_text(font, "abcABC", 200, 200, 200.0f, glm::vec3(0.5f, 0.2f, 0.7f));
-    Text screen_text2(font2, "LET ME OUTTTTT", 200, 600, 200.0f, glm::vec3(1.0f, 0.1f, 0.1f));
+    Text screen_text2(font2, "LET ME OUTTTTT", 0, 700, 200.0f, glm::vec3(1.0f, 0.1f, 0.1f));
+    /*Font font3("jianjianti");
+    Text screen_text3(font3, u8"我爱你", 600, 200, 50.0f, glm::vec3(1.0f, 0.1f, 0.1f));
+    Text screen_text4(font3, "hello world!?", 800, 300, 50.0f, glm::vec3(1.0f, 0.1f, 0.1f));*/
 
     // render loop
     uint step = 0;
     // int frame = 0;
     printf("RENDERING\n");
     while (renderer.open()) {
-		// ++step;        // printf("[%d]", frame++);
+        // ++step;        // printf("[%d]", frame++);
         float currentFrame = renderer.get_time();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+        if (!(step % 10))
+            screen_text.updateText(std::to_string((int)(1.0f / deltaTime)));
 
 
         RVec3 position = body_interface.GetCenterOfMassPosition(sphere_id);
@@ -438,7 +442,7 @@ int main() {
 
 
         // renderer.render_world_geometry(scene, player);
-		// renderer.draw_player_model(player, fly);
+        // renderer.draw_player_model(player, fly);
         renderer.draw_player_stuff(player, clr, emis, fres, expon, space);
 
         renderer.render_crosshair(crosshair);
@@ -448,10 +452,6 @@ int main() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();        
-        
-        ImGui::Begin("Info");
-        ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
-        ImGui::End();
 
         player.debug_hud();
         player.controller->debug_hud(io);
