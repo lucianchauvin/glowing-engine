@@ -30,8 +30,8 @@ class Model_ass {
         std::string directory;
         // bool gammaCorrection;
 
-        void process_node(aiNode *node, const aiScene *scene);
-        Mesh process_mesh(aiMesh *mesh, const aiScene *scene);
+        void process_node(aiNode *node, const aiScene *scene, const std::string& path);
+        Mesh process_mesh(aiMesh *mesh, const aiScene *scene, const std::string& path);
         void normalize_model(float scale);
         std::vector<Texture> load_material_textures(aiMaterial *mat, aiTextureType type, std::string typeName);
         unsigned int texutre_from_file(const char *path, const std::string &directory, bool gamma);

@@ -67,7 +67,7 @@ namespace Texture_manager {
             stbi_image_free(data);
             textures.push_back(texture_id);
             paths.push_back(file_path);
-            std::cout << "Loaded: " << file_path << std::endl;
+            std::cout << "[TEXTURE] Loaded: " << file_path << std::endl;
             return textures.size() - 1;
         }
         else {

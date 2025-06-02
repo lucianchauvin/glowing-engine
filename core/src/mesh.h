@@ -5,6 +5,7 @@
 #include <string>
 
 #include "shader.h"
+#include "material.h"
 
 struct Vertex {
     glm::vec3 Position;
@@ -24,8 +25,9 @@ class Mesh {
         std::vector<Vertex>       vertices;
         std::vector<unsigned int> indices;
         std::vector<Texture>      textures;
+        Material material;
 
-        Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
+        Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, Material material);
         
         void draw(Shader &shader);
         void update_vertex_buffer();

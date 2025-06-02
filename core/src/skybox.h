@@ -20,7 +20,7 @@ public:
 
         for (const auto& name : faceNames) {
             faces.push_back(basePath + name);
-            std::cout << basePath + name << std::endl;
+            //std::cout << basePath + name << std::endl;
         }
 
         texture_id = loadCubemap(faces);

@@ -302,35 +302,49 @@ int main() {
     //Model_ass sphere("../resources/models/backpack/backpack.obj", 1.0f);
     //Model_ass sphere("../resources/models/cat/cat.obj");
     Model_ass sphere("../resources/models/bunny.obj");
-    //Model_ass sphere("../resources/models/sword_ice/scene.gltf");
+    Model_ass sphere2("../resources/models/sword_ice/scene.gltf");
     //Model_ass sphere("../resources/models/sponza/main1_sponza/NewSponza_Main_glTF_003.gltf");
 
     //Model_ass fly("../resources/models/plane/scene.gltf");
 
-    for (int i = -5; i < 5; i++) {
-        for (int j = 0; j < 10; j++) {
-    //         // int k = 1;
-    //         int j = 1;
-    //         for (int k = 0; k < 10; k++) {
-                glm::vec3 pos   = glm::vec3(6.0f * i, j * 6.0f, -6.0f * j); 
-                glm::vec3 scale = glm::vec3(10.0f, 10.0f, 10.0f);
-                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * j);
-                if ((i + j) % 2) {
-                    Entity e(&sphere, pos, true, scale, color);
-                    scene.include(e);
-                } else {
-                    Entity e(&sphere, pos, true, scale, color, 1.0f, glm::rotate(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
-                    scene.include(e);
-                }
-            //}
-        }
-     }
+    //for (int i = -5; i < 5; i++) {
+    //    for (int j = 0; j < 10; j++) {
+    ////         // int k = 1;
+    ////         int j = 1;
+    ////         for (int k = 0; k < 10; k++) {
+    //            glm::vec3 pos   = glm::vec3(6.0f * i, j * 6.0f, -6.0f * j); 
+    //            glm::vec3 scale = glm::vec3(10.0f, 10.0f, 10.0f);
+    //            glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * j);
+    //            if ((i + j) % 2) {
+    //                Entity e(&sphere, pos, true, scale, color);
+    //                scene.include(e);
+    //            } else {
+    //                Entity e(&sphere2, pos, true, scale, color, 1.0f, glm::rotate(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
+    //                scene.include(e);
+    //            }
+    //        //}
+    //    }
+    // }
 
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
     glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
     glm::vec3 color = glm::vec3(0.7f, 0.7f, 0.7f);
     Entity e(&plane, pos, false, scale, color);
     scene.include(e);
+
+    Model_ass actual_plane("../resources/models/f22/scene.gltf");
+    pos = glm::vec3(5.0f, 4.0f, -10.0f);
+    scale = glm::vec3(25.0f);
+    color = glm::vec3(0.7f);
+    Entity e2(&actual_plane, pos, false, scale, color, 1.0f, glm::quat(0.707f, 0.707f, 0.0f, 0.0f));
+    scene.include(e2);
+
+    Model_ass car("../resources/models/924/scene.gltf");
+    pos = glm::vec3(-5.0f, 10.0f, -10.0f);
+    scale = glm::vec3(15.0f);
+    color = glm::vec3(0.7f);
+    Entity e3(&car, pos, false, scale, color, 1.0f, glm::quat(0.0f, 0.0f, -0.707f, -0.707f));
+    scene.include(e3);
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Next we can create a rigid body to serve as the floor, we make a large box

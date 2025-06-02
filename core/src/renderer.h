@@ -243,36 +243,37 @@ public:
         //     debug_renderer.add_axes(entity.physics.position, entity.physics.orientation);
         // }
 
+        Shader used_shader = our_shader;
         // Clear the buffers
         glClearColor(0.2f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        disney_shader.use();
+        used_shader.use();
         
-        disney_shader.setVec3("light_position", light.position);
-        disney_shader.setVec3("light_color", light.color);
-        disney_shader.setFloat("light_intensity", light.intensity);
+        used_shader.setVec3("light_position", light.position);
+        used_shader.setVec3("light_color", light.color);
+        used_shader.setFloat("light_intensity", light.intensity);
         debug_renderer.add_sphere(light.position, 0.1f, light.color);
 
         // Setup camera matrices
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        disney_shader.setMat4("projection", projection);
+        used_shader.setMat4("projection", projection);
         
         glm::mat4 view = player.camera.get_view_matrix();
-        disney_shader.setMat4("view", view);
-        disney_shader.setVec3("view_position", player.camera.position);
+        used_shader.setMat4("view", view);
+        used_shader.setVec3("view_position", player.camera.position);
         
         material.apply(disney_shader);
         for (Entity& entity : scene.entities) {
             // Calculate and set transformation matrices
             glm::mat4 model = entity.get_model_matrix();
-            disney_shader.setMat4("model", model);
+            used_shader.setMat4("model", model);
             
             // Calculate normal matrix (inverse transpose of the model matrix)
             glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model)));
-            disney_shader.setMat3("normal_matrix", normal_matrix);
+            used_shader.setMat3("normal_matrix", normal_matrix);
             
             // Draw the entity
-            entity.draw(disney_shader);
+            entity.draw(used_shader);
             
             debug_renderer.add_axes(entity.physics.position, entity.physics.orientation);
         }
@@ -298,9 +299,7 @@ public:
         glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         
         // Prepare matrices
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), 
-                                                (float)scr_width / (float)scr_height, 
-                                                0.1f, 300.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
         glm::mat4 view = player.camera.get_view_matrix();
 
         // Use deferred geometry shader for G-buffer pass

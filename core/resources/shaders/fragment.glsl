@@ -12,12 +12,8 @@ uniform vec3  viewPos;
 uniform vec3  lightColor;
 uniform vec3  objectColor;
 
-struct Material {
-    sampler2D diffuse;
-    sampler2D normal;
-};
-
-uniform Material material;
+uniform sampler2D diffuse;
+uniform sampler2D normal;
 
 void main() {
     // Basic Phong/Blinn-Phong lighting inputs
@@ -26,7 +22,7 @@ void main() {
     vec3 viewDir    = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     
-    vec3 diffuseTex = texture(material.diffuse, TexCoord).rgb;
+    vec3 diffuseTex = texture(diffuse, TexCoord).rgb;
 
     // Combine them
     vec3 result = diffuseTex;
