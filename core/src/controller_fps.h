@@ -90,10 +90,16 @@ public:
         current_weapon->update(deltaTime, ads_active, firing, reload_requested, is_sprinting);
         
         // Handle jumping
-        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && player_physics.isOnGround) {
+        //if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && player_physics.isOnGround) {
+        //    player_physics.velocity.y = JUMP_FORCE;
+        //    player_physics.isOnGround = false;
+        //}
+
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
             player_physics.velocity.y = JUMP_FORCE;
             player_physics.isOnGround = false;
         }
+
         
         // Convert camera-relative movement to world space
         glm::vec3 forward = glm::normalize(glm::vec3(camera.front.x, 0.0f, camera.front.z));

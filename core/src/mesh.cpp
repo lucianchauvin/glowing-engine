@@ -8,10 +8,9 @@
     } \
 }
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, Material material) : material(material) {
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, Material material) : material(material) {
     this->vertices = vertices;
     this->indices = indices;
-    this->textures = textures;
 
     setup_mesh();
 }
@@ -30,29 +29,42 @@ void Mesh::setup_mesh() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
                  &indices[0], GL_STATIC_DRAW); CHECK_GL_ERROR();
 
-                 // vertex positions CHECK_GL_ERROR();
+    // vertex positions CHECK_GL_ERROR();
     glEnableVertexAttribArray(0);	 CHECK_GL_ERROR();
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0); CHECK_GL_ERROR();
+
     // vertex normals CHECK_GL_ERROR();
     glEnableVertexAttribArray(1);	 CHECK_GL_ERROR();
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal)); CHECK_GL_ERROR();
+
     // vertex texture coords CHECK_GL_ERROR();
     glEnableVertexAttribArray(2);	 CHECK_GL_ERROR();
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords)); CHECK_GL_ERROR();
+
+    // vertex tangent coords CHECK_GL_ERROR();
+    glEnableVertexAttribArray(3);	 CHECK_GL_ERROR();
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent)); CHECK_GL_ERROR();
+
+    // vertex bitangents
+    glEnableVertexAttribArray(4); CHECK_GL_ERROR();
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent)); CHECK_GL_ERROR();
+
 
     glBindVertexArray(0); CHECK_GL_ERROR();
 }
 
 // todo gonna be way different
-void Mesh::draw(Shader &shader) {
+void Mesh::draw(Shader &shader) const {
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
 
     //Texture_manager::bind(0);
+
+    Texture_manager::bind(material.albedo_map, 0);
     shader.setInt("diffuse", 0);
 
-    Texture_manager::bind(material.albedo_map);
-    
+    Texture_manager::bind(material.normal_map, 1);
+    shader.setInt("normal", 1);
 
     // draw mesh
     glBindVertexArray(VAO);

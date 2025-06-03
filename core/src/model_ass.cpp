@@ -20,8 +20,9 @@ void Model_ass::draw(Shader &shader) {
 }  
 
 void Model_ass::load_model(const std::string &path, float scale) {
+    printf("trying to load %s", path.c_str());
     Assimp::Importer import;
-    const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);	
+    const aiScene *scene = import.ReadFile(path, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals);
 	
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
@@ -30,7 +31,7 @@ void Model_ass::load_model(const std::string &path, float scale) {
     directory = path.substr(0, path.find_last_of('/'));
     CHECK_GL_ERROR();
     process_node(scene->mRootNode, scene, path);
-    normalize_model(scale);
+    //normalize_model(scale);
 }
 
 void Model_ass::process_node(aiNode *node, const aiScene *scene, const std::string& path) {
@@ -48,7 +49,6 @@ void Model_ass::process_node(aiNode *node, const aiScene *scene, const std::stri
 Mesh Model_ass::process_mesh(aiMesh *mesh, const aiScene *scene, const std::string& path) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-    std::vector<Texture> textures;
 
     for(unsigned int i = 0; i < mesh->mNumVertices; i++) {
         Vertex vertex;
@@ -64,9 +64,18 @@ Mesh Model_ass::process_mesh(aiMesh *mesh, const aiScene *scene, const std::stri
             vec.x = mesh->mTextureCoords[0][i].x; 
             vec.y = mesh->mTextureCoords[0][i].y;
             vertex.TexCoords = vec;
+
+            const aiVector3D& pTangent = mesh->mTangents[i];
+            vertex.Tangent = glm::vec3(pTangent.x, pTangent.y, pTangent.z);
+
+            const aiVector3D& pBitangent = mesh->mBitangents[i];
+            vertex.Bitangent = glm::vec3(pBitangent.x, pBitangent.y, pBitangent.z);
         }
-        else
-            vertex.TexCoords = glm::vec2(0.0f, 0.0f);  
+        else {
+            vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+            vertex.Tangent = glm::vec3(0.0f);
+            vertex.Bitangent = glm::vec3(0.0f);
+        }
 
         vertices.push_back(vertex);
     }
@@ -87,10 +96,15 @@ Mesh Model_ass::process_mesh(aiMesh *mesh, const aiScene *scene, const std::stri
             aiString str;
             material->GetTexture(aiTextureType_BASE_COLOR, 0, &str);
             albedo = Texture_manager::load_from_path(path.substr(0, path.size() - 10) + str.C_Str());
+        }        
+        
+        if (material->GetTextureCount(aiTextureType_NORMALS)) {
+            aiString str;
+            material->GetTexture(aiTextureType_NORMALS, 0, &str);
+            normal = Texture_manager::load_from_path(path.substr(0, path.size() - 10) + str.C_Str());
         }
 
         //material.albedo_maps = 
-        //material.normal_maps = load_material_textures(mat, aiTextureType_NORMALS, "texture_normal");
         //material.metallic_roughness_maps = load_material_textures(mat, aiTextureType_UNKNOWN, "texture_metallic_roughness");
         //material.ao_maps = load_material_textures(mat, aiTextureType_LIGHTMAP, "texture_ao");
         //material.emissive_maps = load_material_textures(mat, aiTextureType_EMISSIVE, "texture_emissive");
@@ -99,7 +113,7 @@ Mesh Model_ass::process_mesh(aiMesh *mesh, const aiScene *scene, const std::stri
 
     Material material(albedo, normal, metrough, occ, emis);
 
-    return Mesh(vertices, indices, textures, material);
+    return Mesh(vertices, indices, material);
 }  
 
 void Model_ass::normalize_model(float scale) {
