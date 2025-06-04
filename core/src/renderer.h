@@ -262,7 +262,7 @@ public:
         used_shader.setMat4("view", view);
         used_shader.setVec3("view_position", player.camera.position);
         
-        material.apply(disney_shader);
+        //material.apply(disney_shader);
         for (Entity& entity : scene.entities) {
             // Calculate and set transformation matrices
             glm::mat4 model = entity.get_model_matrix();
@@ -453,17 +453,17 @@ public:
     }
 
     void render_skybox(const Skybox& skybox, const glm::mat4& view, const glm::mat4& projection) {
-        //glDepthFunc(GL_LEQUAL);
-        //skybox_shader.use();
+        glDepthFunc(GL_LEQUAL);
+        skybox_shader.use();
 
-        //glm::mat4 viewNoTranslation = glm::mat4(glm::mat3(view));
+        glm::mat4 viewNoTranslation = glm::mat4(glm::mat3(view));
 
-        //skybox_shader.setMat4("view", viewNoTranslation);
-        //skybox_shader.setMat4("projection", projection);
+        skybox_shader.setMat4("view", viewNoTranslation);
+        skybox_shader.setMat4("projection", projection);
 
-        //skybox.draw();
+        skybox.draw();
 
-        //glDepthFunc(GL_LESS);
+        glDepthFunc(GL_LESS);
     }
 
     void draw_model_at(Model_ass& model, glm::vec3 pos) {

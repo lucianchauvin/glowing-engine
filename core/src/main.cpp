@@ -307,24 +307,24 @@ int main() {
 
     //Model_ass fly("../resources/models/plane/scene.gltf");
 
-    for (int i = -5; i < 5; i++) {
-        for (int j = 0; j < 10; j++) {
+    //for (int i = -5; i < 5; i++) {
+        //for (int j = 0; j < 10; j++) {
     ////         // int k = 1;
     ////         int j = 1;
     ////         for (int k = 0; k < 10; k++) {
-                glm::vec3 pos   = glm::vec3(6.0f * i, j * 6.0f + 1, -6.0f * j); 
-                glm::vec3 scale = glm::vec3(1.0f);
-                glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * j);
+                //glm::vec3 pos   = glm::vec3(6.0f * i, j * 6.0f + 1, -6.0f * j); 
+                //glm::vec3 scale = glm::vec3(1.0f);
+                //glm::vec3 color = glm::vec3(0.1f * i, 0.1f * j, 0.1f * j);
     //            if ((i + j) % 2) {
     //                Entity e(&sphere, pos, true, scale, color);
     //                scene.include(e);
     //            } else {
-                    Entity e(&sphere2, pos, true, scale, color, 1.0f, glm::rotate(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
-                    scene.include(e);
+                    //Entity e(&sphere2, pos, true, scale, color, 1.0f, glm::rotate(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
+                    //scene.include(e);
     //            }
             //}
-        }
-     }
+        //}
+     //}
 
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
     glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
@@ -332,28 +332,33 @@ int main() {
     Entity e(&plane, pos, false, scale, color);
     scene.include(e);
 
-    Model_ass actual_plane("../resources/models/f22/scene.gltf");
-    pos = glm::vec3(5.0f, 0.0f, -10.0f);
+    //Model_ass actual_plane("../resources/models/f22/scene.gltf");
+    //pos = glm::vec3(5.0f, 0.0f, -10.0f);
+    //scale = glm::vec3(1.0f);
+    //color = glm::vec3(0.7f);
+    //Entity e2(&actual_plane, pos, false, scale, color, 1.0f, glm::quat(0.707f, 0.707f, 0.0f, 0.0f));
+    //scene.include(e2);
+
+    //Model_ass car("../resources/models/924/scene.gltf");
+    //pos = glm::vec3(-5.0f, 7.0f, -10.0f);
+    //scale = glm::vec3(3.0f);
+    //color = glm::vec3(0.7f);
+    //Entity e3(&car, pos, false, scale, color, 1.0f, glm::quat(0.0f, 0.0f, -0.707f, -0.707f));
+    //scene.include(e3);
+
+    Model_ass car("../resources/models/911-2/scene.gltf");
+    pos = glm::vec3(0.0f, 0.0f, 0.0f);
     scale = glm::vec3(1.0f);
     color = glm::vec3(0.7f);
-    Entity e2(&actual_plane, pos, false, scale, color, 1.0f, glm::quat(0.707f, 0.707f, 0.0f, 0.0f));
-    scene.include(e2);
-
-    Model_ass car("../resources/models/924/scene.gltf");
-    pos = glm::vec3(-5.0f, 7.0f, -10.0f);
-    scale = glm::vec3(3.0f);
-    color = glm::vec3(0.7f);
-    Entity e3(&car, pos, false, scale, color, 1.0f, glm::quat(0.0f, 0.0f, -0.707f, -0.707f));
+    Entity e3(&car, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(e3);
 
     Model_ass car23("../resources/models/sword/scene.gltf");
-    pos = glm::vec3(0.0f, 10.0f, -10.0f);
-    scale = glm::vec3(5);
+    pos = glm::vec3(-1.0f, 2.0f, -2.0f);
+    scale = glm::vec3(1.0f);
     color = glm::vec3(0.7f);
     Entity e4(&car23, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(e4);
-
-
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Next we can create a rigid body to serve as the floor, we make a large box
@@ -474,7 +479,7 @@ int main() {
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();        
+        ImGui::NewFrame();
 
         player.debug_hud();
         player.controller->debug_hud(io);
@@ -486,6 +491,37 @@ int main() {
         ImGui::SliderFloat3("color", &renderer.light.color.x, 0.0f, 1.0f); // 1.0f;     
         ImGui::SliderFloat("itensity", &renderer.light.intensity, -5.0, 25.0f); // 1.0f;        
         ImGui::End();
+
+        {
+            ImGui::Begin("Entity Inspector");
+
+            for (size_t i = 0; i < scene.entities.size(); ++i) {
+                Entity& entity = scene.entities[i];
+                ImGui::PushID(static_cast<int>(i));
+
+                if (ImGui::TreeNode("Entity")) {
+                    // Show & edit position
+                    ImGui::DragFloat3("Position", glm::value_ptr(entity.physics.position), 0.1f);
+
+                    // Show & edit scale
+                    ImGui::DragFloat3("Scale", glm::value_ptr(entity.scale), 0.1f);
+
+                    // Convert quaternion to Euler angles (in degrees)
+                    glm::vec3 euler = glm::degrees(glm::eulerAngles(entity.physics.orientation));
+                    if (ImGui::DragFloat3("Rotation (Euler)", glm::value_ptr(euler), 1.0f)) {
+                        // Convert back to quaternion if changed
+                        glm::vec3 radians = glm::radians(euler);
+                        entity.physics.orientation = glm::quat(radians);
+                    }
+
+                    ImGui::TreePop();
+                }
+
+                ImGui::PopID();
+            }
+
+            ImGui::End();
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

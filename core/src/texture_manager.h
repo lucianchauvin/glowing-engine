@@ -9,5 +9,6 @@ namespace Texture_manager {
     unsigned int load_from_path(const std::string& file_path);
     void bind(int texture_id, unsigned int texture_unit = 0);
     size_t get_texture_count();
+    std::string get_name(unsigned int texture_id);
 }
 #endif

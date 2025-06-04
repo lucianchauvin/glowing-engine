@@ -43,7 +43,7 @@ public:
     bool fade;
     float ttl;
     float max_ttl;
-    glm::vec3 rotation; 
+    glm::quat rotation; 
 
     Physics_object physics;
 

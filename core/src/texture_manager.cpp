@@ -86,4 +86,7 @@ namespace Texture_manager {
         return textures.size();
     }
 
+    std::string get_name(unsigned int texture_id) {
+        return paths[texture_id];
+    }
 }

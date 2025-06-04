@@ -12,7 +12,7 @@ struct Light {
     
     Light(const glm::vec3& pos = glm::vec3(2.0f, 2.0f, 2.0f),
           const glm::vec3& col = glm::vec3(1.0f, 1.0f, 1.0f),
-          float intens = 5.0f)
+          float intens = 0.707f)
         : position(pos), color(col), intensity(intens) {}
     
     // void apply(Shader& shader) const {

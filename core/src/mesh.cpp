@@ -49,22 +49,24 @@ void Mesh::setup_mesh() {
     glEnableVertexAttribArray(4); CHECK_GL_ERROR();
     glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent)); CHECK_GL_ERROR();
 
-
     glBindVertexArray(0); CHECK_GL_ERROR();
 }
 
 // todo gonna be way different
 void Mesh::draw(Shader &shader) const {
-    unsigned int diffuseNr = 1;
-    unsigned int specularNr = 1;
+    shader.setBool("has_diffuse", material.has_albedo);
+    if (material.has_albedo) {
+        Texture_manager::bind(material.albedo_map, 0);
+        shader.setInt("diffuse", 0);
+        //printf("bound diffuse: %s\n", Texture_manager::get_name(material.albedo_map).c_str());
+    }
 
-    //Texture_manager::bind(0);
-
-    Texture_manager::bind(material.albedo_map, 0);
-    shader.setInt("diffuse", 0);
-
-    Texture_manager::bind(material.normal_map, 1);
-    shader.setInt("normal", 1);
+    shader.setBool("has_normal", material.has_normal);
+    if (material.has_normal) {
+        Texture_manager::bind(material.normal_map, 1);
+        shader.setInt("normal", 1);
+        //printf("bound normal: %s\n", Texture_manager::get_name(material.normal_map).c_str());
+    }
 
     // draw mesh
     glBindVertexArray(VAO);
