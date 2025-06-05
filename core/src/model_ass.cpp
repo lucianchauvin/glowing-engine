@@ -31,7 +31,7 @@ void Model_ass::load_model(const std::string &path, float scale) {
     directory = path.substr(0, path.find_last_of('/'));
     CHECK_GL_ERROR();
     process_node(scene->mRootNode, scene, path);
-    //normalize_model(scale);
+    normalize_model(scale);
 }
 
 void Model_ass::process_node(aiNode *node, const aiScene *scene, const std::string& path) {
@@ -117,42 +117,38 @@ Mesh Model_ass::process_mesh(aiMesh *mesh, const aiScene *scene, const std::stri
 }  
 
 void Model_ass::normalize_model(float scale) {
-    // We'll gather the min/max by scanning *all* vertices in all meshes.
-    glm::vec3 vmin(FLT_MAX);
-    glm::vec3 vmax(-FLT_MAX);
+    aabb_min = glm::vec3(FLT_MAX);
+    aabb_max = glm::vec3(-FLT_MAX);
 
-    // 1. Find the bounding box across all meshes
     for (auto &m : meshes) {
         for (auto &v : m.vertices) {
-            vmin.x = std::min(vmin.x, v.Position.x);
-            vmin.y = std::min(vmin.y, v.Position.y);
-            vmin.z = std::min(vmin.z, v.Position.z);
+            aabb_min.x = std::min(aabb_min.x, v.Position.x);
+            aabb_min.y = std::min(aabb_min.y, v.Position.y);
+            aabb_min.z = std::min(aabb_min.z, v.Position.z);
 
-            vmax.x = std::max(vmax.x, v.Position.x);
-            vmax.y = std::max(vmax.y, v.Position.y);
-            vmax.z = std::max(vmax.z, v.Position.z);
+            aabb_max.x = std::max(aabb_max.x, v.Position.x);
+            aabb_max.y = std::max(aabb_max.y, v.Position.y);
+            aabb_max.z = std::max(aabb_max.z, v.Position.z);
         }
     }
 
-    // 2. Compute center and scale
-    glm::vec3 center = 0.5f * (vmin + vmax);
-    glm::vec3 diff   = vmax - vmin;
-    float maxDim     = std::max(diff.x, std::max(diff.y, diff.z));
-    if (maxDim < 1e-8f) {
-        // Avoid division by zero if the model is basically a single point
-        maxDim = 1.0f;
-    }
-    float scale_f = scale / maxDim;  // so the largest dimension goes from -1 to +1
+    //glm::vec3 center = 0.5f * (vmin + vmax);
+    //glm::vec3 diff   = vmax - vmin;
+    //float maxDim     = std::max(diff.x, std::max(diff.y, diff.z));
+    //if (maxDim < 1e-8f) {
+    //    // Avoid division by zero if the model is basically a single point
+    //    maxDim = 1.0f;
+    //}
+    //float scale_f = scale / maxDim;  // so the largest dimension goes from -1 to +1
 
-    // 3. Shift and scale all vertex positions
-    for (auto &m : meshes) {
-        for (auto &v : m.vertices) {
-            // Shift to center, then scale
-            v.Position = (v.Position - center) * scale_f;
-        }
+    //for (auto &m : meshes) {
+    //    for (auto &v : m.vertices) {
+    //        // Shift to center, then scale
+    //        v.Position = (v.Position - center) * scale_f;
+    //    }
 
-        m.update_vertex_buffer();
-    }
+    //    m.update_vertex_buffer();
+    //}
 }
 
 

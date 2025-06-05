@@ -29,6 +29,7 @@ public:
     void add_line(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color);
     void add_sphere(const glm::vec3& center, float radius, const glm::vec3& color);
     void add_axes(const glm::vec3& position, const glm::quat& orientation, float length = 1.0f);
+    void add_bbox(const glm::vec3& min, const glm::vec3& max, const glm::vec3& color);
     void render(Shader& debug_shader, const glm::mat4& projection, const glm::mat4& view);
 
 private:

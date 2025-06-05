@@ -168,6 +168,36 @@ void Renderer_debug::add_axes(const glm::vec3& position, const glm::quat& orient
     add_line(position, zEnd, glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
+void Renderer_debug::add_bbox(const glm::vec3& min, const glm::vec3& max, const glm::vec3& color) {
+    glm::vec3 corners[8] = {
+        glm::vec3(min.x, min.y, min.z),
+        glm::vec3(max.x, min.y, min.z),
+        glm::vec3(max.x, max.y, min.z),
+        glm::vec3(min.x, max.y, min.z),
+        glm::vec3(min.x, min.y, max.z),
+        glm::vec3(max.x, min.y, max.z),
+        glm::vec3(max.x, max.y, max.z),
+        glm::vec3(min.x, max.y, max.z)
+    };
+
+    // z = min.z
+    add_line(corners[0], corners[1], color);
+    add_line(corners[1], corners[2], color);
+    add_line(corners[2], corners[3], color);
+    add_line(corners[3], corners[0], color);
+
+    // z = max.z
+    add_line(corners[4], corners[5], color);
+    add_line(corners[5], corners[6], color);
+    add_line(corners[6], corners[7], color);
+    add_line(corners[7], corners[4], color);
+
+    // vert lines
+    add_line(corners[0], corners[4], color);
+    add_line(corners[1], corners[5], color);
+    add_line(corners[2], corners[6], color);
+    add_line(corners[3], corners[7], color);
+}
 
 void Renderer_debug::render(Shader& debug_shader, const glm::mat4& projection, const glm::mat4& view) {
     if (!lines.empty()) {

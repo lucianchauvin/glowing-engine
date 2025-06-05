@@ -198,7 +198,6 @@ glm::vec3 fres = glm::vec3(0.0f, 0.0f, 0.0f);
 float expon = 1.0f;
 
 int main() {
-
     // Register allocation hook.In this example we'll just let Jolt use malloc / free but you can override these if you want (see Memory.h).
     // This needs to be done before any other Jolt function is called.
     RegisterDefaultAllocator();
@@ -327,24 +326,24 @@ int main() {
      //}
 
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
-    glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
+    glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 color = glm::vec3(0.7f, 0.7f, 0.7f);
     Entity e(&plane, pos, false, scale, color);
     scene.include(e);
 
-    //Model_ass actual_plane("../resources/models/f22/scene.gltf");
-    //pos = glm::vec3(5.0f, 0.0f, -10.0f);
-    //scale = glm::vec3(1.0f);
-    //color = glm::vec3(0.7f);
-    //Entity e2(&actual_plane, pos, false, scale, color, 1.0f, glm::quat(0.707f, 0.707f, 0.0f, 0.0f));
-    //scene.include(e2);
+    Model_ass actual_plane("../resources/models/f22/scene.gltf");
+    pos = glm::vec3(5.0f, 0.0f, -10.0f);
+    scale = glm::vec3(1.0f);
+    color = glm::vec3(0.7f);
+    Entity e2(&actual_plane, pos, false, scale, color, 1.0f, glm::quat(0.707f, 0.707f, 0.0f, 0.0f));
+    scene.include(e2);
 
-    //Model_ass car("../resources/models/924/scene.gltf");
-    //pos = glm::vec3(-5.0f, 7.0f, -10.0f);
-    //scale = glm::vec3(3.0f);
-    //color = glm::vec3(0.7f);
-    //Entity e3(&car, pos, false, scale, color, 1.0f, glm::quat(0.0f, 0.0f, -0.707f, -0.707f));
-    //scene.include(e3);
+    Model_ass car243("../resources/models/cat/scene.gltf");
+    pos = glm::vec3(-3.0f, 0.0f, -3.0f);
+    scale = glm::vec3(2.0f);
+    color = glm::vec3(0.7f);
+    Entity e5(&car243, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    scene.include(e5);
 
     Model_ass car("../resources/models/911-2/scene.gltf");
     pos = glm::vec3(0.0f, 0.0f, 0.0f);
