@@ -10,8 +10,8 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <camera.h>
-#include <scene.h>
+#include <core/camera.h>
+#include <core/scene.h>
 
 // Constants
 const float PI = 3.14159f;

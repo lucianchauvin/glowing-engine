@@ -15,9 +15,29 @@ Entity::Entity(
     bool fade, float ttl, float max_ttl, float collider_radius
 ) : 
     model(model),
+    model_id(0),
     position(position), 
     scale(scale), color(color),
     fade(fade), ttl(ttl), max_ttl(max_ttl), 
+    rotation(glm::vec3(0.0f)),
+    physics(position, collider_radius, physics_enabled, mass, orientation)
+{
+}
+
+Entity::Entity(
+    model_handle model_id,
+    glm::vec3 position,
+    bool physics_enabled,
+    glm::vec3 scale,
+    glm::vec3 color,
+    float mass,
+    glm::quat orientation,
+    bool fade, float ttl, float max_ttl, float collider_radius
+) :
+    model_id(model_id),
+    position(position),
+    scale(scale), color(color),
+    fade(fade), ttl(ttl), max_ttl(max_ttl),
     rotation(glm::vec3(0.0f)),
     physics(position, collider_radius, physics_enabled, mass, orientation)
 {
@@ -35,11 +55,19 @@ glm::mat4 Entity::get_model_matrix() const {
     return modelMat;
 }
 
-void Entity::draw(Shader shader) {
-    model->draw(shader);
+void Entity::draw(const Shader& shader) {
+
+    //if (model_id == 0)
+        //model->draw(shader);
+    //Model_ass tmp = Model_manager::get_model(model_id);
+    //tmp.draw(shader);
+    //else {
+        //printf("model drawn with id, %s", Model_manager::get_name(model_id).c_str());
+        Model_manager::draw(shader, model_id);
+    //}
 }
 
-bool Entity::draw(Shader shader, float time) {
+bool Entity::draw(const Shader& shader, float time) {
     ttl -= time;
     if (ttl <= 0) {
         return false;

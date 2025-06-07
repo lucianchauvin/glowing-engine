@@ -2,10 +2,11 @@
 #define CONTROLLER_FPS_H
 
 #include <glm/glm.hpp>
-#include <camera.h>
-#include <scene.h>
-#include <audio.h>
-#include <weapon.h>
+
+#include <core/camera.h>
+#include <core/scene.h>
+#include <core/audio.h>
+#include <player/weapon.h>
 
 class Controller_fps : public Controller {
 public:

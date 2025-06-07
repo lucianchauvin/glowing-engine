@@ -7,11 +7,6 @@
 Scene::Scene(std::string skybox_name) : skybox (skybox_name) {
     entities = std::vector<Entity>();
     timed_entities = std::vector<Entity>();
-
-    world_geometry.add_wall(glm::vec3(-1.0f, 0.0f, 0.0f),  glm::vec3(-1.0f, 0.0f, 1.0f), 5.0f);
-    world_geometry.add_wall(glm::vec3(-1.0f, 0.0f, 1.0f),  glm::vec3( 1.0f, 0.0f, 1.0f), 2.0f);
-    world_geometry.add_wall(glm::vec3( 1.0f, 0.0f, -1.0f), glm::vec3(-1.0f, 0.0f, -1.0f), 1.5f);
-    world_geometry.setup_buffers();
 }
 
 Scene::~Scene() {}
@@ -42,8 +37,4 @@ int Scene::cast_ray(const glm::vec3& pos, const glm::vec3& dir, glm::vec3& hit_p
     }
 
     return hits;
-}
-
-void Scene::render_world_geometry(Shader& shady) {
-    world_geometry.draw(shady);
 }

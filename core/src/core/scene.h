@@ -4,10 +4,9 @@
 #include <vector>
 #include <string>
 
-#include "entity.h"
-#include "shader.h"
-#include "world_geometry.h"
-#include "skybox.h"
+#include "core/entity.h"
+#include "asset/shader.h"
+#include "asset/skybox.h"
 
 class Scene {
 public:
@@ -17,11 +16,9 @@ public:
     void include(Entity ntitty);
     // returns the number of hits
     int cast_ray(const glm::vec3& pos, const glm::vec3& dir, glm::vec3& hit_pos);
-    void render_world_geometry(Shader& shady);
 
     std::vector<Entity> entities;
     std::vector<Entity> timed_entities;
-    World_geometry world_geometry;
-    Skybox skybox;
+    Skybox skybox; // todo move to texture manger? maybe
 };
 #endif

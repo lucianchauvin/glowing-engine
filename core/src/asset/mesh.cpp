@@ -53,13 +53,14 @@ void Mesh::setup_mesh() {
 }
 
 // todo gonna be way different
-void Mesh::draw(Shader &shader) const {
-    shader.setBool("has_diffuse", material.has_albedo);
-    if (material.has_albedo) {
+void Mesh::draw(const Shader &shader) const {
+
+    //shader.setBool("has_diffuse", material.has_albedo);
+    //if (material.has_albedo) {
         Texture_manager::bind(material.albedo_map, 0);
         shader.setInt("diffuse", 0);
         //printf("bound diffuse: %s\n", Texture_manager::get_name(material.albedo_map).c_str());
-    }
+    //}
 
     shader.setBool("has_normal", material.has_normal);
     if (material.has_normal) {

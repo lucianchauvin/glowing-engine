@@ -7,9 +7,9 @@
 #include <vector>
 #include <string>
 
-#include "font.h"
+#include "asset/font.h"
 #include "shader.h"
-#include "texture_manager.h"
+#include "asset/texture_manager.h"
 
 class Text {
     //private:

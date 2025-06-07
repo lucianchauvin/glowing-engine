@@ -4,17 +4,17 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "renderer.h"
-#include "player.h"
-#include "entity.h"
-#include "scene.h"
-#include "physics.h"
-#include "model_ass.h"
-#include "audio.h"
-#include "texture_manager.h"
-#include "crosshair.h"
-
-#include "skybox.h" // todo refactor
+#include "core/renderer.h" // first cus glad before glfw otherwise error
+#include "core/entity.h"
+#include "core/scene.h"
+#include "core/physics.h"
+#include "core/audio.h"
+#include "player/player.h"
+#include "asset/crosshair.h"
+#include "asset/text.h"
+#include "asset/model_ass.h"
+#include "asset/texture_manager.h"
+#include "asset/model_manager.h"
 
 //////////////////////////////////////////
 // Jolt includes
@@ -289,13 +289,14 @@ int main() {
     };
 
     Texture_manager::init();
+    Model_manager::init("../resources/models/");
 
     Player player;
     renderer.sync_callbacks(player);
 
     Crosshair crosshair(1.0f, 6.0f, 10.0f, 10.0f, 1.0f, glm::vec3(1.0f, 0.5f, 1.0f));
     
-    Scene scene("river");
+    Scene scene("star"); 
     Model_ass plane("../resources/models/plane.obj");
 
     //Model_ass sphere("../resources/models/backpack/backpack.obj", 1.0f);
@@ -331,18 +332,18 @@ int main() {
     Entity e(&plane, pos, false, scale, color);
     scene.include(e);
 
-    Model_ass actual_plane("../resources/models/f22/scene.gltf");
+    model_handle plane_id = Model_manager::load_model("f22");
     pos = glm::vec3(5.0f, 0.0f, -10.0f);
     scale = glm::vec3(1.0f);
     color = glm::vec3(0.7f);
-    Entity e2(&actual_plane, pos, false, scale, color, 1.0f, glm::quat(0.707f, 0.707f, 0.0f, 0.0f));
+    Entity e2(plane_id, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(e2);
 
-    Model_ass car243("../resources/models/cat/scene.gltf");
+    model_handle car232323 = Model_manager::load_model("911-2");
     pos = glm::vec3(-3.0f, 0.0f, -3.0f);
     scale = glm::vec3(2.0f);
     color = glm::vec3(0.7f);
-    Entity e5(&car243, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    Entity e5(car232323, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(e5);
 
     Model_ass car("../resources/models/911-2/scene.gltf");
@@ -416,12 +417,10 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(renderer.window, true); // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     ImGui_ImplOpenGL3_Init();
 
-    Skybox space("star");
-
     Font font("tx02");
     Text screen_text(font, "999", 0, 1, 50.0f, glm::vec3(0.5f, 0.2f, 0.7f));
-    Font font2("roughsplash");
-    Text screen_text2(font2, "LET ME OUTTTTT", 0, 700, 200.0f, glm::vec3(1.0f, 0.1f, 0.1f));
+    //Font font2("roughsplash");
+    //Text screen_text2(font2, "LET ME OUTTTTT", 0, 700, 200.0f, glm::vec3(1.0f, 0.1f, 0.1f));
     /*Font font3("jianjianti");
     Text screen_text3(font3, u8"我爱你", 600, 200, 50.0f, glm::vec3(1.0f, 0.1f, 0.1f));
     Text screen_text4(font3, "hello world!?", 800, 300, 50.0f, glm::vec3(1.0f, 0.1f, 0.1f));*/
@@ -474,21 +473,20 @@ int main() {
 
         renderer.render_crosshair(crosshair);
         renderer.render_hud_text(screen_text);
-        renderer.render_hud_text(screen_text2);
+        //renderer.render_hud_text(screen_text2);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
         player.debug_hud();
-        player.controller->debug_hud(io);
-        renderer.material.draw_imgui_editor(io);
-        crosshair.gui();
+        //player.controller->debug_hud(io);
+        //crosshair.gui();
 
         ImGui::Begin("Light");
-        ImGui::SliderFloat3("pos", &renderer.light.position.x, -10.0f, 10.0f);
+        ImGui::SliderFloat3("pos", &renderer.light.position.x, -20.0f, 20.0f);
         ImGui::SliderFloat3("color", &renderer.light.color.x, 0.0f, 1.0f); // 1.0f;     
-        ImGui::SliderFloat("itensity", &renderer.light.intensity, -5.0, 25.0f); // 1.0f;        
+        ImGui::SliderFloat("itensity", &renderer.light.intensity, 0.0f, 1.0f); // 1.0f;        
         ImGui::End();
 
         {

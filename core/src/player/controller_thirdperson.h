@@ -1,8 +1,11 @@
 #ifndef CONTROLLER_THIRDPERSON_H
 #define CONTROLLER_THIRDPERSON_H
+
 #include <glm/glm.hpp>
-#include <camera.h>
-#include <scene.h>
+
+#include <core/camera.h>
+#include <core/scene.h>
+
 class Controller_thirdperson : public Controller {
 public:
     float lastX = 0.0f;

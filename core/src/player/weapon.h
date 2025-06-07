@@ -4,8 +4,8 @@
 
 #include <glm/glm.hpp>
 
-#include <audio.h>
-#include <model_ass.h>
+#include <core/audio.h>
+#include <asset/model_ass.h>
 
 enum class Weapon_id {
     M4A1,

@@ -12,19 +12,21 @@ namespace Texture_manager {
 
     static std::vector<unsigned int> textures;
     static std::vector<std::string> paths;
+    //static std::vector<texture_data> texture_data;
 
-    static int loaded_already(const std::string& new_path) {
+    bool loaded_already(const std::string& new_path, size_t& existing_idx) {
         for (size_t i = 0; i < paths.size(); i++) {
             if (new_path == paths[i]) {
-                return i;
+                existing_idx = i;
+                return true;
             }
         }
-        return -1;
+        return false;
     }
 
     void init() {
         //stbi_set_flip_vertically_on_load(true);
-        unsigned int zero = load_from_path("../resources/textures/missing.png");
+        texture_handle zero = load_from_path("../resources/textures/missing.png");
         assert(!textures.empty());
     }
 
@@ -38,9 +40,9 @@ namespace Texture_manager {
         paths.clear();
     }
 
-    unsigned int load_from_path(const std::string& file_path) {
-        int existing_texture_index = loaded_already(file_path);
-        if (existing_texture_index != -1) {
+    texture_handle load_from_path(const std::string& file_path) {
+        size_t existing_texture_index;
+        if (loaded_already(file_path, existing_texture_index)) {
             return existing_texture_index;
         }
 
@@ -77,7 +79,7 @@ namespace Texture_manager {
         }
     }
 
-    void bind(int texture_id, unsigned int texture_unit) {
+    void bind(texture_handle texture_id, unsigned int texture_unit) {
         glActiveTexture(GL_TEXTURE0 + texture_unit);
         glBindTexture(GL_TEXTURE_2D, textures[texture_id]);
     }
@@ -86,7 +88,7 @@ namespace Texture_manager {
         return textures.size();
     }
 
-    std::string get_name(unsigned int texture_id) {
+    std::string get_name(texture_handle texture_id) {
         return paths[texture_id];
     }
 }

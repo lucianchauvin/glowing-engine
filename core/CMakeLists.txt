@@ -37,17 +37,19 @@ include_directories(
 
 set(SOURCES
     ext/stb_image_impl.cpp
-    src/entity.cpp
     src/main.cpp
-    src/mesh.cpp
-    src/model_ass.cpp
-    src/model.cpp
-    src/physics.cpp
-    src/scene.cpp
-    src/audio.cpp
-    src/renderer_debug.cpp
-    src/material_disney.cpp
-    src/texture_manager.cpp
+
+    "src/core/entity.cpp"
+    "src/core/physics.cpp"
+    "src/core/scene.cpp"
+    "src/core/audio.cpp"
+    "src/core/renderer_debug.cpp"
+    "src/asset/mesh.cpp"
+    "src/asset/model_ass.cpp"
+    "src/asset/material_disney.cpp"
+    "src/asset/texture_manager.cpp"
+    "src/asset/model_manager.cpp"
+
     ext/glad/glad.c
     ext/dearimgui/imgui.cpp
     ext/dearimgui/imgui_draw.cpp

@@ -4,13 +4,14 @@
 #include <memory>
 #include <unordered_map>
 
-#include "camera.h"
-#include "physics.h"
-#include "scene.h"
 #include "controller.h"
 #include "controller_fps.h"
 #include "controller_thirdperson.h"
 #include "controller_plane.h"
+
+#include "core/camera.h"
+#include "core/physics.h"
+#include "core/scene.h"
 // #include <model_ass.h>
 
 enum class ControllerType { FPS, THIRDPERSON, PLANE };

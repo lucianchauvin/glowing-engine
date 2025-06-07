@@ -6,7 +6,8 @@
 #include <glad/glad.h>
 #include <dearimgui/imgui.h>
 
-#include <shader.h>
+#include "texture_manager.h"
+#include "shader.h"
 
 class Shader;
 
@@ -21,7 +22,7 @@ public:
         has_occlusion = occlusion_map != 0;
         has_emissive = emissive_map != 0;
 
-        printf("a: %d, n: %d\n", has_albedo, has_normal);
+        //printf("a: %d, n: %d\n", has_albedo, has_normal);
     }
 
     ~Material() {
@@ -35,11 +36,11 @@ public:
     bool has_metallic_roughness;
     bool has_occlusion;
     bool has_emissive;
-    unsigned int albedo_map;
-    unsigned int normal_map;
-    unsigned int metallic_roughness_map;
-    unsigned int occlusion_map;
-    unsigned int emissive_map;
+    texture_handle albedo_map;
+    texture_handle normal_map;
+    texture_handle metallic_roughness_map;
+    texture_handle occlusion_map;
+    texture_handle emissive_map;
 
     //glm::vec2 texture_scale = glm::vec2(1.0f, 1.0f);
     //glm::vec2 texture_offset = glm::vec2(0.0f, 0.0f);

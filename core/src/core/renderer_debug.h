@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-#include "shader.h"
+#include "asset/shader.h"
 
 struct Debug_line {
     glm::vec3 start;

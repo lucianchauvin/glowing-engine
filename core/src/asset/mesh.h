@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#include <glm/glm.hpp>
+
 #include "shader.h"
 #include "material.h"
 
@@ -23,7 +25,7 @@ class Mesh {
 
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, Material material);
         
-        void draw(Shader &shader) const;
+        void draw(const Shader &shader) const;
         void update_vertex_buffer();
 
     private:

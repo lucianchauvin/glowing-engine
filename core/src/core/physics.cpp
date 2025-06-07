@@ -1,7 +1,7 @@
 #include "physics.h"
 
 #include "scene.h"
-#include "entity.h"
+#include "core/entity.h"
 
 void Physics::add_object(Physics_object* obj) {
     objects.push_back(obj);

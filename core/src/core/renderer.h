@@ -11,15 +11,14 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "renderer_debug.h"
-#include "shader.h"
-// #include "shader_compute.h"
 #include "scene.h"
-#include "player.h"
-#include "model_ass.h"
-#include "material_disney.h"
 #include "light.h"
-#include "crosshair.h"
-#include "text.h"
+#include "asset/shader.h"
+#include "asset/model_ass.h"
+#include "asset/crosshair.h"
+#include "asset/text.h"
+#include "player/player.h"
+
 
 class Renderer {
 public:
@@ -216,33 +215,6 @@ public:
     }
 
     void render_scene(Player& player, Scene& scene, float deltaTime) {
-        // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
-        // our_shader.use();
-
-        // our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
-        // our_shader.setVec3("viewPos", player.camera.position);
-        // our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-
-        // glActiveTexture(GL_TEXTURE0);
-        // glBindTexture(GL_TEXTURE_2D, texture1);
-        // glActiveTexture(GL_TEXTURE1);
-        // glBindTexture(GL_TEXTURE_2D, texture2);
-
-        // glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        // our_shader.setMat4("projection", projection);
-        // glm::mat4 view = player.camera.get_view_matrix();
-        // our_shader.setMat4("view", view);
-
-        // for (Entity entity : scene.entities) {
-        //     glm::mat4 model = entity.get_model_matrix();
-        //     our_shader.setMat4("model", model);
-        //     our_shader.setVec3("objectColor", entity.get_color());
-        //     entity.draw(our_shader);
-            
-        //     debug_renderer.add_axes(entity.physics.position, entity.physics.orientation);
-        // }
-
         Shader used_shader = our_shader;
         // Clear the buffers
         glClearColor(0.2f, 0.5f, 0.5f, 1.0f);
@@ -262,7 +234,6 @@ public:
         used_shader.setMat4("view", view);
         used_shader.setVec3("view_position", player.camera.position);
         
-        //material.apply(disney_shader);
         for (Entity& entity : scene.entities) {
             // Calculate and set transformation matrices
             glm::mat4 model = entity.get_model_matrix();
@@ -276,9 +247,9 @@ public:
             entity.draw(used_shader);
             
             debug_renderer.add_axes(entity.physics.position, entity.physics.orientation);
-            glm::vec4 world_min = model * glm::vec4(entity.model->aabb_min, 1.0f);
-            glm::vec4 world_max = model * glm::vec4(entity.model->aabb_max, 1.0f);
-            debug_renderer.add_bbox(glm::vec3(world_min), glm::vec3(world_max), glm::vec3(1.0f, 1.0f, 0.0f));
+            //glm::vec4 world_min = model * glm::vec4(entity.model->aabb_min, 1.0f);
+            //glm::vec4 world_max = model * glm::vec4(entity.model->aabb_max, 1.0f);
+            //debug_renderer.add_bbox(glm::vec3(world_min), glm::vec3(world_max), glm::vec3(1.0f, 1.0f, 0.0f));
         }
         
         render_skybox(scene.skybox, view, projection);
@@ -526,8 +497,6 @@ public:
 
     Light light;
 
-    Material_disney material;
-
     Shader our_shader, weapon_shader, weapon_shader2, debug_shader, disney_shader;
     Shader skybox_shader;
     Shader crosshair_shader;
@@ -536,8 +505,6 @@ public:
     // deferred pipeline
     Shader deferred_shader, deferred_lighting_shader, debug_gbuffer_shader;
     unsigned int g_buffer, g_position, g_normal, g_albedo_specular;
-    
     unsigned int quadVAO;
-
 };
 #endif
