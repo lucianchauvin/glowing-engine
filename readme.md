@@ -1,12 +1,6 @@
 # ?
 
 ![alt text](image.png)
-
-# build
-
-$ cd core
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make
-$ ./CORE
+![alt text](image1.png)
+![alt text](image2.png)
+![alt text](image3.png)
