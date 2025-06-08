@@ -54,7 +54,7 @@ public:
         key_toggles[key] = !key_toggles[key];
     }
 
-    virtual void process_input(GLFWwindow* window, float deltaTime, Scene& scene, Physics_object& player_physics, Camera& camera, float& model_yaw) override {
+    virtual void process_input(GLFWwindow* window, float deltaTime, Scene& scene, Camera& camera, float& model_yaw) override {
         // Get current weapon
         Weapon* current_weapon = active_weapon;
         
@@ -96,10 +96,10 @@ public:
         //    player_physics.isOnGround = false;
         //}
 
-        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-            player_physics.velocity.y = JUMP_FORCE;
-            player_physics.isOnGround = false;
-        }
+        //if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        //    player_physics.velocity.y = JUMP_FORCE;
+        //    player_physics.isOnGround = false;
+        //}
 
         
         // Convert camera-relative movement to world space
@@ -109,51 +109,30 @@ public:
         
         // Apply sprint boost if sprinting
         float speed_multiplier = is_sprinting ? 1.5f : 1.0f;
-        acceleration *= ACCELERATION * deltaTime * speed_multiplier;
+        //acceleration *= ACCELERATION * deltaTime * speed_multiplier;
         
         // Apply acceleration
-        player_physics.velocity.x += acceleration.x;
-        player_physics.velocity.z += acceleration.z;
-        
-        // Apply friction when on ground
-        if (player_physics.isOnGround) {
-            player_physics.velocity.x *= FRICTION;
-            player_physics.velocity.z *= FRICTION;
-        }
-        
-        // Limit horizontal velocity
-        float horizontal_speed = glm::length(glm::vec2(player_physics.velocity.x, player_physics.velocity.z));
-        if (horizontal_speed > MAX_VELOCITY * speed_multiplier) {
-            float scale = MAX_VELOCITY * speed_multiplier / horizontal_speed;
-            player_physics.velocity.x *= scale;
-            player_physics.velocity.z *= scale;
-        }
+        //player_physics.velocity.x += acceleration.x;
+        //player_physics.velocity.z += acceleration.z;
+        //
+        //// Apply friction when on ground
+        //if (player_physics.isOnGround) {
+        //    player_physics.velocity.x *= FRICTION;
+        //    player_physics.velocity.z *= FRICTION;
+        //}
+        //
+        //// Limit horizontal velocity
+        //float horizontal_speed = glm::length(glm::vec2(player_physics.velocity.x, player_physics.velocity.z));
+        //if (horizontal_speed > MAX_VELOCITY * speed_multiplier) {
+        //    float scale = MAX_VELOCITY * speed_multiplier / horizontal_speed;
+        //    player_physics.velocity.x *= scale;
+        //    player_physics.velocity.z *= scale;
+        //}
         
         model_yaw = camera.yaw;
     }
     
-    virtual void update_physics(float deltaTime, Physics_object& player_physics, Camera& camera) override {
-        // apply gravity
-        if (!player_physics.isOnGround)
-            player_physics.velocity.y -= GRAVITY * deltaTime;
-        // move player
-        player_physics.position += player_physics.velocity * deltaTime;
-        // check floor collision
-        bool floor_collision = player_physics.position.y <= FLOOR_Y;
-        if (floor_collision) {
-            player_physics.isOnGround = true;
-            player_physics.velocity.y = 0.0f;
-            player_physics.position.y = FLOOR_Y; // snap to floor
-        } else {
-            player_physics.isOnGround = false;
-        }
-    }
-    
-    virtual void update_camera(Camera& camera, const Physics_object& player_physics, bool crouched, float player_height) override {
-        if (crouched)
-            camera.position = player_physics.position + glm::vec3(0, player_height / 2.0f, 0);
-        else
-            camera.position = player_physics.position + glm::vec3(0, player_height, 0);
+    virtual void update_camera(Camera& camera, bool crouched, float player_height) override {
     }
 
     virtual void draw_hud(Shader& shader) const override {

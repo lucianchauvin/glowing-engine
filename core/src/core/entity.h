@@ -44,7 +44,6 @@ public:
     glm::mat4 get_model_matrix() const;
 
     void draw(const Shader& shader);
-    bool draw(const Shader& shader, float time);
     bool collides(const glm::vec3& pos, const glm::vec3& dir, glm::vec3& hit_pos);
     glm::vec3 get_color();
 
@@ -59,9 +58,7 @@ public:
     bool fade;
     float ttl;
     float max_ttl;
-    glm::quat rotation; 
-
-    Physics_object physics;
+    glm::quat rotation;
 
 };
 #endif

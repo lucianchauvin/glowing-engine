@@ -27,7 +27,7 @@ namespace Model_manager {
 
     void init(std::string path) {
         base_path = path;
-        model_handle mh = load_model("teapot.obj", 0);
+        model_handle mh = load_model("cube.obj", 0);
     }
 
     void cleanup() {

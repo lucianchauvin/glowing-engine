@@ -1,71 +1,48 @@
-#ifndef PHYSICS_H
-#define PHYSICS_H
+#pragma once
 
-#include <vector>
 #include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
 
-struct Bounding_sphere {
-    glm::vec3 center;
-    float radius;
+// includ this stuff cus
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Math/Vec3.h>
+#include <Jolt/Math/Quat.h>
 
-    Bounding_sphere(glm::vec3 c, float r) : center(c), radius(r) {}
-};
+namespace JPH {
+    class BodyInterface;
+    class PhysicsSystem;
+    class TempAllocatorImpl;
+    class JobSystemThreadPool;
+    class Body;
+    class Shape;
+    using BodyID = class BodyID;
+}
+// includ this stuff cus
 
-struct AABB {
-    glm::vec3 min;
-    glm::vec3 max;
-};
+namespace Physics {
 
-class Scene;
+    bool init();
+    void shutdown();
+    void update(float deltaTime = 1.0f / 60.0f);
+    void optimize_broad_phase();
+    // todo add call to somewhere OptimizeBroadPhase();
+    // Optional step: Before starting the physics simulation you can optimize the broad phase. This improves collision detection performance (it's pointless here because we only have 2 bodies).
+    // You should definitely not call this every frame or when e.g. streaming in a new level section as it is an expensive operation.
+    // Instead insert all new objects in batches instead of 1 at a time to keep the broad phase efficient.
 
-inline constexpr float GRAVITY       = 9.8f;
-inline constexpr float JUMP_FORCE    = 5.0f;
-inline constexpr float FRICTION      = 0.937f;
-// inline constexpr float ACCELERATION  = 1000.0f; //47.0f
-inline constexpr float ACCELERATION  = 47.0f;
-// inline constexpr float MAX_VELOCITY  = 20.0f;   //4.3f
-inline constexpr float MAX_VELOCITY  = 4.3f;
-inline constexpr float FLOOR_Y       = 0.0f;
+    JPH::BodyID addBox(const glm::vec3& pos, const glm::vec3& size, bool isStatic = false);
+    JPH::BodyID addSphere(const glm::vec3& pos, float radius, bool isStatic = false);
+    void removeBody(JPH::BodyID id);
 
-struct Physics_object {
-    float mass = 1.0f;
-    glm::vec3 position;
-    glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-    glm::vec3 velocity;
-    glm::vec3 angular_velocity;
-    glm::mat3 inertia, inverse_inertia;
-    bool isOnGround;
-    Bounding_sphere collider;
-    bool enabled; // todo implement
+    glm::vec3 getBodyPosition(JPH::BodyID id);
+    void setBodyPosition(JPH::BodyID id, const glm::vec3& pos);
+    glm::vec3 getBodyVelocity(JPH::BodyID id);
+    void setBodyVelocity(JPH::BodyID id, const glm::vec3& vel);
 
-    Physics_object(glm::vec3 pos, 
-        float colliderRadius, 
-        bool physics_on, 
-        float m = 1.0f, 
-        const glm::quat& orient = glm::quat(1.0f, 0.0f, 0.0f, 0.0f), 
-        const glm::vec3& angVel = glm::vec3(0.0f), 
-        const glm::mat3& inertiaVal = glm::mat3(1.0f), 
-        const glm::mat3& invInertiaVal = glm::mat3(1.0f))
-        // add to take aabb stuff
-        :   mass(m), 
-            position(pos),
-            orientation(orient), 
-            velocity(0.0f),
-            angular_velocity(angVel),
-            inertia(inertiaVal), 
-            inverse_inertia(invInertiaVal), 
-            isOnGround(false), 
-            collider(pos, colliderRadius), 
-            enabled(physics_on) {}
-};
+    JPH::BodyInterface& getBodyInterface();
 
-class Physics {
-public:
-    std::vector<Physics_object*> objects;
-
-    void add_object(Physics_object* obj);
-    void load_scene(Scene& scene);
-    void step(float deltaTime);
-};
-#endif
+    //glm::vec3 toGlm(const JPH::RVec3& v);
+    //glm::quat toGlm(const JPH::Quat& q);
+    //JPH::RVec3 toJolt(const glm::vec3& v);
+    //JPH::Quat toJolt(const glm::quat& q);
+}

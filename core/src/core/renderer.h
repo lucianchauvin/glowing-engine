@@ -246,7 +246,7 @@ public:
             // Draw the entity
             entity.draw(used_shader);
             
-            debug_renderer.add_axes(entity.physics.position, entity.physics.orientation);
+            debug_renderer.add_axes(entity.position, entity.rotation);
             //glm::vec4 world_min = model * glm::vec4(entity.model->aabb_min, 1.0f);
             //glm::vec4 world_max = model * glm::vec4(entity.model->aabb_max, 1.0f);
             //debug_renderer.add_bbox(glm::vec3(world_min), glm::vec3(world_max), glm::vec3(1.0f, 1.0f, 0.0f));

@@ -22,9 +22,8 @@ public:
     virtual void scroll_callback(GLFWwindow* window, Camera& camera, double xoffset, double yoffset) = 0;
     virtual void char_callback(GLFWwindow* window, unsigned int key) = 0;
 
-    virtual void process_input(GLFWwindow* window, float deltaTime, Scene& scene, Physics_object& player_physics, Camera& camera, float& model_yaw) = 0;
-    virtual void update_physics(float deltaTime, Physics_object& player_physics, Camera& camera) = 0;
-    virtual void update_camera(Camera& camera, const Physics_object& player_physics, bool crouched, float player_height) = 0;
+    virtual void process_input(GLFWwindow* window, float deltaTime, Scene& scene, Camera& camera, float& model_yaw) = 0;
+    virtual void update_camera(Camera& camera, bool crouched, float player_height) = 0;
 
     virtual glm::vec3 get_weapon_position() const { return glm::vec3(0.0f); } // for FPS camera
 

@@ -97,7 +97,7 @@ public:
         weapon.sprint_pos = glm::vec3(0.8f, -0.3f, -1.5f);
         weapon.ads_speed = 20.0f;
         weapon.sound_file = "gun1.wav";
-        weapon.sound_volume = 0.2f;
+        weapon.sound_volume = 0.1f;
         weapon.cooldown = 0.07f; // ~857 rounds per minute
         weapon.magazine_size = 30;
         weapon.current_ammo = 30;
@@ -127,7 +127,7 @@ public:
         weapon.sprint_pos = glm::vec3(0.6f, -0.2f, -1.2f);
         weapon.ads_speed = 25.0f;
         weapon.sound_file = "glock.wav";
-        weapon.sound_volume = 0.15f;
+        weapon.sound_volume = 0.07f;
         weapon.cooldown = 0.2f; // ~300 rounds per minute
         weapon.magazine_size = 17;
         weapon.current_ammo = 17;

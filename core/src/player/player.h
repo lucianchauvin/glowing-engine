@@ -21,7 +21,6 @@ public:
     float PLAYER_HEIGHT = 1.8f;
 
     Camera camera;
-    Physics_object player_physics;
 
     std::unordered_map<ControllerType, std::unique_ptr<Controller>> controllers;
     Controller* controller;
@@ -42,20 +41,17 @@ public:
 
     // Model_ass wep;
 
-    Player() : camera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f)), player_physics(glm::vec3(0.0f), 1.0f, true, .0f), controller() {
+    Player() : camera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f)), controller() {
         controllers[ControllerType::FPS] = std::make_unique<Controller_fps>();
-        controllers[ControllerType::THIRDPERSON] = std::make_unique<Controller_thirdperson>();
-        controllers[ControllerType::PLANE] = std::make_unique<Controller_plane>(player_physics);
+        //controllers[ControllerType::THIRDPERSON] = std::make_unique<Controller_thirdperson>();
+        //controllers[ControllerType::PLANE] = std::make_unique<Controller_plane>();
         controller = controllers[ControllerType::FPS].get();
     }
 
-    // glm::mat4 () pitch yaw roll model
-
     void controller_step(GLFWwindow* window, float deltaTime, Scene& scene) {
         poll_player(window);
-        controller->process_input(window, deltaTime, scene, player_physics, camera, model_yaw);
-        controller->update_physics(deltaTime, player_physics, camera);
-        controller->update_camera(camera, player_physics, crouched, PLAYER_HEIGHT);
+        controller->process_input(window, deltaTime, scene, camera, model_yaw);
+        controller->update_camera(camera, crouched, PLAYER_HEIGHT);
     }
 
     static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -81,21 +77,17 @@ public:
 
     glm::mat4 get_model_matrix() {
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, player_physics.position);
-        model = glm::rotate(model, -glm::radians(model_yaw - 90), glm::vec3(0, 1, 0));
-        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+        //model = glm::translate(model, position);
+        //model = glm::rotate(model, -glm::radians(model_yaw - 90), glm::vec3(0, 1, 0));
+        //model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
         return model;
     }
 
     void debug_hud() {
         ImGui::Begin("Player");
 
-        ImGui::Text("Player position: (%.1f, %.1f, %.1f)", player_physics.position.x, player_physics.position.y, player_physics.position.z);
         ImGui::Text("Camera Position: (%.1f, %.1f, %.1f)", camera.position.x, camera.position.y, camera.position.z);
         ImGui::Text("Camera Facing:   (%.1f, %.1f, %.1f)", camera.front.x, camera.front.y, camera.front.z);
-        ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player_physics.velocity.x, player_physics.velocity.y, player_physics.velocity.z);
-        // ImGui::Text("Velocity: (%.1f, %.1f, %.1f)", player_physics.velocity.x, player_physics.velocity.y, player_physics.velocity.z);
-        ImGui::Text("On Ground: %s", player_physics.isOnGround ? "Yes" : "No");
         
         ImGui::End();
     }
@@ -159,14 +151,14 @@ private:
         // v    game state control      v
         crouched = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
 
-        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+      /*  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
             player_physics.position.x += camera.front.x * 15.0f;
             player_physics.position.y += camera.front.y * 8.0f;
             player_physics.position.z += camera.front.z * 15.0f;
             dashing = true;
         } else {
             dashing = false;
-        }
+        }*/
     }
 };
 #endif

@@ -19,8 +19,7 @@ Entity::Entity(
     position(position), 
     scale(scale), color(color),
     fade(fade), ttl(ttl), max_ttl(max_ttl), 
-    rotation(glm::vec3(0.0f)),
-    physics(position, collider_radius, physics_enabled, mass, orientation)
+    rotation(glm::vec3(0.0f))
 {
 }
 
@@ -38,8 +37,7 @@ Entity::Entity(
     position(position),
     scale(scale), color(color),
     fade(fade), ttl(ttl), max_ttl(max_ttl),
-    rotation(glm::vec3(0.0f)),
-    physics(position, collider_radius, physics_enabled, mass, orientation)
+    rotation(glm::vec3(0.0f))
 {
 }
 
@@ -47,11 +45,11 @@ Entity::~Entity() = default;
 
 glm::mat4 Entity::get_model_matrix() const {
     glm::mat4 modelMat(1.0f);
-    glm::mat4 translation = glm::translate(glm::mat4(1.0f), physics.position);
-    glm::mat4 rotation = glm::mat4_cast(physics.orientation);
+    glm::mat4 translation = glm::translate(glm::mat4(1.0f), position);
+    glm::mat4 rot = glm::mat4_cast(rotation);
     glm::mat4 scaling = glm::scale(glm::mat4(1.0f), scale);
 
-    modelMat = translation * rotation * scaling;
+    modelMat = translation * rot * scaling;
     return modelMat;
 }
 
@@ -65,15 +63,6 @@ void Entity::draw(const Shader& shader) {
         //printf("model drawn with id, %s", Model_manager::get_name(model_id).c_str());
         Model_manager::draw(shader, model_id);
     //}
-}
-
-bool Entity::draw(const Shader& shader, float time) {
-    ttl -= time;
-    if (ttl <= 0) {
-        return false;
-    }
-    model->draw(shader);
-    return true;
 }
 
 bool Entity::collides(const glm::vec3& pos, const glm::vec3& dir, glm::vec3& hit_pos) {
