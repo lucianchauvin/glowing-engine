@@ -49,7 +49,7 @@ public:
     }
 
     void controller_step(GLFWwindow* window, float deltaTime, Scene& scene) {
-        poll_player(window);
+        poll_player(window, scene);
         controller->process_input(window, deltaTime, scene, camera, model_yaw);
         controller->update_camera(camera, crouched, PLAYER_HEIGHT);
     }
@@ -141,7 +141,7 @@ private:
     }
     // stuff we're polling for every frame that wouldnt be captured by a keycallback
     // maybe can breakup into 'meta player' vs physics/game state?
-    void poll_player(GLFWwindow* window) {
+    void poll_player(GLFWwindow* window, Scene& scene) {
         // CTRL + C
         // CLOSE WINDOW
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) 
@@ -159,6 +159,13 @@ private:
         } else {
             dashing = false;
         }*/
+
+        if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS) {
+            // spawn glock
+            Audio::play_audio("beep.wav", 0.1f);
+            Entity e("glock", camera.position + camera.front * 3.0f, false, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+            scene.include(e);
+        }
     }
 };
 #endif

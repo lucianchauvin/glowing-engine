@@ -42,15 +42,6 @@ int main() {
     Crosshair crosshair(1.0f, 6.0f, 10.0f, 10.0f, 1.0f, glm::vec3(1.0f, 0.5f, 1.0f));
     
     Scene scene("star"); 
-    Model_ass plane("../resources/models/plane.obj");
-
-    //Model_ass sphere("../resources/models/backpack/backpack.obj", 1.0f);
-    //Model_ass sphere("../resources/models/cat/cat.obj");
-    //Model_ass sphere("../resources/models/bunny.obj");
-    Model_ass sphere2("../resources/models/sword_ice/scene.gltf");
-    //Model_ass sphere("../resources/models/sponza/main1_sponza/NewSponza_Main_glTF_003.gltf");
-
-    //Model_ass fly("../resources/models/plane/scene.gltf");
 
     //for (int i = -5; i < 5; i++) {
         //for (int j = 0; j < 10; j++) {
@@ -71,38 +62,44 @@ int main() {
         //}
      //}
 
+    //Model_ass sphere2("../resources/models/sponza/scene.gltf");
+    //Model_ass sphere2("../resources/models/link/scene.gltf");
+    
+    //Model_ass plane("../resources/models/plane.obj");
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
     glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
-    glm::vec3 color = glm::vec3(0.7f, 0.7f, 0.7f);
-    Entity e(&plane, pos, false, scale, color);
-    scene.include(e);
+    //Entity e(&plane, pos, false, scale);
+    //scene.include(e);
 
-    model_handle plane_id = Model_manager::load_model("f22");
-    pos = glm::vec3(5.0f, 0.0f, -10.0f);
+    //model_handle plane_id = Model_manager::load_model("f22");
+    pos = glm::vec3(5.0f, 10.0f, -10.0f);
     scale = glm::vec3(1.0f);
-    color = glm::vec3(0.7f);
-    Entity e2(plane_id, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    scene.include(e2);
+    Entity e2323322("f22", pos, false, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    scene.include(e2323322);
 
-    model_handle car232323 = Model_manager::load_model("911-2");
-    pos = glm::vec3(-3.0f, 0.0f, -3.0f);
-    scale = glm::vec3(2.0f);
-    color = glm::vec3(0.7f);
-    Entity e5(car232323, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    scene.include(e5);
+    //model_handle rtwsd = Model_manager::load_model("link");
+    //pos = glm::vec3(0.0, 1.5f, -1.0f);
+    //scale = glm::vec3(1.0f);
+    //Entity e2(rtwsd, pos, false, scale, 1.0f, glm::quat(0.707f, 0.0f, 0.707f, 0.0f));
+    //scene.include(e2);
 
-    Model_ass car("../resources/models/911-2/scene.gltf");
-    pos = glm::vec3(0.0f, 0.0f, 0.0f);
-    scale = glm::vec3(1.0f);
-    color = glm::vec3(0.7f);
-    Entity e3(&car, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    scene.include(e3);
+    //model_handle gdfhgsd = Model_manager::load_model("sponza");
+    //pos = glm::vec3(0.0f);
+    //scale = glm::vec3(0.1f);
+    //Entity e5555(gdfhgsd, pos, false, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    //scene.include(e5555);
 
-    Model_ass car23("../resources/models/sword/scene.gltf");
+    //model_handle car232323 = Model_manager::load_model("911-2");
+    //pos = glm::vec3(-3.0f, 0.0f, -3.0f);
+    //scale = glm::vec3(2.0f);
+    //color = glm::vec3(0.7f);
+    //Entity e5(car232323, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    //scene.include(e5);
+
+    model_handle car23 = Model_manager::load_model("../resources/models/sword/scene.gltf");
     pos = glm::vec3(-1.0f, 2.0f, -2.0f);
     scale = glm::vec3(1.0f);
-    color = glm::vec3(0.7f);
-    Entity e4(&car23, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    Entity e4(car23, pos, false, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(e4);
 
     // pos   = glm::vec3(0.0f, 30.0f, 0.0f); 
@@ -126,14 +123,9 @@ int main() {
     Text screen_text3(font3, u8"我爱你", 600, 200, 50.0f, glm::vec3(1.0f, 0.1f, 0.1f));
     Text screen_text4(font3, "hello world!?", 800, 300, 50.0f, glm::vec3(1.0f, 0.1f, 0.1f));*/
 
-    JPH::BodyID ground = Physics::addBox(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(100.0f, 1.0f, 100.0f), true);
+    // ground 
+    JPH::BodyID ground = Physics::addBox(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(100.0f, 1.0f, 100.0f), true);
     printf("Created ground body\n");
-    JPH::BodyID jsphere = Physics::addSphere(glm::vec3(0.0f, 10.0f, -25.0f), 1.0f, false);
-    printf("Created falling box\n");
-    JPH::BodyID jsphere2 = Physics::addSphere(glm::vec3(0.125f, 15.0f, -25.0f), 1.0f, false);
-    printf("Created sphere\n");
-
-    Physics::setBodyVelocity(jsphere2, glm::vec3(0.0f, 5.0f, 0.0f));
 
     Physics::optimize_broad_phase();
 
@@ -158,14 +150,8 @@ int main() {
 
         Physics::update(); // default 1/60 delta time
 
-
         // render scene
         renderer.render_scene(player, scene, delta_time);
-
-        glm::vec3 position = Physics::getBodyPosition(jsphere2);
-        renderer.debug_sphere_at(position);        
-        position = Physics::getBodyPosition(jsphere);
-        renderer.debug_sphere_at(position);
 
         if (!player.key_toggles[(unsigned)'r'])
             renderer.render_debug(player);

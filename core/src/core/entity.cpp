@@ -4,48 +4,74 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-Entity::Entity(
-    Model_ass* model, 
-    glm::vec3 position, 
-    bool physics_enabled, 
-    glm::vec3 scale, 
-    glm::vec3 color,
-    float mass,
-    glm::quat orientation,
-    bool fade, float ttl, float max_ttl, float collider_radius
-) : 
-    model(model),
-    model_id(0),
-    position(position), 
-    scale(scale), color(color),
-    fade(fade), ttl(ttl), max_ttl(max_ttl), 
-    rotation(glm::vec3(0.0f))
-{
-}
+//Entity::Entity(
+//    Model_ass* model, 
+//    glm::vec3 position, 
+//    bool physics_enabled, 
+//    glm::vec3 scale, 
+//    float mass,
+//    glm::quat orientation,
+//    bool fade, float ttl, float max_ttl, float collider_radius
+//) : 
+//    model(model),
+//    model_id(0),
+//    position(position), 
+//    scale(scale),
+//    fade(fade), ttl(ttl), max_ttl(max_ttl), 
+//    rotation(glm::vec3(0.0f))
+//{
+//}
 
 Entity::Entity(
     model_handle model_id,
     glm::vec3 position,
     bool physics_enabled,
     glm::vec3 scale,
-    glm::vec3 color,
     float mass,
     glm::quat orientation,
-    bool fade, float ttl, float max_ttl, float collider_radius
+    bool fade, float ttl, float max_ttl
 ) :
     model_id(model_id),
     position(position),
-    scale(scale), color(color),
+    scale(scale),
     fade(fade), ttl(ttl), max_ttl(max_ttl),
     rotation(glm::vec3(0.0f))
 {
+    // consume bb
+    aabb = Model_manager::get_aabb(model_id);
+    // add to physics simulation
+    physics_id = Physics::addSphere(position, 1.0f, false);
+}
+
+Entity::Entity(
+    std::string model_name,
+    glm::vec3 position,
+    bool physics_enabled,
+    glm::vec3 scale,
+    float mass,
+    glm::quat,
+    bool fade,
+    float ttl,
+    float max_ttl
+) :
+    position(position),
+    scale(scale),
+    fade(fade), ttl(ttl), max_ttl(max_ttl),
+    rotation(glm::vec3(0.0f)) 
+{
+    model_id = Model_manager::load_model(model_name);
+    // consume bb
+    aabb = Model_manager::get_aabb(model_id);
+    // add to physics simulation
+    physics_id = Physics::addSphere(position, 1.0f, false);
 }
 
 Entity::~Entity() = default;
 
 glm::mat4 Entity::get_model_matrix() const {
     glm::mat4 modelMat(1.0f);
-    glm::mat4 translation = glm::translate(glm::mat4(1.0f), position);
+    //glm::mat4 translation = glm::translate(glm::mat4(1.0f), position);
+    glm::mat4 translation = glm::translate(glm::mat4(1.0f), Physics::getBodyPosition(physics_id));
     glm::mat4 rot = glm::mat4_cast(rotation);
     glm::mat4 scaling = glm::scale(glm::mat4(1.0f), scale);
 
@@ -89,6 +115,6 @@ bool Entity::collides(const glm::vec3& pos, const glm::vec3& dir, glm::vec3& hit
     return true;
 }
 
-glm::vec3 Entity::get_color() {
-    return color;
+glm::vec3 Entity::get_physics_position() {
+    return Physics::getBodyPosition(physics_id);
 }

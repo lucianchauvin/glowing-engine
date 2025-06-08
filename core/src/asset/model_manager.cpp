@@ -92,7 +92,13 @@ namespace Model_manager {
         return models.size();
     }
 
-    std::string get_name(model_handle model_id) {
+    std::string get_name(const model_handle& model_id) {
         return names[model_id];
+    }
+
+
+    Util::aabb get_aabb(const model_handle& model_id) {
+        Util::aabb aabb{ models[model_id].aabb_min, models[model_id].aabb_max };
+        return aabb;
     }
 }
