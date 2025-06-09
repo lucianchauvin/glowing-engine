@@ -278,11 +278,14 @@ namespace Physics {
         RefConst<Shape> box_shape = new BoxShape(Vec3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f));
 
         // Create body creation settings
+        Vec3 box_half_extents = Vec3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f);
+        RVec3 corrected_pos = RVec3(pos.x, pos.y + box_half_extents.GetY(), pos.z);
+
         BodyCreationSettings body_settings(box_shape, RVec3(pos.x, pos.y, pos.z),
             Quat::sIdentity(), isStatic ? EMotionType::Static : EMotionType::Dynamic,
             isStatic ? Layers::NON_MOVING : Layers::MOVING);
 
-        body_settings.mRestitution = 0.6f;
+        body_settings.mRestitution = 0.2f;
 
         // Create body
         BodyInterface& body_interface = g_state.physicsSystem->GetBodyInterface();
@@ -334,6 +337,81 @@ namespace Physics {
         BodyInterface& body_interface = g_state.physicsSystem->GetBodyInterface();
         body_interface.SetLinearVelocity(id, Vec3(vel.x, vel.y, vel.z));
     }
+
+    glm::quat getBodyRotation(JPH::BodyID id) {
+        BodyInterface& body_interface = g_state.physicsSystem->GetBodyInterface();
+        Quat rot = body_interface.GetRotation(id);
+        return glm::quat(rot.GetW(), rot.GetX(), rot.GetY(), rot.GetZ());
+    }
+
+    Util::aabb getShapeBounds(JPH::BodyID id) { // todo maybe noit right
+        BodyInterface& body_interface = g_state.physicsSystem->GetBodyInterface();
+
+        // Get the shape from the body
+        RefConst<Shape> shape = body_interface.GetShape(id);
+
+        // Get the local bounding box of the shape
+        AABox local_bounds = shape->GetLocalBounds();
+
+        // Convert to glm vectors
+        glm::vec3 min_bounds(local_bounds.mMin.GetX(), local_bounds.mMin.GetY(), local_bounds.mMin.GetZ());
+        glm::vec3 max_bounds(local_bounds.mMax.GetX(), local_bounds.mMax.GetY(), local_bounds.mMax.GetZ());
+
+        return Util::aabb{ min_bounds, max_bounds };
+    }
+
+    //void setBodyVelocity(JPH::BodyID id, const glm::vec3& vel) {
+    //    BodyInterface& body_interface = g_state.physicsSystem->GetBodyInterface();
+    //    body_interface.SetLinearVelocity(id, Vec3(vel.x, vel.y, vel.z));
+    //}
+    Util::OBB getShapeOBB(JPH::BodyID id) {
+        BodyInterface& body_interface = g_state.physicsSystem->GetBodyInterface();
+
+        // Get the shape from the body
+        RefConst<Shape> shape = body_interface.GetShape(id);
+
+        // Get the local bounding box of the shape
+        AABox local_bounds = shape->GetLocalBounds();
+
+        // Get the body's world transform (position + rotation)
+        RVec3 position = body_interface.GetPosition(id);
+        Quat rotation = body_interface.GetRotation(id);
+
+        // Create transformation matrix from Jolt transform
+        glm::mat4 physics_transform = glm::mat4(1.0f);
+        // Apply rotation (convert Jolt quaternion to glm)
+        glm::quat glm_rot(rotation.GetW(), rotation.GetX(), rotation.GetY(), rotation.GetZ());
+        glm::mat4 rot_matrix = glm::mat4_cast(glm_rot);
+        physics_transform = rot_matrix;
+        // Apply translation
+        physics_transform[3] = glm::vec4(position.GetX(), position.GetY(), position.GetZ(), 1.0f);
+
+        // Get the 8 corners of the local collision box
+        glm::vec3 local_min(local_bounds.mMin.GetX(), local_bounds.mMin.GetY(), local_bounds.mMin.GetZ());
+        glm::vec3 local_max(local_bounds.mMax.GetX(), local_bounds.mMax.GetY(), local_bounds.mMax.GetZ());
+
+        Util::OBB result;
+        
+        glm::vec3 local_corners[8] = {
+            glm::vec3(local_min.x, local_min.y, local_min.z), // 0: min corner
+            glm::vec3(local_max.x, local_min.y, local_min.z), // 1: +x
+            glm::vec3(local_min.x, local_max.y, local_min.z), // 2: +y  
+            glm::vec3(local_max.x, local_max.y, local_min.z), // 3: +x+y
+            glm::vec3(local_min.x, local_min.y, local_max.z), // 4: +z
+            glm::vec3(local_max.x, local_min.y, local_max.z), // 5: +x+z
+            glm::vec3(local_min.x, local_max.y, local_max.z), // 6: +y+z
+            glm::vec3(local_max.x, local_max.y, local_max.z)  // 7: max corner
+        };
+
+        // Transform all corners to world space
+        for (int i = 0; i < 8; i++) {
+            glm::vec4 world_corner = physics_transform * glm::vec4(local_corners[i], 1.0f);
+            result.corners[i] = glm::vec3(world_corner);
+        }
+
+        return result;
+    }
+
 
     JPH::BodyInterface& getBodyInterface() {
         return g_state.physicsSystem->GetBodyInterface();

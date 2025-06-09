@@ -62,11 +62,13 @@ public:
     void draw(const Shader& shader);
     bool collides(const glm::vec3& pos, const glm::vec3& dir, glm::vec3& hit_pos);
     glm::vec3 get_physics_position();
+    Util::aabb Entity::get_aabb();
 
 // private:
     Model_ass* model;
     model_handle model_id;
-    glm::vec3 position; 
+    glm::vec3 position;
+    bool physics_enabled;
     glm::vec3 scale;
     bool fade;
     float ttl;

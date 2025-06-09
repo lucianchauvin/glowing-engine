@@ -65,16 +65,19 @@ int main() {
     //Model_ass sphere2("../resources/models/sponza/scene.gltf");
     //Model_ass sphere2("../resources/models/link/scene.gltf");
     
-    //Model_ass plane("../resources/models/plane.obj");
+    model_handle plane = Model_manager::load_model("plane.obj", 0);
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
     glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
-    //Entity e(&plane, pos, false, scale);
-    //scene.include(e);
+    Entity e(plane, pos, false, scale);
+    scene.include(e);
 
-    //model_handle plane_id = Model_manager::load_model("f22");
-    pos = glm::vec3(5.0f, 10.0f, -10.0f);
+    model_handle cube = Model_manager::load_model("teapot.obj", 0);
+    pos = glm::vec3(0.0f, 0.0f, 5.0f);
     scale = glm::vec3(1.0f);
-    Entity e2323322("f22", pos, false, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    Entity e233333(cube, pos, true, scale);
+    scene.include(e233333);
+
+    Entity e2323322("f22", glm::vec3(5.0f, 10.0f, -10.0f), true, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(e2323322);
 
     //model_handle rtwsd = Model_manager::load_model("link");
@@ -88,19 +91,23 @@ int main() {
     //scale = glm::vec3(0.1f);
     //Entity e5555(gdfhgsd, pos, false, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     //scene.include(e5555);
-
-    //model_handle car232323 = Model_manager::load_model("911-2");
-    //pos = glm::vec3(-3.0f, 0.0f, -3.0f);
-    //scale = glm::vec3(2.0f);
-    //color = glm::vec3(0.7f);
-    //Entity e5(car232323, pos, false, scale, color, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    //scene.include(e5);
-
-    model_handle car23 = Model_manager::load_model("../resources/models/sword/scene.gltf");
-    pos = glm::vec3(-1.0f, 2.0f, -2.0f);
+    model_handle car232323 = Model_manager::load_model("911-2");
+    pos = glm::vec3(-3.0f, 0.0f, -3.0f);
     scale = glm::vec3(1.0f);
-    Entity e4(car23, pos, false, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    scene.include(e4);
+    Entity e5(car232323, pos, true, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    scene.include(e5);
+
+    //pos = glm::vec3(0.0f);
+    //scale = glm::vec3(1.0f);
+    //Entity e555555235("cube", pos, false, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    //scene.include(e555555235);
+
+
+    //model_handle car23 = Model_manager::load_model("../resources/models/sword/scene.gltf");
+    //pos = glm::vec3(-1.0f, 2.0f, -2.0f);
+    //scale = glm::vec3(1.0f);
+    //Entity e4(car23, pos, false, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    //scene.include(e4);
 
     // pos   = glm::vec3(0.0f, 30.0f, 0.0f); 
     // scale = glm::vec3(100.0f, 100.0f, 100.0f);
@@ -124,7 +131,7 @@ int main() {
     Text screen_text4(font3, "hello world!?", 800, 300, 50.0f, glm::vec3(1.0f, 0.1f, 0.1f));*/
 
     // ground 
-    JPH::BodyID ground = Physics::addBox(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(100.0f, 1.0f, 100.0f), true);
+    JPH::BodyID ground = Physics::addBox(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(100.0f, 1.0f, 100.0f), true);
     printf("Created ground body\n");
 
     Physics::optimize_broad_phase();

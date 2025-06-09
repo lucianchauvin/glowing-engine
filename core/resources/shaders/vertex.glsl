@@ -18,6 +18,7 @@ out vec3 Bitangentout;
 
 void main() {
     FragPos = vec3(model * vec4(aPos, 1.0));  // Transform to world space
+
     Normal = normalize(normal_matrix * aNor);
 
     TexCoord = aTexCoord;
@@ -25,5 +26,5 @@ void main() {
     Tangentout = normalize(normal_matrix * Tangent);
     Bitangentout = normalize(normal_matrix * Bitangent);
 
-    gl_Position = projection * view * model * vec4(FragPos, 1.0);
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
 }

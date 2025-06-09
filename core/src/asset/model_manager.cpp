@@ -51,8 +51,7 @@ namespace Model_manager {
         
         printf("[MODEL] Loading: %s\n", full_path.c_str());
 
-        Model_ass model;
-        model.load_model(full_path);
+        Model_ass model(full_path);
 
         size_t new_idx = models.size();
         models.push_back(std::move(model));
@@ -95,7 +94,6 @@ namespace Model_manager {
     std::string get_name(const model_handle& model_id) {
         return names[model_id];
     }
-
 
     Util::aabb get_aabb(const model_handle& model_id) {
         Util::aabb aabb{ models[model_id].aabb_min, models[model_id].aabb_max };

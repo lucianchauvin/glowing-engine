@@ -193,10 +193,29 @@ void Renderer_debug::add_bbox(const glm::vec3& min, const glm::vec3& max, const 
     add_line(corners[7], corners[4], color);
 
     // vert lines
-    add_line(corners[0], corners[4], color);
+    add_line(corners[0], corners[4], color); 
     add_line(corners[1], corners[5], color);
     add_line(corners[2], corners[6], color);
     add_line(corners[3], corners[7], color);
+}
+
+void Renderer_debug::add_obb(const Util::OBB obb, const glm::vec3& color) {
+    add_line(obb.corners[0], obb.corners[1], color); // min to +x
+    add_line(obb.corners[1], obb.corners[3], color); // +x to +x+y
+    add_line(obb.corners[3], obb.corners[2], color); // +x+y to +y
+    add_line(obb.corners[2], obb.corners[0], color); // +y to min
+
+    // Top face (z = max)
+    add_line(obb.corners[4], obb.corners[5], color); // +z to +x+z
+    add_line(obb.corners[5], obb.corners[7], color); // +x+z to max
+    add_line(obb.corners[7], obb.corners[6], color); // max to +y+z
+    add_line(obb.corners[6], obb.corners[4], color); // +y+z to +z
+
+    // Vertical edges connecting bottom and top faces
+    add_line(obb.corners[0], obb.corners[4], color); // min to +z
+    add_line(obb.corners[1], obb.corners[5], color); // +x to +x+z
+    add_line(obb.corners[2], obb.corners[6], color); // +y to +y+z
+    add_line(obb.corners[3], obb.corners[7], color); // +x+y to max
 }
 
 void Renderer_debug::render(Shader& debug_shader, const glm::mat4& projection, const glm::mat4& view) {
@@ -244,12 +263,12 @@ void Renderer_debug::render(Shader& debug_shader, const glm::mat4& projection, c
 
         debug_shader.setVec3("debugColor", glm::vec3(0.0f));
 
-        glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_DEPTH_TEST);
 
         glDrawArrays(GL_LINES, 0, (GLsizei)(lines.size() * 2));
         glBindVertexArray(0);
 
-        glEnable(GL_DEPTH_TEST);
+        //glEnable(GL_DEPTH_TEST);
     }
 
     // spheres

@@ -246,10 +246,12 @@ public:
             // Draw the entity
             entity.draw(used_shader);
             
-            debug_renderer.add_axes(entity.get_physics_position(), entity.rotation);
-            //glm::vec4 world_min = model * glm::vec4(entity.model->aabb_min, 1.0f);
-            //glm::vec4 world_max = model * glm::vec4(entity.model->aabb_max, 1.0f);
-            //debug_renderer.add_bbox(glm::vec3(world_min), glm::vec3(world_max), glm::vec3(1.0f, 1.0f, 0.0f));
+            /////////////////////////////////////////////////////////////////////////////////////////////////
+            //debug_renderer.add_axes(entity.get_physics_position(), entity.rotation);
+            if (entity.physics_enabled) {
+                Util::OBB collision_box = Physics::getShapeOBB(entity.physics_id);
+                debug_renderer.add_obb(collision_box, glm::vec3(0.0f, 1.0f, 0.0f)); // Green for physics collision box
+            }
         }
         
         render_skybox(scene.skybox, view, projection);

@@ -18,7 +18,7 @@ enum class ControllerType { FPS, THIRDPERSON, PLANE };
 
 class Player {
 public:
-    float PLAYER_HEIGHT = 1.8f;
+    float PLAYER_HEIGHT = .1f;
 
     Camera camera;
 
@@ -38,6 +38,7 @@ public:
     bool crouched = false;
     bool dashing = false;
     bool key_toggles[256] = {false};
+    bool f1_was_pressed = false;
 
     // Model_ass wep;
 
@@ -160,11 +161,16 @@ private:
             dashing = false;
         }*/
 
-        if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS) {
+        bool f1_is_pressed = (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS);
+        if (f1_is_pressed && !f1_was_pressed) {
             // spawn glock
             Audio::play_audio("beep.wav", 0.1f);
-            Entity e("glock", camera.position + camera.front * 3.0f, false, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+            Entity e("glock", camera.position + camera.front * 5.0f, true, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
             scene.include(e);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
+            Physics::optimize_broad_phase();
         }
     }
 };

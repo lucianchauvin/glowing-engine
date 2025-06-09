@@ -33,6 +33,7 @@ Entity::Entity(
 ) :
     model_id(model_id),
     position(position),
+    physics_enabled(physics_enabled),
     scale(scale),
     fade(fade), ttl(ttl), max_ttl(max_ttl),
     rotation(glm::vec3(0.0f))
@@ -40,7 +41,8 @@ Entity::Entity(
     // consume bb
     aabb = Model_manager::get_aabb(model_id);
     // add to physics simulation
-    physics_id = Physics::addSphere(position, 1.0f, false);
+    if (physics_enabled)
+        physics_id = Physics::addBox(position, (aabb.max - aabb.min) * scale, false);
 }
 
 Entity::Entity(
@@ -55,6 +57,7 @@ Entity::Entity(
     float max_ttl
 ) :
     position(position),
+    physics_enabled(physics_enabled),
     scale(scale),
     fade(fade), ttl(ttl), max_ttl(max_ttl),
     rotation(glm::vec3(0.0f)) 
@@ -63,7 +66,12 @@ Entity::Entity(
     // consume bb
     aabb = Model_manager::get_aabb(model_id);
     // add to physics simulation
-    physics_id = Physics::addSphere(position, 1.0f, false);
+    //glm::vec3 middle = (aabb.max + aabb.min) / 2.0f;
+    //float x = aabb.max.x - aabb.min.x;
+    //float y = aabb.max.y - aabb.min.y;
+    //float z = aabb.max.z - aabb.min.z;
+    if (physics_enabled)
+        physics_id = Physics::addBox(position, (aabb.max - aabb.min) * scale, false);
 }
 
 Entity::~Entity() = default;
@@ -72,7 +80,8 @@ glm::mat4 Entity::get_model_matrix() const {
     glm::mat4 modelMat(1.0f);
     //glm::mat4 translation = glm::translate(glm::mat4(1.0f), position);
     glm::mat4 translation = glm::translate(glm::mat4(1.0f), Physics::getBodyPosition(physics_id));
-    glm::mat4 rot = glm::mat4_cast(rotation);
+    //glm::mat4 rot = glm::mat4_cast(rotation);
+    glm::mat4 rot = glm::mat4_cast(Physics::getBodyRotation(physics_id));
     glm::mat4 scaling = glm::scale(glm::mat4(1.0f), scale);
 
     modelMat = translation * rot * scaling;
@@ -117,4 +126,8 @@ bool Entity::collides(const glm::vec3& pos, const glm::vec3& dir, glm::vec3& hit
 
 glm::vec3 Entity::get_physics_position() {
     return Physics::getBodyPosition(physics_id);
+}
+
+Util::aabb Entity::get_aabb() {
+    return Physics::getShapeBounds(physics_id);
 }

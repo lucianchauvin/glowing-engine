@@ -127,21 +127,46 @@ void Model_ass::normalize_model(float scale) {
         }
     }
 
-    //glm::vec3 center = 0.5f * (vmin + vmax);
-    //glm::vec3 diff   = vmax - vmin;
-    //float maxDim     = std::max(diff.x, std::max(diff.y, diff.z));
-    //if (maxDim < 1e-8f) {
-    //    // Avoid division by zero if the model is basically a single point
-    //    maxDim = 1.0f;
-    //}
+    printf("starting aabb max %f %f %f\n", aabb_max.x, aabb_max.y, aabb_max.z);
+    printf("starting aabb min %f %f %f\n", aabb_min.x, aabb_min.y, aabb_min.z);
+
+    glm::vec3 center = 0.5f * (aabb_min + aabb_max);
+    glm::vec3 diff   = aabb_max - aabb_min;
+    float maxDim     = std::max(diff.x, std::max(diff.y, diff.z));
+    if (maxDim < 1e-8f) {
+        maxDim = 1.0f;
+    }
     //float scale_f = scale / maxDim;  // so the largest dimension goes from -1 to +1
+    float scale_f = 1.0f; // dont scale, just center
 
-    //for (auto &m : meshes) {
-    //    for (auto &v : m.vertices) {
-    //        // Shift to center, then scale
-    //        v.Position = (v.Position - center) * scale_f;
-    //    }
+    for (auto& m : meshes) {
+        for (auto& v : m.vertices) {
+            // Center around origin
+            v.Position = (v.Position - center) * scale_f;
+            // Then shift Y so bottom is at y=0
+            //v.Position.y += (center.y - aabb_min.y) * scale_f; // why ?>?????? todo figure out bruh
+        }
+        m.update_vertex_buffer();
+    }
 
-    //    m.update_vertex_buffer();
-    //}
+    // Recalculate final AABB
+    aabb_min = glm::vec3(FLT_MAX);
+    aabb_max = glm::vec3(-FLT_MAX);
+    for (auto& m : meshes) {
+        for (auto& v : m.vertices) {
+            aabb_min.x = std::min(aabb_min.x, v.Position.x);
+            aabb_min.y = std::min(aabb_min.y, v.Position.y);
+            aabb_min.z = std::min(aabb_min.z, v.Position.z);
+
+            aabb_max.x = std::max(aabb_max.x, v.Position.x);
+            aabb_max.y = std::max(aabb_max.y, v.Position.y);
+            aabb_max.z = std::max(aabb_max.z, v.Position.z);
+        }
+    }
+
+    printf("after aabb max %f %f %f\n", aabb_max.x, aabb_max.y, aabb_max.z);
+    printf("after aabb min %f %f %f\n", aabb_min.x, aabb_min.y, aabb_min.z);
+
+    printf("after aabb max %f %f %f\n", aabb_max.x, aabb_max.y, aabb_max.z);
+    printf("after aabb min %f %f %f\n", aabb_min.x, aabb_min.y, aabb_min.z);
 }

@@ -1,12 +1,15 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 // includ this stuff cus
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Math/Vec3.h>
 #include <Jolt/Math/Quat.h>
+#include <util/aabb.h>
+#include <util/OBB.h>
 
 namespace JPH {
     class BodyInterface;
@@ -38,6 +41,11 @@ namespace Physics {
     void setBodyPosition(JPH::BodyID id, const glm::vec3& pos);
     glm::vec3 getBodyVelocity(JPH::BodyID id);
     void setBodyVelocity(JPH::BodyID id, const glm::vec3& vel);
+
+    glm::quat getBodyRotation(JPH::BodyID id);
+    Util::aabb getShapeBounds(JPH::BodyID id); // todo maybe not right
+    Util::OBB getShapeOBB(JPH::BodyID id);
+
 
     JPH::BodyInterface& getBodyInterface();
 
