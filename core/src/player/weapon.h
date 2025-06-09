@@ -226,7 +226,7 @@ public:
     void fire() {
         // Play weapon sound
         Audio::play_audio(sound_file.c_str(), sound_volume);
-        
+
         // Reset cooldown timer and decrement ammo
         last_shot_time = 0.0f;
         current_ammo--;

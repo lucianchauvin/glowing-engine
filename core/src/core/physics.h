@@ -46,6 +46,7 @@ namespace Physics {
     Util::aabb getShapeBounds(JPH::BodyID id); // todo maybe not right
     Util::OBB getShapeOBB(JPH::BodyID id);
 
+    bool shoot(const glm::vec3& origin, const glm::vec3& direction, float force, float maxDistance);
 
     JPH::BodyInterface& getBodyInterface();
 

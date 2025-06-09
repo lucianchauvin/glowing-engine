@@ -14,6 +14,9 @@
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+//#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/CastResult.h>
 
 using namespace JPH;
 using namespace JPH::literals;
@@ -412,6 +415,51 @@ namespace Physics {
         return result;
     }
 
+    bool Physics::shoot(const glm::vec3& origin, const glm::vec3& direction,
+        float force, float maxDistance) {
+
+        // Debug output
+        printf("Shooting from (%.2f, %.2f, %.2f) in direction (%.2f, %.2f, %.2f)\n",
+            origin.x, origin.y, origin.z, direction.x, direction.y, direction.z);
+
+        // Create ray
+        Vec3 joltOrigin(origin.x, origin.y, origin.z);
+        Vec3 joltDir = Vec3(direction.x, direction.y, direction.z).Normalized();
+        RRayCast ray(joltOrigin, joltDir * maxDistance);
+
+        // Cast ray
+        RayCastResult result;
+        if (g_state.physicsSystem->GetNarrowPhaseQuery().CastRay(ray, result)) {
+            printf("Ray hit something! BodyID: %u, Fraction: %.3f\n",
+                result.mBodyID.GetIndexAndSequenceNumber(), result.mFraction);
+
+            // Calculate hit point from ray fraction
+            Vec3 hitPoint = joltOrigin + joltDir * maxDistance * result.mFraction;
+            printf("Hit point: (%.2f, %.2f, %.2f)\n", hitPoint.GetX(), hitPoint.GetY(), hitPoint.GetZ());
+
+            // Check if body is dynamic
+            BodyInterface& bodyInterface = g_state.physicsSystem->GetBodyInterface();
+            EMotionType motionType = bodyInterface.GetMotionType(result.mBodyID);
+            printf("Body motion type: %d (0=Static, 1=Kinematic, 2=Dynamic)\n", (int)motionType);
+
+            if (motionType == EMotionType::Dynamic) {
+                // Apply impulse
+                Vec3 impulse = joltDir * force;
+                printf("Applying impulse: (%.2f, %.2f, %.2f) with force %.2f\n",
+                    impulse.GetX(), impulse.GetY(), impulse.GetZ(), force);
+                bodyInterface.AddImpulse(result.mBodyID, impulse, hitPoint);
+                printf("Impulse applied successfully!\n");
+            }
+            else {
+                printf("Body is not dynamic, cannot apply impulse\n");
+            }
+            return true;
+        }
+        else {
+            printf("Ray didn't hit anything\n");
+        }
+        return false;
+    }
 
     JPH::BodyInterface& getBodyInterface() {
         return g_state.physicsSystem->GetBodyInterface();

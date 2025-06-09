@@ -13,12 +13,13 @@
 #include "core/physics.h"
 #include "core/scene.h"
 // #include <model_ass.h>
+#include "core/physics.h"
 
 enum class ControllerType { FPS, THIRDPERSON, PLANE };
 
 class Player {
 public:
-    float PLAYER_HEIGHT = .1f;
+    float PLAYER_HEIGHT = 1.8f;
 
     Camera camera;
 
@@ -171,6 +172,18 @@ private:
 
         if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
             Physics::optimize_broad_phase();
+        }
+
+        bool left_mouse_is_pressed = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+        if (left_mouse_is_pressed) {
+            // Shoot from camera position in camera direction
+            glm::vec3 shootOrigin = camera.position;
+            glm::vec3 shootDirection = camera.front;
+
+            if (Physics::shoot(shootOrigin, shootDirection, 7500.0f, 1000.0f)) {
+                // Optional: play sound or visual effect when something is hit
+                Audio::play_audio("gun1.wav", 0.2f); // if you have a shoot sound
+            }
         }
     }
 };
