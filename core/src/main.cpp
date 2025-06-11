@@ -77,7 +77,7 @@ int main() {
     Entity e233333(cube, pos, true, scale);
     scene.include(e233333);
 
-    Entity e2323322("f22", glm::vec3(5.0f, 10.0f, -10.0f), true, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    Entity e2323322("f22", glm::vec3(5.0f, 10.0f, 10.0f), true, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(e2323322);
 
     //model_handle rtwsd = Model_manager::load_model("link");
@@ -124,7 +124,14 @@ int main() {
 
     Font font("tx02");
     Text screen_text(font, "999", 0, 1, 50.0f, glm::vec3(0.5f, 0.2f, 0.7f));
-    //Font font2("roughsplash");
+    Font daysl8r("28DaysLater");
+    Text weapon_ammo_text(daysl8r, "200", SCR_WIDTH - 175, 50, 50.0f, glm::vec3(1.0f, 1.0f, 0.7f));
+    Text reserve_ammo_text(daysl8r, "9999", SCR_WIDTH - 100, 50, 50.0f, glm::vec3(0.5f, 0.5f, 0.35f));
+
+    float debug_size = 20.0f;
+    Text player_position(font, "position: (1.00, 1.00, 1.00)", 1, SCR_HEIGHT - debug_size, debug_size, glm::vec3(1.0f));
+    Text player_facing(font, "facing: (1.00, 1.00, 1.00)", 1, SCR_HEIGHT - (debug_size * 2), debug_size, glm::vec3(1.0f));
+    Text player_holding(font, "holding: weaponweapon", 1, SCR_HEIGHT - (debug_size * 3), debug_size, glm::vec3(1.0f));
     //Text screen_text2(font2, "LET ME OUTTTTT", 0, 700, 200.0f, glm::vec3(1.0f, 0.1f, 0.1f));
     /*Font font3("jianjianti");
     Text screen_text3(font3, u8"我爱你", 600, 200, 50.0f, glm::vec3(1.0f, 0.1f, 0.1f));
@@ -145,8 +152,14 @@ int main() {
         delta_time = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        if (!(step % 10))
+        if (!(step % 144)) {
             screen_text.updateText(std::to_string((int)(1.0f / delta_time)));
+            weapon_ammo_text.updateText(std::to_string(player.active_weapon->current_ammo));
+            reserve_ammo_text.updateText(std::to_string(player.active_weapon->reserve_ammo));
+            player_position.updateText("pos 1 00 1 00 1 00");
+            player_facing.updateText("dir 1 00 1 00 1 00");
+            player_holding.updateText("hand " + player.active_weapon->name);
+        }
 
         // todo maybe refactor all into jolt controller hmmm
         // controller step takes input
@@ -168,52 +181,23 @@ int main() {
 
         renderer.render_crosshair(crosshair);
         renderer.render_hud_text(screen_text);
-        //renderer.render_hud_text(screen_text2);
+        renderer.render_hud_text(weapon_ammo_text);
+        renderer.render_hud_text(reserve_ammo_text);
+        renderer.render_hud_text(player_position);
+        renderer.render_hud_text(player_facing);
+        renderer.render_hud_text(player_holding);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        player.debug_hud();
-        //player.controller->debug_hud(io);
-        //crosshair.gui();
-
         ImGui::Begin("Light");
         ImGui::SliderFloat3("pos", &renderer.light.position.x, -20.0f, 20.0f);
         ImGui::SliderFloat3("color", &renderer.light.color.x, 0.0f, 1.0f); // 1.0f;     
-        ImGui::SliderFloat("itensity", &renderer.light.intensity, 0.0f, 1.0f); // 1.0f;        
+        ImGui::SliderFloat("itensity", &renderer.light.intensity, 0.0f, 50.0f); // 1.0f;        
         ImGui::End();
 
-        {
-            ImGui::Begin("Entity Inspector");
-
-            for (size_t i = 0; i < scene.entities.size(); ++i) {
-                Entity& entity = scene.entities[i];
-                ImGui::PushID(static_cast<int>(i));
-
-                if (ImGui::TreeNode("Entity")) {
-                    // Show & edit position
-                    ImGui::DragFloat3("Position", glm::value_ptr(entity.position), 0.1f);
-
-                    // Show & edit scale
-                    ImGui::DragFloat3("Scale", glm::value_ptr(entity.scale), 0.1f);
-
-                    // Convert quaternion to Euler angles (in degrees)
-                    glm::vec3 euler = glm::degrees(glm::eulerAngles(entity.rotation));
-                    if (ImGui::DragFloat3("Rotation (Euler)", glm::value_ptr(euler), 1.0f)) {
-                        // Convert back to quaternion if changed
-                        glm::vec3 radians = glm::radians(euler);
-                        entity.rotation = glm::quat(radians);
-                    }
-
-                    ImGui::TreePop();
-                }
-
-                ImGui::PopID();
-            }
-
-            ImGui::End();
-        }
+        //player.debug_hud();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

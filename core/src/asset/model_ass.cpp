@@ -99,10 +99,21 @@ Mesh Model_ass::process_mesh(aiMesh *mesh, const aiScene *scene, const std::stri
             normal = Texture_manager::load_from_path(path.substr(0, path.size() - 10) + str.C_Str());
         }
 
-        //material.albedo_maps = 
-        //material.metallic_roughness_maps = load_material_textures(mat, aiTextureType_UNKNOWN, "texture_metallic_roughness");
-        //material.ao_maps = load_material_textures(mat, aiTextureType_LIGHTMAP, "texture_ao");
-        //material.emissive_maps = load_material_textures(mat, aiTextureType_EMISSIVE, "texture_emissive");
+        if (material->GetTextureCount(aiTextureType_UNKNOWN)) {
+            // Try to find metallic-roughness texture by name patterns
+            for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_UNKNOWN); i++) {
+                aiString str;
+                material->GetTexture(aiTextureType_UNKNOWN, i, &str);
+                std::string texName = str.C_Str();
+                // Common naming patterns for metallic-roughness maps
+                if (texName.find("metallic") != std::string::npos ||
+                    texName.find("roughness") != std::string::npos ||
+                    texName.find("orm") != std::string::npos) { // ORM = Occlusion/Roughness/Metallic
+                    metrough = Texture_manager::load_from_path(path.substr(0, path.size() - 10) + str.C_Str());
+                    break;
+                }
+            }
+        }
    
     }
 

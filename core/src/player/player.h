@@ -12,8 +12,7 @@
 #include "core/camera.h"
 #include "core/physics.h"
 #include "core/scene.h"
-// #include <model_ass.h>
-#include "core/physics.h"
+#include <player/weapon.h>
 
 enum class ControllerType { FPS, THIRDPERSON, PLANE };
 
@@ -25,6 +24,9 @@ public:
 
     std::unordered_map<ControllerType, std::unique_ptr<Controller>> controllers;
     Controller* controller;
+
+    std::unordered_map<Weapon_id, std::unique_ptr<Weapon>> weapons;
+    Weapon* active_weapon;
 
     // Hands hands; // (   ͡°   ͜ʖ    ͡°   )
 
@@ -45,15 +47,37 @@ public:
 
     Player() : camera(glm::vec3(0.0f, PLAYER_HEIGHT, 0.0f)), controller() {
         controllers[ControllerType::FPS] = std::make_unique<Controller_fps>();
-        //controllers[ControllerType::THIRDPERSON] = std::make_unique<Controller_thirdperson>();
+        controllers[ControllerType::THIRDPERSON] = std::make_unique<Controller_thirdperson>();
         //controllers[ControllerType::PLANE] = std::make_unique<Controller_plane>();
         controller = controllers[ControllerType::FPS].get();
+
+        weapons[Weapon_id::M4A1] = std::make_unique<Weapon>(Weapon::M4A1());
+        weapons[Weapon_id::GLOCK] = std::make_unique<Weapon>(Weapon::GLOCK());
+        // weapons[Weapon_id::NONE] = std::make_unique<Weapon>(Weapon::NONE());
+        active_weapon = weapons[Weapon_id::M4A1].get();
     }
 
     void controller_step(GLFWwindow* window, float deltaTime, Scene& scene) {
         poll_player(window, scene);
         controller->process_input(window, deltaTime, scene, camera, model_yaw);
         controller->update_camera(camera, crouched, PLAYER_HEIGHT);
+
+        // yanked from process input function of player controller, todo refactor ?
+        Weapon* current_weapon = active_weapon;
+        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+            // reset reload timer
+            active_weapon = weapons[Weapon_id::M4A1].get();
+        }
+        else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+            // reset reload timer of held
+            active_weapon = weapons[Weapon_id::GLOCK].get();
+        }
+
+        bool ads_active = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+        bool firing = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+        bool reload_requested = glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS;
+        bool is_sprinting = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+        current_weapon->update(deltaTime, ads_active, firing, reload_requested, is_sprinting, camera.position, camera.front);
     }
 
     static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -86,11 +110,23 @@ public:
     }
 
     void debug_hud() {
-        ImGui::Begin("Player");
+        Weapon* current_weapon = active_weapon;
 
-        ImGui::Text("Camera Position: (%.1f, %.1f, %.1f)", camera.position.x, camera.position.y, camera.position.z);
-        ImGui::Text("Camera Facing:   (%.1f, %.1f, %.1f)", camera.front.x, camera.front.y, camera.front.z);
-        
+        ImGui::SetNextWindowPos(ImVec2(200, 200));
+        ImGui::SetNextWindowSize(ImVec2(200, 50));
+        ImGui::Begin("Weapon", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+            ImGuiWindowFlags_NoSavedSettings);
+
+        ImGui::Text("%s", current_weapon->name.c_str());
+        ImGui::SameLine(120);
+        ImGui::Text("%s", current_weapon->get_ammo_string().c_str());
+
+        if (current_weapon->is_reloading) {
+            float progress = current_weapon->get_reload_progress();
+            ImGui::ProgressBar(progress, ImVec2(-1, 10), "");
+        }
+
         ImGui::End();
     }
 
@@ -146,21 +182,21 @@ private:
     void poll_player(GLFWwindow* window, Scene& scene) {
         // CTRL + C
         // CLOSE WINDOW
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) 
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
         // ^ example meta player control ^
         //            vs
         // v    game state control      v
         crouched = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
 
-      /*  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-            player_physics.position.x += camera.front.x * 15.0f;
-            player_physics.position.y += camera.front.y * 8.0f;
-            player_physics.position.z += camera.front.z * 15.0f;
-            dashing = true;
-        } else {
-            dashing = false;
-        }*/
+        /*  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+              player_physics.position.x += camera.front.x * 15.0f;
+              player_physics.position.y += camera.front.y * 8.0f;
+              player_physics.position.z += camera.front.z * 15.0f;
+              dashing = true;
+          } else {
+              dashing = false;
+          }*/
 
         bool f1_is_pressed = (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS);
         if (f1_is_pressed && !f1_was_pressed) {
@@ -170,20 +206,38 @@ private:
             scene.include(e);
         }
 
-        if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
-            Physics::optimize_broad_phase();
+        if (glfwGetKey(window, GLFW_KEY_F3) == GLFW_PRESS) {
+            Audio::play_audio("beep.wav", 0.1f);
+            Entity e("deagle", camera.position + camera.front * 5.0f, true, glm::vec3(0.05f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+            scene.include(e);
         }
 
-        bool left_mouse_is_pressed = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
-        if (left_mouse_is_pressed) {
-            // Shoot from camera position in camera direction
-            glm::vec3 shootOrigin = camera.position;
-            glm::vec3 shootDirection = camera.front;
+        if (glfwGetKey(window, GLFW_KEY_F4) == GLFW_PRESS) {
+            Audio::play_audio("beep.wav", 0.1f);
+            Entity e("sword", camera.position + camera.front * 5.0f, true, glm::vec3(1.0f), 0.1f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+            scene.include(e);
+        }
 
-            if (Physics::shoot(shootOrigin, shootDirection, 7500.0f, 1000.0f)) {
-                // Optional: play sound or visual effect when something is hit
-                Audio::play_audio("gun1.wav", 0.2f); // if you have a shoot sound
-            }
+        if (glfwGetKey(window, GLFW_KEY_F5) == GLFW_PRESS) {
+            Audio::play_audio("beep.wav", 0.1f);
+            Entity e("sword_ice", camera.position + camera.front * 5.0f, true, glm::vec3(1.0f), 0.1f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+            scene.include(e);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_F6) == GLFW_PRESS) {
+            Audio::play_audio("beep.wav", 0.1f);
+            Entity e("link", camera.position + camera.front * 5.0f, true, glm::vec3(1.0f), 0.1f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+            scene.include(e);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_F7) == GLFW_PRESS) {
+            Audio::play_audio("beep.wav", 0.1f);
+            Entity e("fuzziebox", camera.position + camera.front * 5.0f, true, glm::vec3(1.0f), 0.5f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+            scene.include(e);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
+            Physics::optimize_broad_phase();
         }
     }
 };

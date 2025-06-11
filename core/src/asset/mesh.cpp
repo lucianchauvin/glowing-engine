@@ -69,6 +69,13 @@ void Mesh::draw(const Shader &shader) const {
         //printf("bound normal: %s\n", Texture_manager::get_name(material.normal_map).c_str());
     }
 
+    // Add metallic-roughness texture
+    shader.setBool("has_metallic_roughness", material.metallic_roughness_map != 0);
+    if (material.metallic_roughness_map != 0) {
+        Texture_manager::bind(material.metallic_roughness_map, 2);
+        shader.setInt("metallic_roughness", 2);
+    }
+
     // draw mesh
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

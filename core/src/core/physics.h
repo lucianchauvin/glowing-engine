@@ -54,4 +54,24 @@ namespace Physics {
     //glm::quat toGlm(const JPH::Quat& q);
     //JPH::RVec3 toJolt(const glm::vec3& v);
     //JPH::Quat toJolt(const glm::quat& q);
+
+
+    struct CharacterController {
+        JPH::BodyID body_id;
+        glm::vec3 velocity = glm::vec3(0.0f);
+        bool is_on_ground = false;
+        float ground_distance = 0.0f;
+
+        // Source-style movement constants
+        static constexpr float MAX_SPEED = 320.0f;           // units per second
+        static constexpr float ACCELERATION = 10.0f;         // ground acceleration
+        static constexpr float AIR_ACCELERATION = 10.0f;     // air acceleration  
+        static constexpr float FRICTION = 4.0f;              // ground friction
+        static constexpr float STOP_SPEED = 100.0f;          // speed below which friction is amplified
+        static constexpr float JUMP_SPEED = 268.3281572999747f; // jump velocity
+        static constexpr float GRAVITY = 800.0f;             // gravity acceleration
+        static constexpr float AIR_CAP = 30.0f;              // air acceleration cap
+        static constexpr float GROUND_TRACE_DISTANCE = 2.0f; // distance to check for ground
+    };
+
 }

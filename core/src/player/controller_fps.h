@@ -13,18 +13,7 @@ public:
     float lastX = 0.0f;
     float lastY = 0.0f;
          
-    std::unordered_map<Weapon_id, std::unique_ptr<Weapon>> weapons;
-    Weapon* active_weapon;
-
-    Controller_fps() {
-        printf("strart m4\n\n\n");
-        weapons[Weapon_id::M4A1] = std::make_unique<Weapon>(Weapon::M4A1());
-        printf("strart glawk\n\n\n");
-        weapons[Weapon_id::GLOCK] = std::make_unique<Weapon>(Weapon::GLOCK());
-        // weapons[Weapon_id::NONE] = std::make_unique<Weapon>(Weapon::NONE());
-        active_weapon = weapons[Weapon_id::M4A1].get();
-    }
-
+    Controller_fps() = default;
 
     // glm::vec3 wep_pos = glm::vec3(0.6f, -0.5f, -1.6f);  M4A1
     // glm::vec3 min_pos = wep_pos;
@@ -55,40 +44,25 @@ public:
     }
 
     virtual void process_input(GLFWwindow* window, float deltaTime, Scene& scene, Camera& camera, float& model_yaw) override {
-        // Get current weapon
-        Weapon* current_weapon = active_weapon;
-        
-        // Handle weapon switching (1-2 keys)
-        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
-            active_weapon = weapons[Weapon_id::M4A1].get();
-        } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
-            active_weapon = weapons[Weapon_id::GLOCK].get();
-        }
-        
-        // Check for player states
-        bool ads_active = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-        bool firing = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-        bool reload_requested = glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS;
-        
-        // Check for sprinting
-        glm::vec3 movement(0.0f);
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            movement.z += 1.0f;
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            movement.z -= 1.0f;
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            movement.x -= 1.0f;
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            movement.x += 1.0f;
-            
-        // Normalize movement vector if the player is moving diagonally
-        if (glm::length(movement) > 0.0f)
-            movement = glm::normalize(movement);
-            
-        bool is_sprinting = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && movement.z > 0.0f;
-        
-        // Update the weapon with all inputs
-        current_weapon->update(deltaTime, ads_active, firing, reload_requested, is_sprinting);
+        //// Check for sprinting
+        //glm::vec3 movement(0.0f);
+        //if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        //    movement.z += 1.0f;
+        //if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        //    movement.z -= 1.0f;
+        //if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        //    movement.x -= 1.0f;
+        //if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        //    movement.x += 1.0f;
+        //    
+        //// Normalize movement vector if the player is moving diagonally
+        //if (glm::length(movement) > 0.0f)
+        //    movement = glm::normalize(movement);
+        //    
+        //bool is_sprinting = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && movement.z > 0.0f;
+        //
+        //// Update the weapon with all inputs
+        //current_weapon->update(deltaTime, ads_active, firing, reload_requested, is_sprinting);
         
         // Handle jumping
         //if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && player_physics.isOnGround) {
@@ -103,12 +77,12 @@ public:
 
         
         // Convert camera-relative movement to world space
-        glm::vec3 forward = glm::normalize(glm::vec3(camera.front.x, 0.0f, camera.front.z));
-        glm::vec3 right = glm::normalize(glm::cross(forward, camera.world_up));
-        glm::vec3 acceleration = forward * movement.z + right * movement.x;
+        //glm::vec3 forward = glm::normalize(glm::vec3(camera.front.x, 0.0f, camera.front.z));
+        //glm::vec3 right = glm::normalize(glm::cross(forward, camera.world_up));
+        //glm::vec3 acceleration = forward * movement.z + right * movement.x;
         
         // Apply sprint boost if sprinting
-        float speed_multiplier = is_sprinting ? 1.5f : 1.0f;
+        //float speed_multiplier = is_sprinting ? 1.5f : 1.0f;
         //acceleration *= ACCELERATION * deltaTime * speed_multiplier;
         
         // Apply acceleration
@@ -136,40 +110,42 @@ public:
     }
 
     virtual void draw_hud(Shader& shader) const override {
-        if (!active_weapon) return;
+        //if (!active_weapon) return;
         
-        active_weapon->model.draw(shader);
+        //active_weapon->model.draw(shader);
         
         // if (hands_model) {
         // }
     }
 
     virtual glm::vec3 get_weapon_position() const override {
-        return active_weapon->wep_pos;
+        //return active_weapon->wep_pos;
+        return glm::vec3(0.0f);
     }
     virtual glm::vec3 get_weapon_rotation() const {
-        return active_weapon->wep_rot;
+        //return active_weapon->wep_rot;
+        return glm::vec3(0.0f);
     }
     
     virtual void debug_hud(ImGuiIO& io) override {
-        Weapon* current_weapon = active_weapon;
-        
-        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 210, io.DisplaySize.y - 60));
-        ImGui::SetNextWindowSize(ImVec2(200, 50));
-        ImGui::Begin("Weapon", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | 
-                                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | 
-                                      ImGuiWindowFlags_NoSavedSettings);
-        
-        ImGui::Text("%s", current_weapon->name.c_str());
-        ImGui::SameLine(120);
-        ImGui::Text("%s", current_weapon->get_ammo_string().c_str());
-        
-        if (current_weapon->is_reloading) {
-            float progress = current_weapon->get_reload_progress();
-            ImGui::ProgressBar(progress, ImVec2(-1, 10), "");
-        }
-        
-        ImGui::End();
+        //Weapon* current_weapon = active_weapon;
+
+        //ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 210, io.DisplaySize.y - 60));
+        //ImGui::SetNextWindowSize(ImVec2(200, 50));
+        //ImGui::Begin("Weapon", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+        //    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+        //    ImGuiWindowFlags_NoSavedSettings);
+
+        //ImGui::Text("%s", current_weapon->name.c_str());
+        //ImGui::SameLine(120);
+        //ImGui::Text("%s", current_weapon->get_ammo_string().c_str());
+
+        //if (current_weapon->is_reloading) {
+        //    float progress = current_weapon->get_reload_progress();
+        //    ImGui::ProgressBar(progress, ImVec2(-1, 10), "");
+        //}
+
+        //ImGui::End();
     }
 };
 #endif

@@ -103,6 +103,7 @@ public:
         skybox_shader.init("../resources/shaders/skybox_v.glsl", "../resources/shaders/skybox_f.glsl");
         crosshair_shader.init("../resources/shaders/crosshair_v.glsl", "../resources/shaders/crosshair_f.glsl");
         hud_text_shader.init("../resources/shaders/text_hud_v.glsl", "../resources/shaders/text_hud_f.glsl");
+        toon.init("../resources/shaders/vertex.glsl", "../resources/shaders/toon.glsl");
 
         debug_renderer.init();
 
@@ -220,6 +221,12 @@ public:
         glClearColor(0.2f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         used_shader.use();
+
+        //used_shader.setFloat("toon_steps", 3.0f);          // More steps = smoother
+        //used_shader.setFloat("toon_specular_steps", 2.0f); // Usually 1-3 for toon
+        //used_shader.setFloat("rim_power", 2.5f);           // Higher = sharper rim
+        //used_shader.setFloat("rim_intensity", 2.0f);       // Rim brightness
+        //used_shader.setVec3("rim_color", glm::vec3(0.0f, 0.0f, 0.0f)); // Warm rim
         
         used_shader.setVec3("light_position", light.position);
         used_shader.setVec3("light_color", light.color);
@@ -503,6 +510,7 @@ public:
     Shader skybox_shader;
     Shader crosshair_shader;
     Shader hud_text_shader;
+    Shader toon;
 
     // deferred pipeline
     Shader deferred_shader, deferred_lighting_shader, debug_gbuffer_shader;

@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 
 #include <core/audio.h>
+#include <core/physics.h>
 #include <asset/model_ass.h>
 
 enum class Weapon_id {
@@ -66,7 +67,7 @@ public:
           wep_rot(glm::vec3(0.0f)),
           ads_speed(0.0f),
           id(Weapon_id::NONE),
-          name("None"),
+          name("none"),
           sound_file(""),
           sound_volume(0.0f),
           cooldown(0.0f),
@@ -90,7 +91,7 @@ public:
         weapon.model.load_model("../resources/models/m4a1/M4A1.obj");
         printf("here23\n");
         weapon.id = Weapon_id::M4A1;
-        weapon.name = "M4A1";
+        weapon.name = "m4a1";
         weapon.min_pos = glm::vec3(0.6f, -0.5f, -1.6f);
         weapon.wep_pos = weapon.min_pos;
         weapon.ads_pos = glm::vec3(0.0f, -0.45f, -1.2f);
@@ -120,7 +121,7 @@ public:
         Weapon weapon;
         weapon.model.load_model("../resources/models/glock/glock.gltf");
         weapon.id = Weapon_id::GLOCK;
-        weapon.name = "Glock";
+        weapon.name = "glock";
         weapon.min_pos = glm::vec3(0.4f, -0.4f, -1.3f);
         weapon.wep_pos = weapon.min_pos;
         weapon.ads_pos = glm::vec3(-0.0001f, -0.4f, -1.0f);
@@ -128,7 +129,7 @@ public:
         weapon.ads_speed = 25.0f;
         weapon.sound_file = "glock.wav";
         weapon.sound_volume = 0.07f;
-        weapon.cooldown = 0.2f; // ~300 rounds per minute
+        weapon.cooldown = 0.13f; // ~300 rounds per minute
         weapon.magazine_size = 17;
         weapon.current_ammo = 17;
         weapon.reserve_ammo = 51;
@@ -153,7 +154,7 @@ public:
     // float last_shot_time = 0.0f; 
     
     // Update weapon position and state
-    void update(float deltaTime, bool ads_requested, bool firing, bool reload_requested, bool sprinting) {
+    void update(float deltaTime, bool ads_requested, bool firing, bool reload_requested, bool sprinting, glm::vec3 pos, glm::vec3 facing) {
         // Update cooldown timer
         last_shot_time += deltaTime;
         
@@ -186,12 +187,12 @@ public:
             if (is_automatic) {
                 // Automatic: fire continuously as long as button is held and cooldown is met.
                 if (!is_reloading && last_shot_time >= cooldown && current_ammo > 0) {
-                    fire();
+                    fire(pos, facing);
                 }
             } else {
                 // Semi-automatic: fire only on the rising edge (button was not held previously)
                 if (!prev_firing && !is_reloading && last_shot_time >= cooldown && current_ammo > 0) {
-                    fire();
+                    fire(pos, facing);
                 }
             }
         }
@@ -223,40 +224,37 @@ public:
     }
     
     // Fire the weapon
-    void fire() {
+    void fire(glm::vec3 pos, glm::vec3 facing) {
         // Play weapon sound
         Audio::play_audio(sound_file.c_str(), sound_volume);
+
 
         // Reset cooldown timer and decrement ammo
         last_shot_time = 0.0f;
         current_ammo--;
         
-        // Apply shake effect
-        apply_shake();
+        if (Physics::shoot(pos, facing, 6500.0f, 1000.0f)) {
+            //Audio::play_audio("hitmarker.wav", 0.15f);
+        }
+        //apply_shake();
         
-        // Add some rotation for recoil
-        wep_rot.x += 0.03f;
+        //wep_rot.x += 0.03f;
     }
     
-    // Apply shake effect when firing
     void apply_shake() {
         is_shaking = true;
         
-        // Generate random shake offset (more vertical than horizontal)
         float x_offset = ((float)rand() / RAND_MAX * 2.0f - 1.0f) * shake_intensity;
-        float y_offset = ((float)rand() / RAND_MAX * 0.8f) * shake_intensity; // More upward
+        float y_offset = ((float)rand() / RAND_MAX * 0.8f) * shake_intensity;
         shake_offset = glm::vec3(x_offset, y_offset, 0.0f);
     }
     
-    // Start reloading process
     void start_reload() {
         is_reloading = true;
         reload_timer = 0.0f;
-        // Could play reload sound here
         // Audio::play_audio("reload.wav", 0.2f);
     }
     
-    // Complete reload and update ammo
     void finish_reload() {
         int ammo_needed = magazine_size - current_ammo;
         int ammo_to_use = std::min(reserve_ammo, ammo_needed);
@@ -276,6 +274,6 @@ public:
     
     // Get ammo as string for HUD ("current/reserve")
     std::string get_ammo_string() const {
-        return std::to_string(current_ammo) + "/" + std::to_string(reserve_ammo);
+        return std::to_string(current_ammo) + " / " + std::to_string(reserve_ammo);
     }
 };

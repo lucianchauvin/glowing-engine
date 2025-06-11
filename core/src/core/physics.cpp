@@ -12,6 +12,7 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include <Jolt/Physics/Collision/RayCast.h>
@@ -45,7 +46,8 @@ namespace Physics {
     namespace Layers {
         static constexpr ObjectLayer NON_MOVING = 0;
         static constexpr ObjectLayer MOVING = 1;
-        static constexpr ObjectLayer NUM_LAYERS = 2;
+        static constexpr ObjectLayer CHARACTER = 2;
+        static constexpr ObjectLayer NUM_LAYERS = 3;
     };
 
     namespace BroadPhaseLayers {
@@ -480,4 +482,5 @@ namespace Physics {
     //JPH::Quat toJolt(const glm::quat& q) {
     //    return JPH::Quat(q.x, q.y, q.z, q.w);
     //}
+
 }

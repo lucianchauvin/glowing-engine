@@ -17,7 +17,5 @@ void main() {
     float screenPxDistance = (sd - 0.5) / fwidth(sd);
     float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
 
-    color = vec4(textColor, opacity);
-
-    if (opacity < 0.2) discard;
+    color = vec4(opacity * textColor, opacity);
 }
