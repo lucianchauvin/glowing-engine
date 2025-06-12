@@ -19,6 +19,11 @@
 #include "asset/text.h"
 #include "player/player.h"
 
+enum ortho_view {
+    TOP_DOWN,
+    FRONT,
+    SIDE
+};
 
 class Renderer {
 public:
@@ -28,7 +33,8 @@ public:
     float get_time() { return static_cast<float>(glfwGetTime()); }
     bool open() { return !glfwWindowShouldClose(window); }
 
-    bool init(int width, int height, const char* title) {
+    bool init(int width, int height, const char* title, bool edit_mode) {
+        editor_mode = edit_mode;
         scr_width = width;
         scr_height = height;
 
@@ -47,6 +53,7 @@ public:
         }
 
         glfwMakeContextCurrent(window);
+        glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
         // tell GLFW to capture our mouse
@@ -111,10 +118,12 @@ public:
     }
 
     void sync_callbacks(Player& player) {
-        glfwSetWindowUserPointer(window, &player);
-        glfwSetCursorPosCallback(window, Player::mouse_callback);
-        glfwSetScrollCallback(window, Player::scroll_callback);
-        glfwSetCharCallback(window, Player::char_callback);
+        current_player = &player; // Store pointer to the active Player instance
+
+        //glfwSetWindowUserPointer(window, &player);
+        glfwSetCursorPosCallback(window, Renderer::static_mouse_callback);
+        glfwSetScrollCallback(window, Renderer::static_scroll_callback);
+        glfwSetCharCallback(window, Renderer::static_char_callback);
     }
 
     bool setup_buffers() {
@@ -215,18 +224,28 @@ public:
         player_model.draw(our_shader);
     }
 
-    void render_scene(Player& player, Scene& scene, float deltaTime) {
-        Shader used_shader = our_shader;
-        // Clear the buffers
+    void render(Player& player, Scene& scene, float delta_time) {
         glClearColor(0.2f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        if (editor_mode)
+            render_scene_editor(player, scene, delta_time);
+        else
+            render_scene(player, scene, delta_time);
+    }
+
+    void render_scene(Player& player, Scene& scene, float delta_time) {
+        Shader used_shader = toon;
+        //Shader used_shader = our_shader;
+        // Clear the buffers
+
         used_shader.use();
 
-        //used_shader.setFloat("toon_steps", 3.0f);          // More steps = smoother
-        //used_shader.setFloat("toon_specular_steps", 2.0f); // Usually 1-3 for toon
-        //used_shader.setFloat("rim_power", 2.5f);           // Higher = sharper rim
-        //used_shader.setFloat("rim_intensity", 2.0f);       // Rim brightness
-        //used_shader.setVec3("rim_color", glm::vec3(0.0f, 0.0f, 0.0f)); // Warm rim
+        used_shader.setFloat("toon_steps", 3.0f);          // More steps = smoother
+        used_shader.setFloat("toon_specular_steps", 2.0f); // Usually 1-3 for toon
+        used_shader.setFloat("rim_power", 2.5f);           // Higher = sharper rim
+        used_shader.setFloat("rim_intensity", 2.0f);       // Rim brightness
+        used_shader.setVec3("rim_color", glm::vec3(0.0f, 0.0f, 0.0f)); // Warm rim
         
         used_shader.setVec3("light_position", light.position);
         used_shader.setVec3("light_color", light.color);
@@ -265,6 +284,101 @@ public:
 
         // flush(); !!
     }
+
+    void render_scene_ortho(Player& player, Scene& scene, float deltaTime, ortho_view view_type) {
+        Shader used_shader = toon;
+        used_shader.use();
+
+        used_shader.setFloat("toon_steps", 3.0f);
+        used_shader.setFloat("toon_specular_steps", 2.0f);
+        used_shader.setFloat("rim_power", 2.5f);
+        used_shader.setFloat("rim_intensity", 2.0f);
+        used_shader.setVec3("rim_color", glm::vec3(0.0f, 0.0f, 0.0f));
+
+        used_shader.setVec3("light_position", light.position);
+        used_shader.setVec3("light_color", light.color);
+        used_shader.setFloat("light_intensity", light.intensity);
+
+        float ortho_size = 20.0f;
+        int half_width = scr_width / 2;
+        int half_height = scr_height / 2;
+        float aspect_ratio = (float)half_width / (float)half_height;
+
+        glm::mat4 projection = glm::ortho(
+            -ortho_size * aspect_ratio, ortho_size * aspect_ratio,  // left, right
+            -ortho_size, ortho_size,                                // bottom, top
+            0.1f, 300.0f                                           // near, far
+        );
+        used_shader.setMat4("projection", projection);
+
+        glm::vec3 camera_pos = player.camera.position;
+        glm::vec3 target_pos;
+        glm::vec3 up_vector;
+        glm::vec3 view_camera_pos;
+        float offset_distance = 50.0f;
+
+        switch (view_type) {
+        case ortho_view::TOP_DOWN:
+            view_camera_pos = glm::vec3(camera_pos.x, camera_pos.y + offset_distance, camera_pos.z);
+            target_pos = glm::vec3(camera_pos.x, camera_pos.y, camera_pos.z);
+            up_vector = glm::vec3(0.0f, 0.0f, -1.0f);
+            break;
+
+        case ortho_view::FRONT:
+            view_camera_pos = glm::vec3(camera_pos.x, camera_pos.y, camera_pos.z + offset_distance);
+            target_pos = glm::vec3(camera_pos.x, camera_pos.y, camera_pos.z);
+            up_vector = glm::vec3(0.0f, 1.0f, 0.0f);
+            break;
+
+        case ortho_view::SIDE:
+            view_camera_pos = glm::vec3(camera_pos.x + offset_distance, camera_pos.y, camera_pos.z);
+            target_pos = glm::vec3(camera_pos.x, camera_pos.y, camera_pos.z);
+            up_vector = glm::vec3(0.0f, 1.0f, 0.0f);
+            break;
+        }
+
+        glm::mat4 view = glm::lookAt(view_camera_pos, target_pos, up_vector);
+        used_shader.setMat4("view", view);
+        used_shader.setVec3("view_position", view_camera_pos);
+
+        for (Entity& entity : scene.entities) {
+            glm::mat4 model = entity.get_model_matrix();
+            used_shader.setMat4("model", model);
+
+            glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model)));
+            used_shader.setMat3("normal_matrix", normal_matrix);
+
+            entity.draw(used_shader);
+
+ /*           if (entity.physics_enabled) {
+                Util::OBB collision_box = Physics::getShapeOBB(entity.physics_id);
+                debug_renderer.add_obb(collision_box, glm::vec3(0.0f, 1.0f, 0.0f));
+            }*/
+        }
+    }
+
+    void render_scene_editor(Player& player, Scene& scene, float delta_time) {
+        int half_width = scr_width / 2;
+        int half_height = scr_height / 2;
+        //float quadrant_aspect_ratio = (float)half_width / (float)half_height;
+
+        glViewport(0, half_height, half_width, half_height); // Top-left quadrant
+        render_scene(player, scene, delta_time);
+
+        // Top-Right
+        glViewport(half_width, half_height, half_width, half_height);
+        render_scene_ortho(player, scene, delta_time, ortho_view::TOP_DOWN);
+
+        // Bottom-Left
+        glViewport(0, 0, half_width, half_height);
+        render_scene_ortho(player, scene, delta_time, ortho_view::SIDE);
+
+        // Bottom-Right
+        glViewport(half_width, 0, half_width, half_height);
+        render_scene_ortho(player, scene, delta_time, ortho_view::FRONT);
+
+        glViewport(0, 0, scr_width, scr_height);
+    }
     
     void render_debug(Player& player) {
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
@@ -272,10 +386,19 @@ public:
         glm::mat4 view = player.camera.get_view_matrix();
         our_shader.setMat4("view", view);
 
-        debug_renderer.render(debug_shader, projection, view);
+        if (editor_mode) {
+            int half_width = scr_width / 2;
+            int half_height = scr_height / 2;
+            glViewport(0, half_height, half_width, half_height);
+            debug_renderer.render(debug_shader, projection, view);
+            glViewport(0, 0, scr_width, scr_height);
+
+        } else 
+            debug_renderer.render(debug_shader, projection, view);
+
     }
 
-    void render_scene_deferred(Player& player, Scene& scene, float deltaTime) {
+    void render_scene_deferred(Player& player, Scene& scene, float delta_time) {
         // 1. Geometry Pass: Render scene to G-buffer
         glBindFramebuffer(GL_FRAMEBUFFER, g_buffer);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -409,30 +532,6 @@ public:
         // HERE ------------------------------------
         // USE WEAPON + HANDS + QUATS + ANIMATION + OH GOD 
 
-        // weapon_shader2.setVec3("lightPos", glm::vec3(5.0f, 5.0f, 5.0f));
-        // float timeValue = glfwGetTime();
-        // weapon_shader2.setFloat("time", timeValue);
-
-        // // d) Wave settings
-        // weapon_shader2.setFloat("time", timeValue);
-        // weapon_shader2.setFloat("waveAmplitude", amp);
-        // weapon_shader2.setFloat("waveFrequency", frq);
-        // weapon_shader2.setFloat("waveSpeed", spd);
-
-        // f) Base color & camera position
-        weapon_shader2.setVec3("uColor", clr);
-        // emiss 
-        // sparkle
-        weapon_shader2.setVec3("uEmission", emis_clr); // e.g. (0, 0.6, 1.0)
-        weapon_shader2.setVec3("uFresnelColor", fres_clr);    // _Emission
-        weapon_shader2.setFloat("uFresnelExponent", expon); // _FresnelExponent
-        // wep.draw(weapon_shader2);
-        weapon_shader2.setInt("skybox", 0);
-        skybox.bind();
-        player.controller->draw_hud(weapon_shader2);
-
-        // glDepthMask(GL_TRUE);
-        // glEnable(GL_DEPTH_TEST);
     }
 
     void render_skybox(const Skybox& skybox, const glm::mat4& view, const glm::mat4& projection) {
@@ -475,6 +574,7 @@ public:
     void debug_sphere_at(float x, float y, float z) {
         debug_renderer.add_sphere(glm::vec3(x, y, z), 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
     }
+
     void debug_sphere_at(glm::vec3 pos) {
         debug_renderer.add_sphere(pos, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
     }
@@ -499,6 +599,79 @@ public:
         glViewport(0, 0, width, height);
     }
 
+    Player* current_player;
+
+    static void static_mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+        Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+        if (renderer && renderer->current_player) {
+            if (renderer->editor_mode) {
+                // Editor mode input handling
+                double half_width = renderer->scr_width / 2.0;
+                double half_height = renderer->scr_height / 2.0;
+
+                if (xpos < half_width && ypos < half_height) {
+                    std::cout << "Top-Left: (" << xpos << ", " << ypos << ")" << std::endl;
+                }
+                else if (xpos >= half_width && ypos < half_height) {
+                    std::cout << "Top-Right: (" << xpos << ", " << ypos << ")" << std::endl;
+                }
+                else if (xpos < half_width && ypos >= half_height) {
+                    std::cout << "Bottom-Left: (" << xpos << ", " << ypos << ")" << std::endl;
+                }
+                else {
+                    std::cout << "Bottom-Right: (" << xpos << ", " << ypos << ")" << std::endl;
+                }
+            }
+            else {
+                renderer->current_player->mouse_callback(window, xpos, ypos);
+            }
+        }
+    }
+
+    static void static_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+        Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+        if (renderer && renderer->current_player) {
+            if (renderer->editor_mode) {
+                // Editor mode scroll handling
+                // This might apply to the active viewport or a global editor zoom
+                // For now, let's just print
+                // std::cout << "Scroll in Editor: " << yoffset << std::endl;
+                // TODO: Implement editor scroll logic, possibly quadrant-aware
+            }
+            else {
+                // Game mode scroll handling
+                renderer->current_player->scroll_callback(window, xoffset, yoffset);
+            }
+        }
+    }
+
+    static void static_char_callback(GLFWwindow* window, unsigned int key) {
+        Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+
+        if (key == 'm') {
+            renderer->editor_mode = !renderer->editor_mode;
+            if (renderer->editor_mode)
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            else
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+            return;
+        }
+               
+        if (renderer && renderer->current_player) {
+            if (renderer->editor_mode) {
+                // Editor mode character input handling (e.g., for text input in UI)
+                // std::cout << "Char in Editor: " << (char)codepoint << std::endl;
+                // TODO: Implement editor char input logic
+            }
+            else {
+                // Game mode character input handling (e.g., for console, chat)
+                // You might have a process_char method in Player or a separate UI handler
+                renderer->current_player->char_callback(window, key); // Placeholder assuming this method exists
+            }
+        }
+    }
+
 // private:
     GLFWwindow* window;
     int scr_width, scr_height;
@@ -511,6 +684,8 @@ public:
     Shader crosshair_shader;
     Shader hud_text_shader;
     Shader toon;
+
+    bool editor_mode;
 
     // deferred pipeline
     Shader deferred_shader, deferred_lighting_shader, debug_gbuffer_shader;

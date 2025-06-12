@@ -26,7 +26,7 @@ float lastFrame = 0.0f;
 int main() {
 
     Renderer renderer;
-    if (!renderer.init(SCR_WIDTH, SCR_HEIGHT, "GLOW")) {
+    if (!renderer.init(SCR_WIDTH, SCR_HEIGHT, "GLOW", false)) {
         return -1;
     };
     
@@ -168,16 +168,11 @@ int main() {
         // draws hud (weapon, etc)
         player.controller_step(renderer.window, delta_time, scene);
 
-        Physics::update(); // default 1/60 delta time
+        if (!renderer.editor_mode)
+            Physics::update(); // default 1/60 delta time
 
         // render scene
-        renderer.render_scene(player, scene, delta_time);
-
-        if (!player.key_toggles[(unsigned)'r'])
-            renderer.render_debug(player);
-        // render scene deferred pipeline
-        // renderer.render_scene_deferred(player, scene, delta_time);
-        // TODO: clustered forward 
+        renderer.render(player, scene, delta_time);
 
         renderer.render_crosshair(crosshair);
         renderer.render_hud_text(screen_text);
@@ -186,6 +181,13 @@ int main() {
         renderer.render_hud_text(player_position);
         renderer.render_hud_text(player_facing);
         renderer.render_hud_text(player_holding);
+
+        if (!player.key_toggles[(unsigned)'r'])
+            renderer.render_debug(player);
+
+        // render scene deferred pipeline
+        // renderer.render_scene_deferred(player, scene, delta_time);
+        // TODO: clustered forward 
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

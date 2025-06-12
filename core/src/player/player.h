@@ -80,7 +80,7 @@ public:
         current_weapon->update(deltaTime, ads_active, firing, reload_requested, is_sprinting, camera.position, camera.front);
     }
 
-    static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    /*static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
         Player* player = static_cast<Player*>(glfwGetWindowUserPointer(window));
         if (player) {
             player->mouse_callback_impl(window, xpos, ypos);
@@ -99,7 +99,7 @@ public:
         if (player) {
             player->char_callback_impl(window, key);
         }
-    }
+    }*/
 
     glm::mat4 get_model_matrix() {
         glm::mat4 model = glm::mat4(1.0f);
@@ -130,21 +130,23 @@ public:
         ImGui::End();
     }
 
-private:
-    void mouse_callback_impl(GLFWwindow* window, double xpos, double ypos) { // need these guys to pass camera
+
+    void mouse_callback(GLFWwindow* window, double xpos, double ypos) { // need these guys to pass camera
         if (!key_toggles[(unsigned)'q'])
             controller->mouse_callback(window, camera, xpos, ypos, model_yaw);
     }
     
-    void scroll_callback_impl(GLFWwindow* window, double xoffset, double yoffset) {
+    void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
         controller->scroll_callback(window, camera, xoffset, yoffset);
     }
 
-    void char_callback_impl(GLFWwindow* window, unsigned int key) {
+    void char_callback(GLFWwindow* window, unsigned int key) {
         key_toggles[key] = !key_toggles[key]; // set this key in our player key toggles
         process_player_toggles(window); // run through local stuff based on these keytoggles
         controller->char_callback(window, key); // set controller key toggles
     }
+
+private:
     // key toggle state that is more specific to the idea of a player than a controller
     // think noclip mode vs plane throttle
     void process_player_toggles(GLFWwindow* window) { 
