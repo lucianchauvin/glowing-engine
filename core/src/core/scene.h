@@ -33,6 +33,6 @@ public:
 
     std::vector<Entity> entities;
     std::vector<Entity> timed_entities;
-    Skybox skybox; // todo move to texture manger? maybe
+    Skybox skybox;
 };
 #endif

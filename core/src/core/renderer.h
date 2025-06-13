@@ -111,6 +111,7 @@ public:
         crosshair_shader.init("../resources/shaders/crosshair_v.glsl", "../resources/shaders/crosshair_f.glsl");
         hud_text_shader.init("../resources/shaders/text_hud_v.glsl", "../resources/shaders/text_hud_f.glsl");
         toon.init("../resources/shaders/vertex.glsl", "../resources/shaders/toon.glsl");
+        editor.init("../resources/shaders/editor_v.glsl", "../resources/shaders/editor_f.glsl");
 
         debug_renderer.init();
 
@@ -235,17 +236,17 @@ public:
     }
 
     void render_scene(Player& player, Scene& scene, float delta_time) {
-        Shader used_shader = toon;
-        //Shader used_shader = our_shader;
+        //Shader used_shader = toon;
+        Shader used_shader = our_shader;
         // Clear the buffers
 
         used_shader.use();
 
-        used_shader.setFloat("toon_steps", 3.0f);          // More steps = smoother
-        used_shader.setFloat("toon_specular_steps", 2.0f); // Usually 1-3 for toon
-        used_shader.setFloat("rim_power", 2.5f);           // Higher = sharper rim
-        used_shader.setFloat("rim_intensity", 2.0f);       // Rim brightness
-        used_shader.setVec3("rim_color", glm::vec3(0.0f, 0.0f, 0.0f)); // Warm rim
+        //used_shader.setFloat("toon_steps", 3.0f);          // More steps = smoother
+        //used_shader.setFloat("toon_specular_steps", 2.0f); // Usually 1-3 for toon
+        //used_shader.setFloat("rim_power", 2.5f);           // Higher = sharper rim
+        //used_shader.setFloat("rim_intensity", 2.0f);       // Rim brightness
+        //used_shader.setVec3("rim_color", glm::vec3(0.0f, 0.0f, 0.0f)); // Warm rim
         
         used_shader.setVec3("light_position", light.position);
         used_shader.setVec3("light_color", light.color);
@@ -286,18 +287,8 @@ public:
     }
 
     void render_scene_ortho(Player& player, Scene& scene, float deltaTime, ortho_view view_type) {
-        Shader used_shader = toon;
+        Shader used_shader = editor;
         used_shader.use();
-
-        used_shader.setFloat("toon_steps", 3.0f);
-        used_shader.setFloat("toon_specular_steps", 2.0f);
-        used_shader.setFloat("rim_power", 2.5f);
-        used_shader.setFloat("rim_intensity", 2.0f);
-        used_shader.setVec3("rim_color", glm::vec3(0.0f, 0.0f, 0.0f));
-
-        used_shader.setVec3("light_position", light.position);
-        used_shader.setVec3("light_color", light.color);
-        used_shader.setFloat("light_intensity", light.intensity);
 
         float ortho_size = 20.0f;
         int half_width = scr_width / 2;
@@ -341,6 +332,7 @@ public:
         used_shader.setMat4("view", view);
         used_shader.setVec3("view_position", view_camera_pos);
 
+        
         for (Entity& entity : scene.entities) {
             glm::mat4 model = entity.get_model_matrix();
             used_shader.setMat4("model", model);
@@ -365,6 +357,7 @@ public:
         glViewport(0, half_height, half_width, half_height); // Top-left quadrant
         render_scene(player, scene, delta_time);
 
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         // Top-Right
         glViewport(half_width, half_height, half_width, half_height);
         render_scene_ortho(player, scene, delta_time, ortho_view::TOP_DOWN);
@@ -378,6 +371,7 @@ public:
         render_scene_ortho(player, scene, delta_time, ortho_view::FRONT);
 
         glViewport(0, 0, scr_width, scr_height);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     
     void render_debug(Player& player) {
@@ -596,7 +590,10 @@ public:
     }
 
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+        Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
         glViewport(0, 0, width, height);
+        renderer->scr_width = width;
+        renderer->scr_height = height;
     }
 
     Player* current_player;
@@ -684,6 +681,8 @@ public:
     Shader crosshair_shader;
     Shader hud_text_shader;
     Shader toon;
+
+    Shader editor;
 
     bool editor_mode;
 

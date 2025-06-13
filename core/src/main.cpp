@@ -129,8 +129,8 @@ int main() {
     Text reserve_ammo_text(daysl8r, "9999", SCR_WIDTH - 100, 50, 50.0f, glm::vec3(0.5f, 0.5f, 0.35f));
 
     float debug_size = 20.0f;
-    Text player_position(font, "position: (1.00, 1.00, 1.00)", 1, SCR_HEIGHT - debug_size, debug_size, glm::vec3(1.0f));
-    Text player_facing(font, "facing: (1.00, 1.00, 1.00)", 1, SCR_HEIGHT - (debug_size * 2), debug_size, glm::vec3(1.0f));
+    //Text player_position(font, "position: (1.00, 1.00, 1.00)", 1, SCR_HEIGHT - debug_size, debug_size, glm::vec3(1.0f));
+    //Text player_facing(font, "facing: (1.00, 1.00, 1.00)", 1, SCR_HEIGHT - (debug_size * 2), debug_size, glm::vec3(1.0f));
     Text player_holding(font, "holding: weaponweapon", 1, SCR_HEIGHT - (debug_size * 3), debug_size, glm::vec3(1.0f));
     //Text screen_text2(font2, "LET ME OUTTTTT", 0, 700, 200.0f, glm::vec3(1.0f, 0.1f, 0.1f));
     /*Font font3("jianjianti");
@@ -156,8 +156,8 @@ int main() {
             screen_text.updateText(std::to_string((int)(1.0f / delta_time)));
             weapon_ammo_text.updateText(std::to_string(player.active_weapon->current_ammo));
             reserve_ammo_text.updateText(std::to_string(player.active_weapon->reserve_ammo));
-            player_position.updateText("pos 1 00 1 00 1 00");
-            player_facing.updateText("dir 1 00 1 00 1 00");
+           /* player_position.updateText("pos 1 00 1 00 1 00");
+            player_facing.updateText("dir 1 00 1 00 1 00");*/
             player_holding.updateText("hand " + player.active_weapon->name);
         }
 
@@ -178,8 +178,8 @@ int main() {
         renderer.render_hud_text(screen_text);
         renderer.render_hud_text(weapon_ammo_text);
         renderer.render_hud_text(reserve_ammo_text);
-        renderer.render_hud_text(player_position);
-        renderer.render_hud_text(player_facing);
+        //renderer.render_hud_text(player_position);
+        //renderer.render_hud_text(player_facing);
         renderer.render_hud_text(player_holding);
 
         if (!player.key_toggles[(unsigned)'r'])
