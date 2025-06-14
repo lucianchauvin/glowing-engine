@@ -169,12 +169,12 @@ struct ortho_view_data {
     }
 };
 
-struct editor_viewports {
+struct editor_viewports_struct {
     ortho_view_data top;
     ortho_view_data side;
     ortho_view_data front;
 
-    editor_viewports()
+    editor_viewports_struct()
         : top(ortho_view::TOP_DOWN)
         , side(ortho_view::SIDE)
         , front(ortho_view::FRONT)
@@ -883,7 +883,7 @@ public:
     Shader hud_text_shader;
     Shader toon;
 
-    editor_viewports editor_viewports;
+    editor_viewports_struct editor_viewports;
     Shader editor;
     bool editor_mode;
 

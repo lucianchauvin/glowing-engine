@@ -33,6 +33,7 @@ public:
     Weapon_id id;           // Weapon identifier
     std::string name;       // Display name
     std::string sound_file; // Sound file to play when firing
+    std::string sound_dry;
     float sound_volume;     // Volume to play sound at
     float cooldown;         // Time between shots
     float last_shot_time;   // Tracks time since last shot
@@ -69,6 +70,7 @@ public:
           id(Weapon_id::NONE),
           name("none"),
           sound_file(""),
+          sound_dry(""),
           sound_volume(0.0f),
           cooldown(0.0f),
           last_shot_time(0.0f),
@@ -128,6 +130,7 @@ public:
         weapon.sprint_pos = glm::vec3(0.6f, -0.2f, -1.2f);
         weapon.ads_speed = 25.0f;
         weapon.sound_file = "glock.wav";
+        weapon.sound_dry = "glock_dry.wav";
         weapon.sound_volume = 0.07f;
         weapon.cooldown = 0.13f; // ~300 rounds per minute
         weapon.magazine_size = 17;
@@ -188,11 +191,17 @@ public:
                 // Automatic: fire continuously as long as button is held and cooldown is met.
                 if (!is_reloading && last_shot_time >= cooldown && current_ammo > 0) {
                     fire(pos, facing);
+                } else if (!is_reloading && last_shot_time >= cooldown && current_ammo == 0) {
+                    Audio::play_audio(sound_dry.c_str(), sound_volume);
+                    last_shot_time = 0.0f;
                 }
             } else {
                 // Semi-automatic: fire only on the rising edge (button was not held previously)
                 if (!prev_firing && !is_reloading && last_shot_time >= cooldown && current_ammo > 0) {
                     fire(pos, facing);
+                } else if (!prev_firing && !is_reloading && last_shot_time >= cooldown && current_ammo == 0) {
+                    Audio::play_audio(sound_dry.c_str(), sound_volume);
+                    last_shot_time = 0.0f;
                 }
             }
         }
