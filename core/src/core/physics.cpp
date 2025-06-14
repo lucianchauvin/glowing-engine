@@ -417,7 +417,7 @@ namespace Physics {
         return result;
     }
 
-    bool Physics::shoot(const glm::vec3& origin, const glm::vec3& direction,
+    bool shoot(const glm::vec3& origin, const glm::vec3& direction,
         float force, float maxDistance) {
 
         // Debug output

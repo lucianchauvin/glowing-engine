@@ -6,10 +6,8 @@
 #include <dearimgui/imgui_impl_glfw.h>
 #include <dearimgui/imgui_impl_opengl3.h>
 
-#include "player.h"
 #include "core/scene.h"
 #include "core/camera.h"
-#include "core/physics.h"
 #include "asset/shader.h"
 
 class Controller {

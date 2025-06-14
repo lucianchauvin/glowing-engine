@@ -5,7 +5,6 @@
 #include <string>
 
 #include "core/entity.h"
-#include "asset/shader.h"
 #include "asset/skybox.h"
 
 //struct entity_build {

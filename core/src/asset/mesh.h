@@ -2,7 +2,6 @@
 #define MESH_H
 
 #include <vector>
-#include <string>
 
 #include <glm/glm.hpp>
 

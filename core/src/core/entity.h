@@ -62,7 +62,7 @@ public:
     void draw(const Shader& shader);
     bool collides(const glm::vec3& pos, const glm::vec3& dir, glm::vec3& hit_pos);
     glm::vec3 get_physics_position();
-    Util::aabb Entity::get_aabb();
+    Util::aabb get_aabb();
 
 // private:
     Model_ass* model;

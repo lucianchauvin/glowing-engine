@@ -9,7 +9,7 @@
 #include <Jolt/Math/Vec3.h>
 #include <Jolt/Math/Quat.h>
 #include <util/aabb.h>
-#include <util/OBB.h>
+#include <util/obb.h>
 
 namespace JPH {
     class BodyInterface;

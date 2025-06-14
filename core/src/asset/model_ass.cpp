@@ -19,18 +19,19 @@ void Model_ass::draw(const Shader &shader) {
         meshes[i].draw(shader);
 }  
 
-void Model_ass::load_model(const std::string &path, float scale) {
+int Model_ass::load_model(const std::string &path, float scale) {
     Assimp::Importer import;
     const aiScene *scene = import.ReadFile(path, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals);
 	
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
-        return;
+        return -1;
     }
     directory = path.substr(0, path.find_last_of('/'));
     CHECK_GL_ERROR();
     process_node(scene->mRootNode, scene, path);
     normalize_model(scale);
+    return 0;
 }
 
 void Model_ass::process_node(aiNode *node, const aiScene *scene, const std::string& path) {

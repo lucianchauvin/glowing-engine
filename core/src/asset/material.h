@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <dearimgui/imgui.h>

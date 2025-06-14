@@ -12,7 +12,7 @@
 #include "core/camera.h"
 #include "core/physics.h"
 #include "core/scene.h"
-#include <player/weapon.h>
+#include "player/weapon.h"
 
 enum class ControllerType { FPS, THIRDPERSON, PLANE };
 

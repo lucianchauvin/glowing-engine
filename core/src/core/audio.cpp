@@ -1,6 +1,10 @@
 // tokyo spliff
 #include "audio.h"
 
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+
 namespace Audio {
     // Global variables and FMOD system objects
     std::unordered_map<std::string, FMOD::Sound*> g_loaded_audio;

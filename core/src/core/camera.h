@@ -50,7 +50,7 @@ public:
         return glm::lookAt(glm::vec3(0.0f), front, up);
     }
     // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-    void process_mouse_movement(float xoffset, float yoffset, GLboolean constrainpitch = true) {
+    void process_mouse_movement(float xoffset, float yoffset, bool constrainpitch = true) {
         xoffset *= mouse_sensitivity;
         yoffset *= mouse_sensitivity;
         yaw   += xoffset;

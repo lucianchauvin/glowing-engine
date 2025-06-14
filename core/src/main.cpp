@@ -12,7 +12,6 @@
 #include "player/player.h"
 #include "asset/crosshair.h"
 #include "asset/text.h"
-#include "asset/model_ass.h"
 #include "asset/texture_manager.h"
 #include "asset/model_manager.h"
 

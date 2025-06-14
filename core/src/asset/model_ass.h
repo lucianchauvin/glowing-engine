@@ -20,7 +20,7 @@ class Model_ass {
             load_model(meshName, scale);
         }
         
-        void load_model(const std::string &meshName, float scale = 1.0f);
+        int load_model(const std::string &meshName, float scale = 1.0f);
         void draw(const Shader &shader);	
 
         glm::vec3 aabb_min;

@@ -1,12 +1,11 @@
 #ifndef CONTROLLER_FPS_H
 #define CONTROLLER_FPS_H
 
+#include "GLFW/glfw3.h"
 #include <glm/glm.hpp>
 
-#include <core/camera.h>
-#include <core/scene.h>
-#include <core/audio.h>
-#include <player/weapon.h>
+#include "core/camera.h"
+#include "core/scene.h"
 
 class Controller_fps : public Controller {
 public:

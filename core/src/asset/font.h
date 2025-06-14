@@ -56,13 +56,13 @@ public:
 
             float atlasWidth = json_data["atlas"]["width"];
             float atlasHeight = json_data["atlas"]["height"];
-            g.atlasLeft = atlas["left"] / atlasWidth;
-            g.atlasRight = atlas["right"] / atlasWidth;
+            g.atlasLeft = atlas["left"].get<float>() / atlasWidth;
+            g.atlasRight = atlas["right"].get<float>() / atlasWidth;
             //g.atlasTop = atlas["top"] / atlasHeight;
             //g.atlasBottom = atlas["bottom"] / atlasHeight
 
-            g.atlasTop = 1.0f - (atlas["top"] / atlasHeight);
-            g.atlasBottom = 1.0f - (atlas["bottom"] / atlasHeight);
+            g.atlasTop = 1.0f - (atlas["top"].get<float>() / atlasHeight);
+            g.atlasBottom = 1.0f - (atlas["bottom"].get<float>() / atlasHeight);
 
             characters[c] = g;
 

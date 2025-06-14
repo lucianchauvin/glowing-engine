@@ -1,6 +1,5 @@
 #include <vector>
 #include <string>
-#include <iostream>
 #include <cassert>
 
 #include <glad/glad.h>
@@ -36,7 +35,7 @@ namespace Model_manager {
         //names.clear();
     }
 
-    texture_handle load_model(const std::string& model_name, int gltf) {
+    model_handle load_model(const std::string& model_name, int gltf) {
         size_t existing_idx;
         if (loaded_already(model_name, existing_idx)) {
             printf("[MODEL] Already loaded: %s\n", model_name.c_str());
@@ -51,7 +50,10 @@ namespace Model_manager {
         
         printf("[MODEL] Loading: %s\n", full_path.c_str());
 
-        Model_ass model(full_path);
+        Model_ass model;
+        int fail = model.load_model(full_path);
+        if (fail)
+            return 0; // default model
 
         size_t new_idx = models.size();
         models.push_back(std::move(model));
