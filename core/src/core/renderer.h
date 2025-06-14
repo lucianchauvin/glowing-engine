@@ -25,6 +25,163 @@ enum ortho_view {
     SIDE
 };
 
+struct ortho_view_data {
+    ortho_view type;
+
+    // Camera positioning
+    float zoom_level;           // Orthographic size multiplier (smaller = more zoomed in)
+    glm::vec2 pan_offset;       // X/Y offset for panning in view space
+    float camera_distance;      // Distance from target point
+
+    // View bounds and limits
+    float min_zoom;            // Minimum zoom level (max zoom in)
+    float max_zoom;            // Maximum zoom level (max zoom out)
+    float zoom_speed;          // How fast zoom responds to input
+    float pan_speed;           // How fast panning responds to input
+    glm::vec2 pan_limits;      // Maximum pan distance from center
+
+    // Input state
+    bool is_panning;           // Currently panning with mouse
+    glm::vec2 last_mouse_pos;  // Last mouse position for delta calculation
+    bool is_zooming;           // Currently zooming
+
+    // Visual settings
+    bool show_grid;            // Show grid overlay
+    float grid_size;           // Grid cell size in world units
+    glm::vec3 grid_color;      // Grid line color
+    bool show_axes;            // Show world axes
+    bool show_bounds;          // Show scene bounds
+
+    ortho_view_data(ortho_view view_type = ortho_view::TOP_DOWN)
+        : type(view_type)
+        , zoom_level(1.0f)
+        , pan_offset(0.0f, 0.0f)
+        , camera_distance(50.0f)
+        , min_zoom(0.1f)
+        , max_zoom(10.0f)
+        , zoom_speed(0.1f)
+        , pan_speed(0.1f)
+        , pan_limits(100.0f, 100.0f)
+        , is_panning(false)
+        , last_mouse_pos(0.0f, 0.0f)
+        , is_zooming(false)
+        , show_grid(true)
+        , grid_size(1.0f)
+        , grid_color(0.3f, 0.3f, 0.3f)
+        , show_axes(true)
+        , show_bounds(false)
+    {
+    }
+
+    // Calculate the actual orthographic size based on zoom
+    float get_ortho_size() const {
+        return 20.0f * zoom_level; // Base size * zoom multiplier
+    }
+
+    glm::vec3 get_camera_position() const {
+        switch (type) {
+        case ortho_view::TOP_DOWN:
+            return glm::vec3(0.0f, camera_distance, 0.0f);
+        case ortho_view::FRONT:
+            return glm::vec3(0.0f, 0.0f, camera_distance);
+        case ortho_view::SIDE:
+            return glm::vec3(camera_distance, 0.0f, 0.0f);
+        default:
+            assert(false);
+        }
+    }
+
+    glm::vec3 get_target_position() const {
+        glm::vec3 target = glm::vec3(0.0f);
+
+        switch (type) {
+        case ortho_view::TOP_DOWN:
+            target.x += pan_offset.x;
+            target.z += pan_offset.y;
+            break;
+        case ortho_view::FRONT:
+            target.x += pan_offset.x;
+            target.y += pan_offset.y;
+            break;
+        case ortho_view::SIDE:
+            target.z += pan_offset.x;
+            target.y += pan_offset.y;
+            break;
+        }
+
+        return target;
+    }
+
+    glm::vec3 get_up_vector() const {
+        switch (type) {
+        case ortho_view::TOP_DOWN:
+            return glm::vec3(0.0f, 0.0f, -1.0f);
+        case ortho_view::FRONT:
+        case ortho_view::SIDE:
+            return glm::vec3(0.0f, 1.0f, 0.0f);
+        default:
+            return glm::vec3(0.0f, 1.0f, 0.0f);
+        }
+    }
+
+    void handle_zoom(float zoom_delta) {
+        if (zoom_delta != 0.0f) {
+            is_zooming = true;
+            zoom_level = glm::clamp(zoom_level + zoom_delta * zoom_speed, min_zoom, max_zoom);
+        }
+        else {
+            is_zooming = false;
+        }
+    }
+
+    // Handle pan input
+    void handle_pan(const glm::vec2& mouse_delta) {
+        if (is_panning) {
+            glm::vec2 pan_delta = mouse_delta * pan_speed * zoom_level;
+            
+            switch (type) {
+                case ortho_view::TOP_DOWN:
+                    pan_delta *= -1;
+                    break;
+                case ortho_view::FRONT:
+                    pan_delta.x *= -1;
+                    break;
+                case ortho_view::SIDE:
+                    //pan_delta.y *= -1;
+                    break;
+                default:
+                    assert(false);
+            }
+            pan_offset.x = glm::clamp(pan_offset.x + pan_delta.x, -pan_limits.x, pan_limits.x);
+            pan_offset.y = glm::clamp(pan_offset.y + pan_delta.y, -pan_limits.y, pan_limits.y);
+        }
+    }
+
+    // Start panning
+    void start_pan(const glm::vec2& mouse_pos) {
+        is_panning = true;
+        last_mouse_pos = mouse_pos;
+    }
+
+    // Stop panning
+    void stop_pan() {
+        is_panning = false;
+    }
+};
+
+struct editor_viewports {
+    ortho_view_data top;
+    ortho_view_data side;
+    ortho_view_data front;
+
+    editor_viewports()
+        : top(ortho_view::TOP_DOWN)
+        , side(ortho_view::SIDE)
+        , front(ortho_view::FRONT)
+    {
+    }
+};
+
 class Renderer {
 public:
     Renderer(){};
@@ -52,9 +209,10 @@ public:
             std::cout << "GLFW window created successfully" << std::endl;
         }
 
-        glfwMakeContextCurrent(window);
-        glfwSetWindowUserPointer(window, this);
-        glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+        glfwMakeContextCurrent(window); // idk
+        glfwSetWindowUserPointer(window, this); // same as below
+
+        glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // todo maybe move kinda weird
 
         // tell GLFW to capture our mouse
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -123,6 +281,7 @@ public:
 
         //glfwSetWindowUserPointer(window, &player);
         glfwSetCursorPosCallback(window, Renderer::static_mouse_callback);
+        glfwSetMouseButtonCallback(window, Renderer::static_mouse_button_callback);
         glfwSetScrollCallback(window, Renderer::static_scroll_callback);
         glfwSetCharCallback(window, Renderer::static_char_callback);
     }
@@ -286,52 +445,32 @@ public:
         // flush(); !!
     }
 
-    void render_scene_ortho(Player& player, Scene& scene, float deltaTime, ortho_view view_type) {
+    void render_scene_ortho(Player& player, Scene& scene, float deltaTime, const ortho_view_data& view_data) {
         Shader used_shader = editor;
         used_shader.use();
 
-        float ortho_size = 20.0f;
         int half_width = scr_width / 2;
         int half_height = scr_height / 2;
+
         float aspect_ratio = (float)half_width / (float)half_height;
+        float ortho_size = view_data.get_ortho_size();
 
         glm::mat4 projection = glm::ortho(
             -ortho_size * aspect_ratio, ortho_size * aspect_ratio,  // left, right
             -ortho_size, ortho_size,                                // bottom, top
             0.1f, 300.0f                                           // near, far
         );
+
         used_shader.setMat4("projection", projection);
 
-        glm::vec3 camera_pos = player.camera.position;
-        glm::vec3 target_pos;
-        glm::vec3 up_vector;
-        glm::vec3 view_camera_pos;
-        float offset_distance = 50.0f;
-
-        switch (view_type) {
-        case ortho_view::TOP_DOWN:
-            view_camera_pos = glm::vec3(camera_pos.x, camera_pos.y + offset_distance, camera_pos.z);
-            target_pos = glm::vec3(camera_pos.x, camera_pos.y, camera_pos.z);
-            up_vector = glm::vec3(0.0f, 0.0f, -1.0f);
-            break;
-
-        case ortho_view::FRONT:
-            view_camera_pos = glm::vec3(camera_pos.x, camera_pos.y, camera_pos.z + offset_distance);
-            target_pos = glm::vec3(camera_pos.x, camera_pos.y, camera_pos.z);
-            up_vector = glm::vec3(0.0f, 1.0f, 0.0f);
-            break;
-
-        case ortho_view::SIDE:
-            view_camera_pos = glm::vec3(camera_pos.x + offset_distance, camera_pos.y, camera_pos.z);
-            target_pos = glm::vec3(camera_pos.x, camera_pos.y, camera_pos.z);
-            up_vector = glm::vec3(0.0f, 1.0f, 0.0f);
-            break;
-        }
+        glm::vec3 target_pos = view_data.get_target_position();
+        glm::vec3 view_camera_pos = target_pos + view_data.get_camera_position();
+        glm::vec3 up_vector = view_data.get_up_vector();
 
         glm::mat4 view = glm::lookAt(view_camera_pos, target_pos, up_vector);
-        used_shader.setMat4("view", view);
-        used_shader.setVec3("view_position", view_camera_pos);
 
+        used_shader.setMat4("view", view);
+        //used_shader.setVec3("view_position", view_camera_pos);
         
         for (Entity& entity : scene.entities) {
             glm::mat4 model = entity.get_model_matrix();
@@ -360,15 +499,15 @@ public:
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         // Top-Right
         glViewport(half_width, half_height, half_width, half_height);
-        render_scene_ortho(player, scene, delta_time, ortho_view::TOP_DOWN);
+        render_scene_ortho(player, scene, delta_time, editor_viewports.top);
 
         // Bottom-Left
         glViewport(0, 0, half_width, half_height);
-        render_scene_ortho(player, scene, delta_time, ortho_view::SIDE);
+        render_scene_ortho(player, scene, delta_time, editor_viewports.side);
 
         // Bottom-Right
         glViewport(half_width, 0, half_width, half_height);
-        render_scene_ortho(player, scene, delta_time, ortho_view::FRONT);
+        render_scene_ortho(player, scene, delta_time, editor_viewports.front);
 
         glViewport(0, 0, scr_width, scr_height);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -589,6 +728,26 @@ public:
         glfwTerminate();
     }
 
+    ortho_view_data* get_viewport_at_mouse(double xpos, double ypos) {
+        if (!editor_mode) return nullptr;
+
+        double half_width = scr_width / 2.0;
+        double half_height = scr_height / 2.0;
+
+        if (xpos < half_width && ypos < half_height) {
+            return nullptr; // Top-Left
+        }
+        else if (xpos >= half_width && ypos < half_height) {
+            return &editor_viewports.top; // Top-Right
+        }
+        else if (xpos < half_width && ypos >= half_height) {
+            return &editor_viewports.side; // Bottom-Left
+        }
+        else {
+            return &editor_viewports.front; // Bottom-Right
+        }
+    }
+
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
         Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
         glViewport(0, 0, width, height);
@@ -596,12 +755,49 @@ public:
         renderer->scr_height = height;
     }
 
-    Player* current_player;
+    static void static_mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+        Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+        if (renderer && renderer->current_player) {
+            if (renderer->editor_mode) {
+                // Handle editor mode mouse button input
+                if (button == GLFW_MOUSE_BUTTON_MIDDLE ||
+                    (button == GLFW_MOUSE_BUTTON_LEFT && (mods & GLFW_MOD_SHIFT))) {
+
+                    double xpos, ypos;
+                    glfwGetCursorPos(window, &xpos, &ypos);
+
+                    ortho_view_data* active_viewport = renderer->get_viewport_at_mouse(xpos, ypos);
+                    if (active_viewport) {
+                        if (action == GLFW_PRESS) {
+                            active_viewport->start_pan(glm::vec2(xpos, ypos));
+                        }
+                        else if (action == GLFW_RELEASE) {
+                            active_viewport->stop_pan();
+                        }
+                    }
+                }
+                // Add other editor mouse button handling here (selection, etc.)
+            }
+            else {
+                // Game mode mouse button handling - forward to player if they have this method
+                // renderer->current_player->mouse_button_callback(window, button, action, mods);
+            }
+        }
+    }
 
     static void static_mouse_callback(GLFWwindow* window, double xpos, double ypos) {
         Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
         if (renderer && renderer->current_player) {
             if (renderer->editor_mode) {
+
+                ortho_view_data* active_viewport = renderer->get_viewport_at_mouse(xpos, ypos);
+                if (active_viewport && active_viewport->is_panning) {
+                    glm::vec2 current_mouse(xpos, ypos);
+                    glm::vec2 mouse_delta = current_mouse - active_viewport->last_mouse_pos;
+                    active_viewport->handle_pan(mouse_delta);
+                    active_viewport->last_mouse_pos = current_mouse;
+                }
+
                 // Editor mode input handling
                 double half_width = renderer->scr_width / 2.0;
                 double half_height = renderer->scr_height / 2.0;
@@ -629,11 +825,14 @@ public:
         Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
         if (renderer && renderer->current_player) {
             if (renderer->editor_mode) {
-                // Editor mode scroll handling
-                // This might apply to the active viewport or a global editor zoom
-                // For now, let's just print
-                // std::cout << "Scroll in Editor: " << yoffset << std::endl;
-                // TODO: Implement editor scroll logic, possibly quadrant-aware
+
+                double xpos, ypos;
+                glfwGetCursorPos(window, &xpos, &ypos);
+
+                ortho_view_data* active_viewport = renderer->get_viewport_at_mouse(xpos, ypos);
+                if (active_viewport) {
+                    active_viewport->handle_zoom(static_cast<float>(-yoffset));
+                }
             }
             else {
                 // Game mode scroll handling
@@ -670,6 +869,8 @@ public:
     }
 
 // private:
+    Player* current_player;
+
     GLFWwindow* window;
     int scr_width, scr_height;
     Renderer_debug debug_renderer;
@@ -682,8 +883,8 @@ public:
     Shader hud_text_shader;
     Shader toon;
 
+    editor_viewports editor_viewports;
     Shader editor;
-
     bool editor_mode;
 
     // deferred pipeline

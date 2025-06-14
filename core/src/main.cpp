@@ -64,11 +64,11 @@ int main() {
     //Model_ass sphere2("../resources/models/sponza/scene.gltf");
     //Model_ass sphere2("../resources/models/link/scene.gltf");
     
-    model_handle plane = Model_manager::load_model("plane.obj", 0);
+    //model_handle plane = Model_manager::load_model("plane.obj", 0);
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
-    glm::vec3 scale = glm::vec3(100.0f, 1.0f, 100.0f);
-    Entity e(plane, pos, false, scale);
-    scene.include(e);
+    glm::vec3 scale = glm::vec3(50.0f, 1.0f, 50.0f);
+    //Entity e(plane, pos, false, scale);
+    //scene.include(e);
 
     model_handle cube = Model_manager::load_model("teapot.obj", 0);
     pos = glm::vec3(0.0f, 0.0f, 5.0f);
@@ -78,6 +78,9 @@ int main() {
 
     Entity e2323322("f22", glm::vec3(5.0f, 10.0f, 10.0f), true, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(e2323322);
+
+    Entity gsdgfsd("rainbow_road", glm::vec3(0.0f, -75.0f, 0.0f), false, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    scene.include(gsdgfsd);
 
     //model_handle rtwsd = Model_manager::load_model("link");
     //pos = glm::vec3(0.0, 1.5f, -1.0f);
@@ -122,7 +125,7 @@ int main() {
     ImGui_ImplOpenGL3_Init();
 
     Font font("tx02");
-    Text screen_text(font, "999", 0, 1, 50.0f, glm::vec3(0.5f, 0.2f, 0.7f));
+    Text fpscounter(font, "999", 0, 1, 50.0f, glm::vec3(0.5f, 0.2f, 0.7f));
     Font daysl8r("28DaysLater");
     Text weapon_ammo_text(daysl8r, "200", SCR_WIDTH - 175, 50, 50.0f, glm::vec3(1.0f, 1.0f, 0.7f));
     Text reserve_ammo_text(daysl8r, "9999", SCR_WIDTH - 100, 50, 50.0f, glm::vec3(0.5f, 0.5f, 0.35f));
@@ -138,8 +141,6 @@ int main() {
 
     // ground 
     JPH::BodyID ground = Physics::addBox(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(100.0f, 1.0f, 100.0f), true);
-    printf("Created ground body\n");
-
     Physics::optimize_broad_phase();
 
     // render loop
@@ -151,8 +152,8 @@ int main() {
         delta_time = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        if (!(step % 144)) {
-            screen_text.updateText(std::to_string((int)(1.0f / delta_time)));
+        if (!(step++ % 30)) {
+            fpscounter.updateText(std::to_string((int)(1.0f / delta_time)));
             weapon_ammo_text.updateText(std::to_string(player.active_weapon->current_ammo));
             reserve_ammo_text.updateText(std::to_string(player.active_weapon->reserve_ammo));
            /* player_position.updateText("pos 1 00 1 00 1 00");
@@ -165,16 +166,17 @@ int main() {
         // updates physics according to active controller
         // updates camera
         // draws hud (weapon, etc)
-        player.controller_step(renderer.window, delta_time, scene);
 
-        if (!renderer.editor_mode)
+        if (!renderer.editor_mode) {
+            player.controller_step(renderer.window, delta_time, scene);
             Physics::update(); // default 1/60 delta time
+        }
 
         // render scene
         renderer.render(player, scene, delta_time);
 
         renderer.render_crosshair(crosshair);
-        renderer.render_hud_text(screen_text);
+        renderer.render_hud_text(fpscounter);
         renderer.render_hud_text(weapon_ammo_text);
         renderer.render_hud_text(reserve_ammo_text);
         //renderer.render_hud_text(player_position);
@@ -193,9 +195,9 @@ int main() {
         ImGui::NewFrame();
 
         ImGui::Begin("Light");
-        ImGui::SliderFloat3("pos", &renderer.light.position.x, -20.0f, 20.0f);
+        ImGui::SliderFloat3("pos", &renderer.light.position.x, -20.0f, 200.0f);
         ImGui::SliderFloat3("color", &renderer.light.color.x, 0.0f, 1.0f); // 1.0f;     
-        ImGui::SliderFloat("itensity", &renderer.light.intensity, 0.0f, 50.0f); // 1.0f;        
+        ImGui::SliderFloat("itensity", &renderer.light.intensity, 0.0f, 10000.0f); // 1.0f;        
         ImGui::End();
 
         //player.debug_hud();

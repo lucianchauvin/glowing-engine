@@ -44,16 +44,16 @@ public:
 
     virtual void process_input(GLFWwindow* window, float deltaTime, Scene& scene, Camera& camera, float& model_yaw) override {
         //// Check for sprinting
-        //glm::vec3 movement(0.0f);
-        //if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        //    movement.z += 1.0f;
-        //if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        //    movement.z -= 1.0f;
-        //if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        //    movement.x -= 1.0f;
-        //if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        //    movement.x += 1.0f;
-        //    
+        glm::vec3 movement(0.0f);
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            movement.z += 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            movement.z -= 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            movement.x -= 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            movement.x += 1.0f;
+
         //// Normalize movement vector if the player is moving diagonally
         //if (glm::length(movement) > 0.0f)
         //    movement = glm::normalize(movement);
@@ -69,16 +69,25 @@ public:
         //    player_physics.isOnGround = false;
         //}
 
-        //if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        //    player_physics.velocity.y = JUMP_FORCE;
-        //    player_physics.isOnGround = false;
-        //}
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            camera.position += glm::vec3(0.0f, 1.0f, 0.0f);
+            /*player_physics.velocity.y = JUMP_FORCE;
+            player_physics.isOnGround = false;*/
+        }
 
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+            camera.position -= glm::vec3(0.0f, 1.0f, 0.0f);
+            /*player_physics.velocity.y = JUMP_FORCE;
+            player_physics.isOnGround = false;*/
+        }
         
+
         // Convert camera-relative movement to world space
-        //glm::vec3 forward = glm::normalize(glm::vec3(camera.front.x, 0.0f, camera.front.z));
-        //glm::vec3 right = glm::normalize(glm::cross(forward, camera.world_up));
-        //glm::vec3 acceleration = forward * movement.z + right * movement.x;
+        glm::vec3 forward = glm::normalize(glm::vec3(camera.front.x, 0.0f, camera.front.z));
+        glm::vec3 right = glm::normalize(glm::cross(forward, camera.world_up));
+        glm::vec3 acceleration = forward * movement.z + right * movement.x;
+
+        camera.position += acceleration;
         
         // Apply sprint boost if sprinting
         //float speed_multiplier = is_sprinting ? 1.5f : 1.0f;
