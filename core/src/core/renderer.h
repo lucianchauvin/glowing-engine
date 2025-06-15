@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <imguizmo/ImGuizmo.h>
 
 #include "renderer_debug.h"
 #include "scene.h"
@@ -18,6 +19,7 @@
 #include "asset/crosshair.h"
 #include "asset/text.h"
 #include "player/player.h"
+#include "util/decompose.h"
 
 enum ortho_view {
     TOP_DOWN,
@@ -532,6 +534,7 @@ public:
 
         glViewport(0, half_height, half_width, half_height); // Top-left quadrant
         render_scene(player, scene, delta_time);
+        //render_gizmo(scene, player, half_width, half_height);
         render_hud_text(editor_viewports.scene.view_text);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -550,6 +553,55 @@ public:
         glViewport(0, 0, scr_width, scr_height);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+
+    void render_gizmo(const Scene& scene, const Player& player) {
+        if (editor_viewports.scene.gizmo_mode != gizmo_modes::NONE && target_entity != -1) {
+            float w = scr_width / 2;
+            float h = scr_height / 2;
+
+            ImGuizmo::BeginFrame();
+
+            ImGui::SetNextWindowPos(ImVec2(0, 0));
+            ImGui::SetNextWindowSize(ImVec2(w, h));
+            ImGui::Begin("gizmode",
+                nullptr,
+                ImGuiWindowFlags_NoTitleBar |
+                ImGuiWindowFlags_NoResize |
+                ImGuiWindowFlags_NoMove |
+                ImGuiWindowFlags_NoScrollbar |
+                ImGuiWindowFlags_NoBackground);
+
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::SetDrawlist();
+
+            ImGuizmo::SetRect(0.0f, 0.0f, w, h);
+
+            glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
+            glm::mat4 view = player.camera.get_view_matrix();
+            glm::mat4 model = scene.entities[target_entity].get_model_matrix();
+
+            ImGuizmo::OPERATION guizmo_op;
+            if (editor_viewports.scene.gizmo_mode == gizmo_modes::TRANSLATE)
+                guizmo_op = ImGuizmo::OPERATION::TRANSLATE;
+            else if (editor_viewports.scene.gizmo_mode == gizmo_modes::ROTATE)
+                guizmo_op = ImGuizmo::OPERATION::ROTATE;
+            else if (editor_viewports.scene.gizmo_mode == gizmo_modes::SCALE)
+                guizmo_op = ImGuizmo::OPERATION::SCALE;
+            else
+                assert(false);
+
+            if (ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), guizmo_op, ImGuizmo::LOCAL,
+                glm::value_ptr(model))) {
+
+                glm::vec3 position, scale, rotation;
+                Util::decompose(model, position, scale, rotation);
+
+                Physics::setBodyPosition(scene.entities[target_entity].physics_id, position);
+                Physics::setBodyRotation(scene.entities[target_entity].physics_id, glm::quat(rotation));
+            }
+            ImGui::End();
+        }
+    }
     
     void render_debug(Player& player) {
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
@@ -563,8 +615,8 @@ public:
             glViewport(0, half_height, half_width, half_height);
             debug_renderer.render(debug_shader, projection, view);
             glViewport(0, 0, scr_width, scr_height);
-
-        } else 
+        } 
+        else 
             debug_renderer.render(debug_shader, projection, view);
 
     }
@@ -804,7 +856,7 @@ public:
                     glfwGetCursorPos(window, &xpos, &ypos);
 
                     ortho_view_data* active_viewport = renderer->get_viewport_at_mouse(xpos, ypos);
-                    if (active_viewport) {
+                    if (active_viewport && active_viewport->type != ortho_view::SCENE) {
                         if (action == GLFW_PRESS) {
                             active_viewport->start_pan(glm::vec2(xpos, ypos));
                         }
@@ -953,6 +1005,8 @@ public:
     editor_viewports_struct editor_viewports;
     Shader editor;
     bool editor_mode;
+
+    size_t target_entity = 0;
 
     // deferred pipeline
     Shader deferred_shader, deferred_lighting_shader, debug_gbuffer_shader;

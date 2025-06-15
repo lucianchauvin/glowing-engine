@@ -22,8 +22,6 @@ add_subdirectory(ext/assimp)
 # Update path for FMOD on Windows
 set(FMOD_ROOT "${CMAKE_SOURCE_DIR}/ext/FMOD Studio API Windows")
 
-
-
 # Include directories
 include_directories(
     ext
@@ -57,6 +55,7 @@ set(SOURCES
     ext/dearimgui/imgui_tables.cpp
     ext/dearimgui/imgui_impl_glfw.cpp
     ext/dearimgui/imgui_impl_opengl3.cpp
+    ext/imguizmo/ImGuizmo.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

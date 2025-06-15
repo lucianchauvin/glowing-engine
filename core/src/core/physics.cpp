@@ -349,6 +349,13 @@ namespace Physics {
         return glm::quat(rot.GetW(), rot.GetX(), rot.GetY(), rot.GetZ());
     }
 
+    void setBodyRotation(JPH::BodyID id, const glm::quat& rot) {
+        BodyInterface& body_interface = g_state.physicsSystem->GetBodyInterface();
+        JPH::Quat joltQuat(rot.x, rot.y, rot.z, rot.w);
+        body_interface.SetRotation(id, joltQuat, JPH::EActivation::Activate);
+    }
+
+
     Util::aabb getShapeBounds(JPH::BodyID id) { // todo maybe noit right
         BodyInterface& body_interface = g_state.physicsSystem->GetBodyInterface();
 

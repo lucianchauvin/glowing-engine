@@ -41,8 +41,9 @@ namespace Physics {
     void setBodyPosition(JPH::BodyID id, const glm::vec3& pos);
     glm::vec3 getBodyVelocity(JPH::BodyID id);
     void setBodyVelocity(JPH::BodyID id, const glm::vec3& vel);
-
     glm::quat getBodyRotation(JPH::BodyID id);
+    void setBodyRotation(JPH::BodyID id, const glm::quat& rot);
+
     Util::aabb getShapeBounds(JPH::BodyID id); // todo maybe not right
     Util::OBB getShapeOBB(JPH::BodyID id);
 

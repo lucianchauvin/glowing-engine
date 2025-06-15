@@ -71,7 +71,7 @@ int main() {
     //scene.include(e);
 
     model_handle cube = Model_manager::load_model("teapot.obj", 0);
-    pos = glm::vec3(0.0f, 0.0f, 5.0f);
+    pos = glm::vec3(0.0f, 0.0f, 0.0f);
     scale = glm::vec3(1.0f);
     Entity e233333(cube, pos, true, scale);
     scene.include(e233333);
@@ -201,6 +201,8 @@ int main() {
         ImGui::End();
 
         //player.debug_hud();
+        if (renderer.editor_mode)
+            renderer.render_gizmo(scene, player);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
