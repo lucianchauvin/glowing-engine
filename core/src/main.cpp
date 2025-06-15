@@ -175,14 +175,6 @@ int main() {
         // render scene
         renderer.render(player, scene, delta_time);
 
-        renderer.render_crosshair(crosshair);
-        renderer.render_hud_text(fpscounter);
-        renderer.render_hud_text(weapon_ammo_text);
-        renderer.render_hud_text(reserve_ammo_text);
-        //renderer.render_hud_text(player_position);
-        //renderer.render_hud_text(player_facing);
-        renderer.render_hud_text(player_holding);
-
         if (!player.key_toggles[(unsigned)'r'])
             renderer.render_debug(player);
 
@@ -201,9 +193,18 @@ int main() {
         ImGui::End();
 
         //player.debug_hud();
-        if (renderer.editor_mode)
+        if (renderer.editor_mode) {
             renderer.render_gizmo(scene, player);
-
+        }
+        else {
+            renderer.render_crosshair(crosshair);
+            renderer.render_hud_text(fpscounter);
+            renderer.render_hud_text(weapon_ammo_text);
+            renderer.render_hud_text(reserve_ammo_text);
+            //renderer.render_hud_text(player_position);
+            //renderer.render_hud_text(player_facing);
+            renderer.render_hud_text(player_holding);
+        }
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         

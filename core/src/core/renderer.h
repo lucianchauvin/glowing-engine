@@ -590,8 +590,15 @@ public:
             else
                 assert(false);
 
+            // no snap
+            bool smooth = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+            float snap_value = 0.5f;
+            if (guizmo_op == ImGuizmo::OPERATION::ROTATE)
+                snap_value = 15.0f;
+            float snap_values[3] = { snap_value, snap_value, snap_value };
+
             if (ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), guizmo_op, ImGuizmo::LOCAL,
-                glm::value_ptr(model))) {
+                glm::value_ptr(model), nullptr, smooth ? nullptr : snap_values)) {
 
                 glm::vec3 position, scale, rotation;
                 Util::decompose(model, position, scale, rotation);
