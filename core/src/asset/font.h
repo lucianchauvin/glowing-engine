@@ -10,6 +10,8 @@
 #include "shader.h"
 #include "texture_manager.h"
 
+// TODO make not shit font manager thing
+
 class Font {
 public:
     struct Glyph {
@@ -19,6 +21,8 @@ public:
         float planeLeft, planeBottom, planeRight, planeTop;
         float atlasLeft, atlasBottom, atlasRight, atlasTop;
     };
+
+    Font() = default;
 
     Font(const std::string& font_name) {
         atlas_texture_id = Texture_manager::load_from_path("../resources/fonts/" + font_name + "/" + font_name + ".png");

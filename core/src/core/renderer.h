@@ -22,11 +22,23 @@
 enum ortho_view {
     TOP_DOWN,
     FRONT,
-    SIDE
+    SIDE,
+    SCENE
 };
+
+enum gizmo_modes {
+    NONE = 0,
+    TRANSLATE,
+    ROTATE,
+    SCALE
+};
+std::string gize_mode_strs[]{"none", "translate", "rotate", "scale"};
 
 struct ortho_view_data {
     ortho_view type;
+
+    // TODO make not shit
+    Font FIX_font;
 
     // Camera positioning
     float zoom_level;           // Orthographic size multiplier (smaller = more zoomed in)
@@ -44,6 +56,7 @@ struct ortho_view_data {
     bool is_panning;           // Currently panning with mouse
     glm::vec2 last_mouse_pos;  // Last mouse position for delta calculation
     bool is_zooming;           // Currently zooming
+    gizmo_modes gizmo_mode;
 
     // Visual settings
     bool show_grid;            // Show grid overlay
@@ -51,6 +64,7 @@ struct ortho_view_data {
     glm::vec3 grid_color;      // Grid line color
     bool show_axes;            // Show world axes
     bool show_bounds;          // Show scene bounds
+    Text view_text;
 
     ortho_view_data(ortho_view view_type = ortho_view::TOP_DOWN)
         : type(view_type)
@@ -65,12 +79,18 @@ struct ortho_view_data {
         , is_panning(false)
         , last_mouse_pos(0.0f, 0.0f)
         , is_zooming(false)
+        , gizmo_mode(NONE)
         , show_grid(true)
         , grid_size(1.0f)
         , grid_color(0.3f, 0.3f, 0.3f)
         , show_axes(true)
         , show_bounds(false)
     {
+    }
+
+    void init_text(std::string text) {
+        FIX_font = Font("tx02");
+        view_text.load(FIX_font, text, 0, 1, 100.0f, glm::vec3(1.0f));
     }
 
     // Calculate the actual orthographic size based on zoom
@@ -167,17 +187,24 @@ struct ortho_view_data {
     void stop_pan() {
         is_panning = false;
     }
+
+    void set_gizmo_mode(gizmo_modes gm) {
+        gizmo_mode = gm;
+        view_text.updateText(gize_mode_strs[gm]);
+    }
 };
 
 struct editor_viewports_struct {
     ortho_view_data top;
     ortho_view_data side;
     ortho_view_data front;
+    ortho_view_data scene;
 
     editor_viewports_struct()
         : top(ortho_view::TOP_DOWN)
         , side(ortho_view::SIDE)
         , front(ortho_view::FRONT)
+        , scene(ortho_view::SCENE)
     {
     }
 };
@@ -221,6 +248,13 @@ public:
             std::cout << "Failed to initialize GLAD" << std::endl;
             return false;
         }
+
+        // make viewports
+        editor_viewports.top.init_text  ("top------"); // pad to 9 xD
+        editor_viewports.front.init_text("front----");
+        editor_viewports.side.init_text ("side-----");
+        editor_viewports.scene.init_text("scene----");
+
         // configure global opengl state
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
@@ -283,6 +317,7 @@ public:
         glfwSetCursorPosCallback(window, Renderer::static_mouse_callback);
         glfwSetMouseButtonCallback(window, Renderer::static_mouse_button_callback);
         glfwSetScrollCallback(window, Renderer::static_scroll_callback);
+        glfwSetKeyCallback(window, Renderer::static_key_callback);
         glfwSetCharCallback(window, Renderer::static_char_callback);
     }
 
@@ -397,8 +432,6 @@ public:
     void render_scene(Player& player, Scene& scene, float delta_time) {
         //Shader used_shader = toon;
         Shader used_shader = our_shader;
-        // Clear the buffers
-
         used_shader.use();
 
         //used_shader.setFloat("toon_steps", 3.0f);          // More steps = smoother
@@ -486,6 +519,10 @@ public:
                 debug_renderer.add_obb(collision_box, glm::vec3(0.0f, 1.0f, 0.0f));
             }*/
         }
+        
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        render_hud_text(view_data.view_text);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
 
     void render_scene_editor(Player& player, Scene& scene, float delta_time) {
@@ -495,6 +532,7 @@ public:
 
         glViewport(0, half_height, half_width, half_height); // Top-left quadrant
         render_scene(player, scene, delta_time);
+        render_hud_text(editor_viewports.scene.view_text);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         // Top-Right
@@ -692,7 +730,6 @@ public:
 
     void render_hud_text(const Text& text) {
         glm::mat4 projection = glm::ortho(0.0f, (float)scr_width, 0.0f, (float)scr_height);
-        
         glDisable(GL_DEPTH_TEST);
 
         glEnable(GL_BLEND);
@@ -735,7 +772,7 @@ public:
         double half_height = scr_height / 2.0;
 
         if (xpos < half_width && ypos < half_height) {
-            return nullptr; // Top-Left
+            return &editor_viewports.scene; // Top-Left
         }
         else if (xpos >= half_width && ypos < half_height) {
             return &editor_viewports.top; // Top-Right
@@ -803,16 +840,16 @@ public:
                 double half_height = renderer->scr_height / 2.0;
 
                 if (xpos < half_width && ypos < half_height) {
-                    std::cout << "Top-Left: (" << xpos << ", " << ypos << ")" << std::endl;
+                    // std::cout << "Top-Left: (" << xpos << ", " << ypos << ")" << std::endl;
                 }
                 else if (xpos >= half_width && ypos < half_height) {
-                    std::cout << "Top-Right: (" << xpos << ", " << ypos << ")" << std::endl;
+                    // std::cout << "Top-Right: (" << xpos << ", " << ypos << ")" << std::endl;
                 }
                 else if (xpos < half_width && ypos >= half_height) {
-                    std::cout << "Bottom-Left: (" << xpos << ", " << ypos << ")" << std::endl;
+                    // std::cout << "Bottom-Left: (" << xpos << ", " << ypos << ")" << std::endl;
                 }
                 else {
-                    std::cout << "Bottom-Right: (" << xpos << ", " << ypos << ")" << std::endl;
+                    // std::cout << "Bottom-Right: (" << xpos << ", " << ypos << ")" << std::endl;
                 }
             }
             else {
@@ -841,6 +878,27 @@ public:
         }
     }
 
+    static void static_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+        Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+
+        // exit
+        if (key == GLFW_KEY_C && (mods & GLFW_MOD_CONTROL))
+            glfwSetWindowShouldClose(window, true);
+               
+        if (renderer && renderer->current_player) {
+            // if (renderer->editor_mode) {
+            //     // Editor mode character input handling (e.g., for text input in UI)
+            //     // std::cout << "Char in Editor: " << (char)codepoint << std::endl;
+            //     // TODO: Implement editor char input logic
+            // }
+            // else {
+            //     // Game mode character input handling (e.g., for console, chat)
+            //     // You might have a process_char method in Player or a separate UI handler
+            //     renderer->current_player->char_callback(window, key); // Placeholder assuming this method exists
+            // }
+        }
+    }
+
     static void static_char_callback(GLFWwindow* window, unsigned int key) {
         Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
 
@@ -850,15 +908,24 @@ public:
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             else
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-            return;
         }
-               
-        if (renderer && renderer->current_player) {
+
+        if (renderer) {
             if (renderer->editor_mode) {
-                // Editor mode character input handling (e.g., for text input in UI)
-                // std::cout << "Char in Editor: " << (char)codepoint << std::endl;
-                // TODO: Implement editor char input logic
+                double xpos, ypos;
+                glfwGetCursorPos(window, &xpos, &ypos);
+
+                ortho_view_data* active_viewport = renderer->get_viewport_at_mouse(xpos, ypos);
+                if (active_viewport) {
+                    if (key == '1')
+                        active_viewport->set_gizmo_mode(gizmo_modes::TRANSLATE);
+                    if (key == '2')
+                        active_viewport->set_gizmo_mode(gizmo_modes::ROTATE);
+                    if (key == '3')
+                        active_viewport->set_gizmo_mode(gizmo_modes::SCALE);
+                    if (key == 27)
+                        active_viewport->set_gizmo_mode(gizmo_modes::NONE);
+                }
             }
             else {
                 // Game mode character input handling (e.g., for console, chat)

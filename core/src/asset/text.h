@@ -117,7 +117,21 @@ public:
         glBindVertexArray(0);
     }
 
+    Text() = default;
+
     Text(Font& font, const std::string& text, float x, float y, float scale, const glm::vec3& textColor) : color(textColor), atlas_texture_id(font.atlas_texture_id), used_font(&font), x(x), y(y), scale(scale) {
+        compute_buffers(text);
+        upload_buffers();
+    }
+
+    void load(Font& font, const std::string& text, float _x, float _y, float _scale, const glm::vec3& textColor) {
+        color = textColor;
+        atlas_texture_id = font.atlas_texture_id;
+        used_font = &font;
+        x = _x;
+        y = _y;
+        scale = _scale;
+
         compute_buffers(text);
         upload_buffers();
     }
