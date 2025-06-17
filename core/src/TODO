@@ -1,20 +1,9 @@
-assetmanager? 
-    shader manager
-    texture manager
-        pbr pipeline
-        disney materials
-        + world geom 
-
 world representation
     frsutum culling (everything / entities)
-
     spline geom
     heightmap
-
     walls
     floors
-
-    
 
 skeletal animation
 make ssimp good (bones)
@@ -23,13 +12,10 @@ weapon / holdable class
 
 controllers
     physics (jolt?)
-
     cars
     planes
     integrate controller into entities
     interaction
     player (use)
 
-jolt drop in / part of physics class?
-
-clustered forward rendering
+clustered forward rendering / deferred
