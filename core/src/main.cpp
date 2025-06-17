@@ -64,29 +64,31 @@ int main() {
     //Model_ass sphere2("../resources/models/sponza/scene.gltf");
     //Model_ass sphere2("../resources/models/link/scene.gltf");
     
-    //model_handle plane = Model_manager::load_model("plane.obj", 0);
+    model_handle plane = Model_manager::load_model("plane.obj", 0);
     glm::vec3 pos   = glm::vec3(0.0f, 0.0f, 0.0f); 
     glm::vec3 scale = glm::vec3(50.0f, 1.0f, 50.0f);
-    //Entity e(plane, pos, false, scale);
-    //scene.include(e);
+    Entity e(plane, pos, false, scale);
+    scene.include(e);
 
-    model_handle cube = Model_manager::load_model("teapot.obj", 0);
-    pos = glm::vec3(0.0f, 0.0f, 0.0f);
-    scale = glm::vec3(1.0f);
-    Entity e233333(cube, pos, true, scale);
-    scene.include(e233333);
+    //model_handle cube = Model_manager::load_model("cube.obj", 0);
+    //pos = glm::vec3(0.0f, 0.0f, 0.0f);
+    //scale = glm::vec3(1.0f);
+    //Entity e233333(cube, pos, true, scale);
+    //scene.include(e233333);
 
-    Entity e2323322("f22", glm::vec3(5.0f, 10.0f, 10.0f), true, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    Entity e2323322("f22", glm::vec3(5.0f, 30.0f, 10.0f), true, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(e2323322);
 
-    Entity gsdgfsd("rainbow_road", glm::vec3(0.0f, -75.0f, 0.0f), false, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    Entity gsdgfsd("rainbow_road", glm::vec3(0.0f, -2500.0f, 0.0f), false, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(gsdgfsd);
 
-    //model_handle rtwsd = Model_manager::load_model("link");
-    //pos = glm::vec3(0.0, 1.5f, -1.0f);
-    //scale = glm::vec3(1.0f);
-    //Entity e2(rtwsd, pos, false, scale, 1.0f, glm::quat(0.707f, 0.0f, 0.707f, 0.0f));
-    //scene.include(e2);
+    //Entity fdfsdfsdfsdfsdf("skyloft", glm::vec3(0.0f, 0.0f, 0.0f), false, glm::vec3(1.0f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+    //scene.include(fdfsdfsdfsdfsdf);
+
+    for (int i = 0; i < 10; i++) {
+        Entity dsadasdasdasda("die", glm::vec3(0.0f, 1.0f + i, -5.0f), true, glm::vec3(0.005f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+        scene.include(dsadasdasdasda);
+    }
 
     //model_handle gdfhgsd = Model_manager::load_model("sponza");
     //pos = glm::vec3(0.0f);
@@ -99,23 +101,6 @@ int main() {
     Entity e5(car232323, pos, true, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
     scene.include(e5);
 
-    //pos = glm::vec3(0.0f);
-    //scale = glm::vec3(1.0f);
-    //Entity e555555235("cube", pos, false, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    //scene.include(e555555235);
-
-
-    //model_handle car23 = Model_manager::load_model("../resources/models/sword/scene.gltf");
-    //pos = glm::vec3(-1.0f, 2.0f, -2.0f);
-    //scale = glm::vec3(1.0f);
-    //Entity e4(car23, pos, false, scale, 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    //scene.include(e4);
-
-    // pos   = glm::vec3(0.0f, 30.0f, 0.0f); 
-    // scale = glm::vec3(100.0f, 100.0f, 100.0f);
-    // color = glm::vec3(1.0f, 1.0f, 1.0f);
-    // Entity e2(&sphere, pos, false, scale, color);
-    // scene.include(e2);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();

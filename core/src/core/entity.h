@@ -59,7 +59,7 @@ public:
 
     glm::mat4 get_model_matrix() const;
 
-    void draw(const Shader& shader);
+    void draw(const Shader* shader);
     bool collides(const glm::vec3& pos, const glm::vec3& dir, glm::vec3& hit_pos);
     glm::vec3 get_physics_position();
     Util::aabb get_aabb();

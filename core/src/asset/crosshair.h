@@ -25,15 +25,15 @@ public:
         glDeleteVertexArrays(1, &idiot);
     }
 
-    void draw(const Shader& shader, const int& screen_width, const int& screen_height) const {
+    void draw(const Shader* shader, const int& screen_width, const int& screen_height) const {
 
-        shader.setFloat("thickness", thickness);
-        shader.setFloat("gap", gap);
-        shader.setFloat("height", height);
-        shader.setFloat("width", width);
-        shader.setFloat("opacity", opacity);
-        shader.setVec3("color", color);
-        shader.setVec2("screen_size", glm::vec2(screen_width, screen_height));
+        shader->setFloat("thickness", thickness);
+        shader->setFloat("gap", gap);
+        shader->setFloat("height", height);
+        shader->setFloat("width", width);
+        shader->setFloat("opacity", opacity);
+        shader->setVec3("color", color);
+        shader->setVec2("screen_size", glm::vec2(screen_width, screen_height));
 
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);

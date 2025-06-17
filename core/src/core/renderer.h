@@ -17,9 +17,12 @@
 #include "asset/shader.h"
 #include "asset/model_ass.h"
 #include "asset/crosshair.h"
+#include "asset/shader_manager.h"
 #include "asset/text.h"
 #include "player/player.h"
 #include "util/decompose.h"
+
+const float FAR_PLANE = 500.0f;
 
 enum ortho_view {
     TOP_DOWN,
@@ -240,7 +243,6 @@ public:
 
         glfwMakeContextCurrent(window); // idk
         glfwSetWindowUserPointer(window, this); // same as below
-
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // todo maybe move kinda weird
 
         // tell GLFW to capture our mouse
@@ -251,6 +253,7 @@ public:
             return false;
         }
 
+        // TODO MOVE TO TO WINDOW CLASS MAYBE EDITOR WINDOW TOO
         // make viewports
         editor_viewports.top.init_text  ("top------"); // pad to 9 xD
         editor_viewports.front.init_text("front----");
@@ -260,52 +263,25 @@ public:
         // configure global opengl state
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
+
         // SHADERS
-        /*shader manager?*/ // build and compile our shader program
-        /*shader manager?*/ if (!std::filesystem::exists("../resources/shaders/vertex.glsl") ||
-        /*shader manager?*/     !std::filesystem::exists("../resources/shaders/fragment.glsl")) {
-        /*shader manager?*/     std::cerr << "Shader files not found! Ensure they're in the 'shaders/' directory relative to the executable." << std::endl;
-        /*shader manager?*/     return false;
-        /*shader manager?*/ }
-        /*shader manager?*/ our_shader.init("../resources/shaders/vertex.glsl", "../resources/shaders/fragment.glsl");
-        /*shader manager?*/ our_shader.use(); // don't forget to activate/use the shader before setting uniforms!
-        /*shader manager?*/ // either set it manually like so:
-        // /*shader manager?*/ glUniform1i(glGetUniformLocation(our_shader.ID, "texture1"), .5);
-        /*shader manager?*/ // or set it via the texture class
-        // /*shader manager?*/ our_shader.setInt("texture2", .5);
+        Shader_manager::init("../resources/shaders/");
+        pbr_shader = Shader_manager::load_from_paths("pbr", "vertex.glsl", "fragment.glsl");
+        skybox_shader = Shader_manager::load_from_name("skybox");
 
-        // weapon_shader2.init("../resources/shaders/weapon_v.glsl", "../resources/shaders/weapon_f.glsl");
-        weapon_shader2.init("../resources/shaders/weapon2_v.glsl", "../resources/shaders/weapon2_f.glsl");
-        // weapon_shader2.init("../resources/shaders/fres_v.glsl", "../resources/shaders/fres_f.glsl");
-
-        debug_shader.init("../resources/shaders/debug_v.glsl", "../resources/shaders/debug_f.glsl");
-        disney_shader.init("../resources/shaders/disney_v.glsl", "../resources/shaders/disney_f.glsl");
-
-        //setup_buffers();
-
-        deferred_shader.init("../resources/shaders/deferred_v.glsl", "../resources/shaders/deferred_f.glsl");
-        deferred_lighting_shader.init("../resources/shaders/deferred_light_v.glsl", "../resources/shaders/deferred_light_f.glsl");
-
-        debug_gbuffer_shader.init("../resources/shaders/deferred_light_v.glsl", "../resources/shaders/deferred_lighting_debug_f.glsl");
+        debug_shader = Shader_manager::load_from_name("debug");
+        editor_shader = Shader_manager::load_from_name("editor");
+        //debug_shader.init("../resources/shaders/debug_v.glsl", "../resources/shaders/debug_f.glsl");
         
-        deferred_shader.use();
-        deferred_shader.setInt("texture_diffuse1", 0);
-        deferred_shader.setInt("texture_specular1", 1);
+        //setup_buffers(); // defferd g buffer setup
+        //deferred_shader.init("../resources/shaders/deferred_v.glsl", "../resources/shaders/deferred_f.glsl");
+        //deferred_lighting_shader.init("../resources/shaders/deferred_light_v.glsl", "../resources/shaders/deferred_light_f.glsl");
+        //debug_gbuffer_shader.init("../resources/shaders/deferred_light_v.glsl", "../resources/shaders/deferred_lighting_debug_f.glsl");
 
-        deferred_shader.use();
-        deferred_shader.setInt("texture_diffuse1", 0);
-        deferred_shader.setInt("texture_specular1", 1);
+        crosshair_shader = Shader_manager::load_from_name("crosshair");
 
-        deferred_lighting_shader.use();
-        deferred_lighting_shader.setInt("g_position", 0);
-        deferred_lighting_shader.setInt("g_normal", 1);
-        deferred_lighting_shader.setInt("g_albedo_specular", 2);
-
-        skybox_shader.init("../resources/shaders/skybox_v.glsl", "../resources/shaders/skybox_f.glsl");
-        crosshair_shader.init("../resources/shaders/crosshair_v.glsl", "../resources/shaders/crosshair_f.glsl");
         hud_text_shader.init("../resources/shaders/text_hud_v.glsl", "../resources/shaders/text_hud_f.glsl");
-        toon.init("../resources/shaders/vertex.glsl", "../resources/shaders/toon.glsl");
-        editor.init("../resources/shaders/editor_v.glsl", "../resources/shaders/editor_f.glsl");
+        //toon.init("../resources/shaders/vertex.glsl", "../resources/shaders/toon.glsl");
 
         debug_renderer.init();
 
@@ -401,24 +377,25 @@ public:
     }
 
     void draw_player_model(Player& player, Model_ass& player_model) {
-        our_shader.use();
+        Shader* shader = Shader_manager::get_shader(pbr_shader);
+        shader->use();
 
-        our_shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
-        our_shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        shader->setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
+        shader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
-        our_shader.setVec3("viewPos", player.camera.position);
+        shader->setVec3("viewPos", player.camera.position);
 
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        our_shader.setMat4("projection", projection);
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, FAR_PLANE);
+        shader->setMat4("projection", projection);
         glm::mat4 view = player.camera.get_view_matrix();
-        our_shader.setMat4("view", view);
+        shader->setMat4("view", view);
 
         glm::mat4 model = player.get_model_matrix();
-        our_shader.setMat4("model", model);
+        shader->setMat4("model", model);
     
-        our_shader.setVec3("objectColor", glm::vec3(0.0f, 0.5f, 0.0f));
+        shader->setVec3("objectColor", glm::vec3(0.0f, 0.5f, 0.0f));
     
-        player_model.draw(our_shader);
+        player_model.draw(shader);
     }
 
     void render(Player& player, Scene& scene, float delta_time) {
@@ -433,8 +410,8 @@ public:
 
     void render_scene(Player& player, Scene& scene, float delta_time) {
         //Shader used_shader = toon;
-        Shader used_shader = our_shader;
-        used_shader.use();
+        Shader* shader = Shader_manager::get_shader(pbr_shader);
+        shader->use();
 
         //used_shader.setFloat("toon_steps", 3.0f);          // More steps = smoother
         //used_shader.setFloat("toon_specular_steps", 2.0f); // Usually 1-3 for toon
@@ -442,30 +419,30 @@ public:
         //used_shader.setFloat("rim_intensity", 2.0f);       // Rim brightness
         //used_shader.setVec3("rim_color", glm::vec3(0.0f, 0.0f, 0.0f)); // Warm rim
         
-        used_shader.setVec3("light_position", light.position);
-        used_shader.setVec3("light_color", light.color);
-        used_shader.setFloat("light_intensity", light.intensity);
+        shader->setVec3("light_position", light.position);
+        shader->setVec3("light_color", light.color);
+        shader->setFloat("light_intensity", light.intensity);
         debug_renderer.add_sphere(light.position, 0.1f, light.color);
 
         // Setup camera matrices
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        used_shader.setMat4("projection", projection);
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, FAR_PLANE);
+        shader->setMat4("projection", projection);
         
         glm::mat4 view = player.camera.get_view_matrix();
-        used_shader.setMat4("view", view);
-        used_shader.setVec3("view_position", player.camera.position);
+        shader->setMat4("view", view);
+        shader->setVec3("view_position", player.camera.position);
         
         for (Entity& entity : scene.entities) {
             // Calculate and set transformation matrices
             glm::mat4 model = entity.get_model_matrix();
-            used_shader.setMat4("model", model);
+            shader->setMat4("model", model);
             
             // Calculate normal matrix (inverse transpose of the model matrix)
             glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model)));
-            used_shader.setMat3("normal_matrix", normal_matrix);
+            shader->setMat3("normal_matrix", normal_matrix);
             
             // Draw the entity
-            entity.draw(used_shader);
+            entity.draw(shader);
             
             /////////////////////////////////////////////////////////////////////////////////////////////////
             //debug_renderer.add_axes(entity.get_physics_position(), entity.rotation);
@@ -481,8 +458,8 @@ public:
     }
 
     void render_scene_ortho(Player& player, Scene& scene, float deltaTime, const ortho_view_data& view_data) {
-        Shader used_shader = editor;
-        used_shader.use();
+        Shader* shader = Shader_manager::get_shader(editor_shader);
+        shader->use();
 
         int half_width = scr_width / 2;
         int half_height = scr_height / 2;
@@ -493,10 +470,10 @@ public:
         glm::mat4 projection = glm::ortho(
             -ortho_size * aspect_ratio, ortho_size * aspect_ratio,  // left, right
             -ortho_size, ortho_size,                                // bottom, top
-            0.1f, 300.0f                                           // near, far
+            0.1f, FAR_PLANE                                         // near, far
         );
 
-        used_shader.setMat4("projection", projection);
+        shader->setMat4("projection", projection);
 
         glm::vec3 target_pos = view_data.get_target_position();
         glm::vec3 view_camera_pos = target_pos + view_data.get_camera_position();
@@ -504,17 +481,17 @@ public:
 
         glm::mat4 view = glm::lookAt(view_camera_pos, target_pos, up_vector);
 
-        used_shader.setMat4("view", view);
+        shader->setMat4("view", view);
         //used_shader.setVec3("view_position", view_camera_pos);
         
         for (Entity& entity : scene.entities) {
             glm::mat4 model = entity.get_model_matrix();
-            used_shader.setMat4("model", model);
+            shader->setMat4("model", model);
 
             glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model)));
-            used_shader.setMat3("normal_matrix", normal_matrix);
+            shader->setMat3("normal_matrix", normal_matrix);
 
-            entity.draw(used_shader);
+            entity.draw(shader);
 
  /*           if (entity.physics_enabled) {
                 Util::OBB collision_box = Physics::getShapeOBB(entity.physics_id);
@@ -576,7 +553,7 @@ public:
 
             ImGuizmo::SetRect(0.0f, 0.0f, w, h);
 
-            glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
+            glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, FAR_PLANE);
             glm::mat4 view = player.camera.get_view_matrix();
             glm::mat4 model = scene.entities[target_entity].get_model_matrix();
 
@@ -611,167 +588,169 @@ public:
     }
     
     void render_debug(Player& player) {
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        our_shader.setMat4("projection", projection);
+        Shader* shader = Shader_manager::get_shader(debug_shader);
+        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, FAR_PLANE);
+        shader->setMat4("projection", projection);
         glm::mat4 view = player.camera.get_view_matrix();
-        our_shader.setMat4("view", view);
+        shader->setMat4("view", view);
 
         if (editor_mode) {
             int half_width = scr_width / 2;
             int half_height = scr_height / 2;
             glViewport(0, half_height, half_width, half_height);
-            debug_renderer.render(debug_shader, projection, view);
+            debug_renderer.render(shader, projection, view);
             glViewport(0, 0, scr_width, scr_height);
         } 
         else 
-            debug_renderer.render(debug_shader, projection, view);
+            debug_renderer.render(shader, projection, view);
 
     }
 
-    void render_scene_deferred(Player& player, Scene& scene, float delta_time) {
-        // 1. Geometry Pass: Render scene to G-buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, g_buffer);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-        
-        // Prepare matrices
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        glm::mat4 view = player.camera.get_view_matrix();
+    //void render_scene_deferred(Player& player, Scene& scene, float delta_time) {
+    //    // 1. Geometry Pass: Render scene to G-buffer
+    //    glBindFramebuffer(GL_FRAMEBUFFER, g_buffer);
+    //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    //    
+    //    // Prepare matrices
+    //    glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, FAR_PLANE);
+    //    glm::mat4 view = player.camera.get_view_matrix();
 
-        // Use deferred geometry shader for G-buffer pass
-        deferred_shader.use();
-        deferred_shader.setMat4("projection", projection);
-        deferred_shader.setMat4("view", view);
+    //    // Use deferred geometry shader for G-buffer pass
+    //    deferred_shader.use();
+    //    deferred_shader.setMat4("projection", projection);
+    //    deferred_shader.setMat4("view", view);
 
-        // Render scene entities to G-buffer
-        for (Entity& entity : scene.entities) {
-            glm::mat4 model = entity.get_model_matrix();
-            deferred_shader.setMat4("model", model);
-            
-            // Calculate normal matrix (inverse transpose of the model matrix)
-            glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model)));
-            deferred_shader.setMat3("normal_matrix", normal_matrix);
-            
-            entity.draw(deferred_shader);
-        }
+    //    // Render scene entities to G-buffer
+    //    for (Entity& entity : scene.entities) {
+    //        glm::mat4 model = entity.get_model_matrix();
+    //        deferred_shader.setMat4("model", model);
+    //        
+    //        // Calculate normal matrix (inverse transpose of the model matrix)
+    //        glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model)));
+    //        deferred_shader.setMat3("normal_matrix", normal_matrix);
+    //        
+    //        entity.draw(deferred_shader);
+    //    }
 
-        // 2. Lighting Pass: Render lighting using G-buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, 0); // Back to default framebuffer
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDisable(GL_DEPTH_TEST);
-        
-        // Use lighting shader
-        deferred_lighting_shader.use();
-        
-        // Bind G-buffer textures
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, g_position);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, g_normal);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, g_albedo_specular);
+    //    // 2. Lighting Pass: Render lighting using G-buffer
+    //    glBindFramebuffer(GL_FRAMEBUFFER, 0); // Back to default framebuffer
+    //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //    glDisable(GL_DEPTH_TEST);
+    //    
+    //    // Use lighting shader
+    //    deferred_lighting_shader.use();
+    //    
+    //    // Bind G-buffer textures
+    //    glActiveTexture(GL_TEXTURE0);
+    //    glBindTexture(GL_TEXTURE_2D, g_position);
+    //    glActiveTexture(GL_TEXTURE1);
+    //    glBindTexture(GL_TEXTURE_2D, g_normal);
+    //    glActiveTexture(GL_TEXTURE2);
+    //    glBindTexture(GL_TEXTURE_2D, g_albedo_specular);
 
-        // Set lighting uniforms
-        deferred_lighting_shader.setVec3("viewPos", player.camera.position);
-        
-        // Set light parameters
-        deferred_lighting_shader.setVec3("light.Position", light.position);
-        deferred_lighting_shader.setVec3("light.Color", light.color);
-        deferred_lighting_shader.setFloat("light.Linear", 0.09f);
-        deferred_lighting_shader.setFloat("light.Quadratic", 0.032f);
-        deferred_lighting_shader.setFloat("light.Intensity", light.intensity);
+    //    // Set lighting uniforms
+    //    deferred_lighting_shader.setVec3("viewPos", player.camera.position);
+    //    
+    //    // Set light parameters
+    //    deferred_lighting_shader.setVec3("light.Position", light.position);
+    //    deferred_lighting_shader.setVec3("light.Color", light.color);
+    //    deferred_lighting_shader.setFloat("light.Linear", 0.09f);
+    //    deferred_lighting_shader.setFloat("light.Quadratic", 0.032f);
+    //    deferred_lighting_shader.setFloat("light.Intensity", light.intensity);
 
-        // glUniform1i(glGetUniformLocation(deferred_lighting_shader.ID, "debug_mode"), 999);
+    //    // glUniform1i(glGetUniformLocation(deferred_lighting_shader.ID, "debug_mode"), 999);
 
-        // Render a screen-filling quad
-        // render_quad();
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glBindVertexArray(quadVAO);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glBindVertexArray(0);
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //    // Render a screen-filling quad
+    //    // render_quad();
+    //    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //    glBindVertexArray(quadVAO);
+    //    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    //    glBindVertexArray(0);
+    //    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        glEnable(GL_DEPTH_TEST);
+    //    glEnable(GL_DEPTH_TEST);
 
-        // Optional: Render debug information
-        if (!player.key_toggles[(unsigned)'r']) {
-            // debug_renderer.render(debug_shader, projection, view);
-            debug_visualize_gbuffer(player);
-        }
-    }
+    //    // Optional: Render debug information
+    //    if (!player.key_toggles[(unsigned)'r']) {
+    //        // debug_renderer.render(debug_shader, projection, view);
+    //        debug_visualize_gbuffer(player);
+    //    }
+    //}
 
-    void debug_visualize_gbuffer(Player& player) {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //void debug_visualize_gbuffer(Player& player) {
+    //    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //
+    //    debug_gbuffer_shader.use();
+    //
+    //    // Bind G-buffer textures
+    //    glActiveTexture(GL_TEXTURE0);
+    //    glBindTexture(GL_TEXTURE_2D, g_position);
+    //    glActiveTexture(GL_TEXTURE1);
+    //    glBindTexture(GL_TEXTURE_2D, g_normal);
+    //    glActiveTexture(GL_TEXTURE2);
+    //    glBindTexture(GL_TEXTURE_2D, g_albedo_specular);
+    //
+    //    const char* mode_names[] = {
+    //        "Position", "Normal", "Albedo", "Specular", "Depth"
+    //    };
+    //    static int current_mode = 0;
+    //
+    //    for (int i = 0; i < 4; ++i) {
+    //        debug_gbuffer_shader.setInt("debug_mode", i);
+    //
+    //        int x = (i % 2) * (scr_width / 2);
+    //        int y = (i / 2) * (scr_height / 2);
+    //        glViewport(x, y, scr_width / 2, scr_height / 2);
+    //
+    //        // render_quad();
+    //        glBindVertexArray(quadVAO);
+    //        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    //        glBindVertexArray(0);    
+    //    }
+    //
+    //    // Reset viewport
+    //    glViewport(0, 0, scr_width, scr_height);
+    //}
     
-        debug_gbuffer_shader.use();
-    
-        // Bind G-buffer textures
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, g_position);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, g_normal);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, g_albedo_specular);
-    
-        const char* mode_names[] = {
-            "Position", "Normal", "Albedo", "Specular", "Depth"
-        };
-        static int current_mode = 0;
-    
-        for (int i = 0; i < 4; ++i) {
-            debug_gbuffer_shader.setInt("debug_mode", i);
-    
-            int x = (i % 2) * (scr_width / 2);
-            int y = (i / 2) * (scr_height / 2);
-            glViewport(x, y, scr_width / 2, scr_height / 2);
-    
-            // render_quad();
-            glBindVertexArray(quadVAO);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-            glBindVertexArray(0);    
-        }
-    
-        // Reset viewport
-        glViewport(0, 0, scr_width, scr_height);
-    }
-    
-    void draw_player_stuff(Player& player, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon, const Skybox& skybox) {
-        // glDisable(GL_DEPTH_TEST);
-        weapon_shader2.use();
-        
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, 300.0f);
-        weapon_shader2.setMat4("projection", projection);
-        
-        glm::mat4 fullView = player.camera.get_view_matrix();
-        glm::mat4 rotationOnlyView = glm::mat4(glm::mat3(fullView));
-        weapon_shader2.setMat4("view", rotationOnlyView);
-        
+    //void draw_player_stuff(Player& player, glm::vec3& clr, glm::vec3& emis_clr, glm::vec3& fres_clr, float expon, const Skybox& skybox) {
+    //    // glDisable(GL_DEPTH_TEST);
+    //    weapon_shader2.use();
+    //    
+    //    glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, FAR_PLANE);
+    //    weapon_shader2.setMat4("projection", projection);
+    //    
+    //    glm::mat4 fullView = player.camera.get_view_matrix();
+    //    glm::mat4 rotationOnlyView = glm::mat4(glm::mat3(fullView));
+    //    weapon_shader2.setMat4("view", rotationOnlyView);
+    //    
 
-        // REPLACE FROM HERE -------------------------------------------------------------
-        glm::mat4 model = glm::mat4(1.0f);
-        
-        // FIX player.camera.yaw pitch roll maybe geeruc
-        model = glm::rotate(model, -glm::radians(player.camera.yaw + 90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(player.camera.pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-        
-        model = glm::translate(model, player.controller->get_weapon_position());
-        weapon_shader2.setMat4("model", model);
-        weapon_shader2.setVec3("viewPos", player.camera.position);
+    //    // REPLACE FROM HERE -------------------------------------------------------------
+    //    glm::mat4 model = glm::mat4(1.0f);
+    //    
+    //    // FIX player.camera.yaw pitch roll maybe geeruc
+    //    model = glm::rotate(model, -glm::radians(player.camera.yaw + 90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    //    model = glm::rotate(model, glm::radians(player.camera.pitch), glm::vec3(1.0f, 0.0f, 0.0f));
+    //    
+    //    model = glm::translate(model, player.controller->get_weapon_position());
+    //    weapon_shader2.setMat4("model", model);
+    //    weapon_shader2.setVec3("viewPos", player.camera.position);
 
-        // HERE ------------------------------------
-        // USE WEAPON + HANDS + QUATS + ANIMATION + OH GOD 
+    //    // HERE ------------------------------------
+    //    // USE WEAPON + HANDS + QUATS + ANIMATION + OH GOD 
 
-    }
+    //}
 
     void render_skybox(const Skybox& skybox, const glm::mat4& view, const glm::mat4& projection) {
         glDepthFunc(GL_LEQUAL);
-        skybox_shader.use();
+        Shader* shader = Shader_manager::get_shader(skybox_shader);
+        shader->use();
 
         glm::mat4 viewNoTranslation = glm::mat4(glm::mat3(view));
 
-        skybox_shader.setMat4("view", viewNoTranslation);
-        skybox_shader.setMat4("projection", projection);
+        shader->setMat4("view", viewNoTranslation);
+        shader->setMat4("projection", projection);
 
         skybox.draw();
 
@@ -783,8 +762,9 @@ public:
     }
 
     void render_crosshair(const Crosshair& crosshair) {
-        crosshair_shader.use();
-        crosshair.draw(crosshair_shader, scr_width, scr_height);
+        Shader* s = Shader_manager::get_shader(crosshair_shader);
+        s->use();
+        crosshair.draw(s, scr_width, scr_height);
     }
 
     void render_hud_text(const Text& text) {
@@ -969,6 +949,9 @@ public:
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
 
+        if (key == '\'')
+            Shader_manager::hot_reload_all();
+
         if (renderer) {
             if (renderer->editor_mode) {
                 double xpos, ypos;
@@ -1003,14 +986,18 @@ public:
 
     Light light;
 
-    Shader our_shader, weapon_shader, weapon_shader2, debug_shader, disney_shader;
-    Shader skybox_shader;
-    Shader crosshair_shader;
+    shader_handle pbr_shader;
+    shader_handle skybox_shader;
+    shader_handle debug_shader;
+    //Shader weapon_shader, disney_shader;
+
+    shader_handle crosshair_shader;
+
     Shader hud_text_shader;
     Shader toon;
 
     editor_viewports_struct editor_viewports;
-    Shader editor;
+    shader_handle editor_shader;
     bool editor_mode;
 
     size_t target_entity = 0;

@@ -14,7 +14,7 @@
     } \
 }
 
-void Model_ass::draw(const Shader &shader) {
+void Model_ass::draw(const Shader* shader) {
     for(unsigned int i = 0; i < meshes.size(); i++)
         meshes[i].draw(shader);
 }  
@@ -139,8 +139,8 @@ void Model_ass::normalize_model(float scale) {
         }
     }
 
-    printf("starting aabb max %f %f %f\n", aabb_max.x, aabb_max.y, aabb_max.z);
-    printf("starting aabb min %f %f %f\n", aabb_min.x, aabb_min.y, aabb_min.z);
+    //printf("starting aabb max %f %f %f\n", aabb_max.x, aabb_max.y, aabb_max.z);
+    //printf("starting aabb min %f %f %f\n", aabb_min.x, aabb_min.y, aabb_min.z);
 
     glm::vec3 center = 0.5f * (aabb_min + aabb_max);
     glm::vec3 diff   = aabb_max - aabb_min;
@@ -176,9 +176,9 @@ void Model_ass::normalize_model(float scale) {
         }
     }
 
-    printf("after aabb max %f %f %f\n", aabb_max.x, aabb_max.y, aabb_max.z);
-    printf("after aabb min %f %f %f\n", aabb_min.x, aabb_min.y, aabb_min.z);
+    //printf("after aabb max %f %f %f\n", aabb_max.x, aabb_max.y, aabb_max.z);
+    //printf("after aabb min %f %f %f\n", aabb_min.x, aabb_min.y, aabb_min.z);
 
-    printf("after aabb max %f %f %f\n", aabb_max.x, aabb_max.y, aabb_max.z);
-    printf("after aabb min %f %f %f\n", aabb_min.x, aabb_min.y, aabb_min.z);
+    //printf("after aabb max %f %f %f\n", aabb_max.x, aabb_max.y, aabb_max.z);
+    //printf("after aabb min %f %f %f\n", aabb_min.x, aabb_min.y, aabb_min.z);
 }

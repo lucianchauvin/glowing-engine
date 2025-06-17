@@ -216,7 +216,7 @@ void Renderer_debug::add_obb(const Util::OBB obb, const glm::vec3& color) {
     add_line(obb.corners[3], obb.corners[7], color); // +x+y to max
 }
 
-void Renderer_debug::render(Shader& debug_shader, const glm::mat4& projection, const glm::mat4& view) {
+void Renderer_debug::render(Shader* debug_shader, const glm::mat4& projection, const glm::mat4& view) {
     if (!lines.empty()) {
         // Build a CPU buffer of vertices: for each line, we have two points, each with (pos + color)
         // that's 6 floats (pos) + 6 floats (color) for the entire line? Actually it's 6 floats total: 
@@ -253,13 +253,11 @@ void Renderer_debug::render(Shader& debug_shader, const glm::mat4& projection, c
                      lineVertices.data(), 
                      GL_DYNAMIC_DRAW);
 
-        debug_shader.use();
-        debug_shader.setMat4("projection", projection);
-        debug_shader.setMat4("view", view);
-        glm::mat4 model(1.0f);
-        debug_shader.setMat4("model", model);
-
-        debug_shader.setVec3("debugColor", glm::vec3(0.0f));
+        debug_shader->use();
+        debug_shader->setMat4("projection", projection);
+        debug_shader->setMat4("view", view);
+        debug_shader->setMat4("model", glm::mat4(1.0f));
+        debug_shader->setVec3("debugColor", glm::vec3(0.0f));
 
         //glDisable(GL_DEPTH_TEST);
 
@@ -272,18 +270,17 @@ void Renderer_debug::render(Shader& debug_shader, const glm::mat4& projection, c
     // spheres
     if (!spheres.empty()) {
         glBindVertexArray(sphereVAO);
-        debug_shader.use();
-        debug_shader.setMat4("projection", projection);
-        debug_shader.setMat4("view", view);
+        debug_shader->use();
+        debug_shader->setMat4("projection", projection);
+        debug_shader->setMat4("view", view);
 
         for (auto& s : spheres) {
             // Build model matrix for each sphere
             glm::mat4 model(1.0f);
             model = glm::translate(model, s.center);
             model = glm::scale(model, glm::vec3(s.radius)); 
-            debug_shader.setMat4("model", model);
-
-            debug_shader.setVec3("debugColor", s.color);
+            debug_shader->setMat4("model", model);
+            debug_shader->setVec3("debugColor", s.color);
 
             // glDisable(GL_DEPTH_TEST); // if needed
             glDrawElements(GL_TRIANGLES, sphereIndexCount, GL_UNSIGNED_INT, 0);

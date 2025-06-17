@@ -88,7 +88,7 @@ glm::mat4 Entity::get_model_matrix() const {
     return modelMat;
 }
 
-void Entity::draw(const Shader& shader) {
+void Entity::draw(const Shader* shader) {
 
     //if (model_id == 0)
         //model->draw(shader);

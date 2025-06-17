@@ -47,6 +47,7 @@ set(SOURCES
     "src/asset/material_disney.cpp"
     "src/asset/texture_manager.cpp"
     "src/asset/model_manager.cpp"
+    "src/asset/shader_manager.cpp"
 
     ext/glad/glad.c
     ext/dearimgui/imgui.cpp
