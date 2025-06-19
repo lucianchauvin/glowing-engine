@@ -79,7 +79,7 @@ Entity::~Entity() = default;
 glm::mat4 Entity::get_model_matrix() const {
     glm::mat4 modelMat(1.0f);
     //glm::mat4 translation = glm::translate(glm::mat4(1.0f), position);
-    glm::mat4 translation = glm::translate(glm::mat4(1.0f), Physics::getBodyPosition(physics_id));
+    glm::mat4 translation = glm::translate(glm::mat4(1.0f), physics_enabled ? Physics::getBodyPosition(physics_id) : position);
     //glm::mat4 rot = glm::mat4_cast(rotation);
     glm::mat4 rot = glm::mat4_cast(Physics::getBodyRotation(physics_id));
     glm::mat4 scaling = glm::scale(glm::mat4(1.0f), scale);
@@ -88,7 +88,7 @@ glm::mat4 Entity::get_model_matrix() const {
     return modelMat;
 }
 
-void Entity::draw(const Shader* shader) {
+void Entity::draw(const Shader* shader, bool shadow_pass) {
 
     //if (model_id == 0)
         //model->draw(shader);
@@ -96,7 +96,7 @@ void Entity::draw(const Shader* shader) {
     //tmp.draw(shader);
     //else {
         //printf("model drawn with id, %s", Model_manager::get_name(model_id).c_str());
-        Model_manager::draw(shader, model_id);
+        Model_manager::draw(shader, model_id, shadow_pass);
     //}
 }
 

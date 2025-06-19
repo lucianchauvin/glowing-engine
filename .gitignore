@@ -2,6 +2,5 @@ core/build/
 .cache/
 .vscode/tasks.json
 odin/
-core/ext/JoltPhysics/
 core/resources/models/
 .vs

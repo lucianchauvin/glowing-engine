@@ -53,5 +53,5 @@
         "ratio": "cpp",
         "iomanip": "cpp"
     },
-    "cmake.sourceDirectory": "/home/br/glowing-engine/core"
+    "cmake.sourceDirectory": "C:/Users/brian/source/repos/glowing-engine/core"
 }

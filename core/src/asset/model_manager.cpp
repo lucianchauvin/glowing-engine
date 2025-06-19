@@ -76,8 +76,8 @@ namespace Model_manager {
         return models[model_id];
     }
 
-    void draw(const Shader* shader, const model_handle model_id) {
-        models[model_id].draw(shader);
+    void draw(const Shader* shader, const model_handle model_id, bool shadow_pass) {
+        models[model_id].draw(shader, shadow_pass);
     }
 
 

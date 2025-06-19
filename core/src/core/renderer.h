@@ -253,6 +253,8 @@ public:
             return false;
         }
 
+        Texture_manager::init();
+
         // TODO MOVE TO TO WINDOW CLASS MAYBE EDITOR WINDOW TOO
         // make viewports
         editor_viewports.top.init_text  ("top------"); // pad to 9 xD
@@ -264,13 +266,19 @@ public:
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
 
+        // LIGHTs
+        // makes opengl calls
+        spotlight = Light::create_spot(glm::vec3(0.0f, 5.0f, -5.0f), glm::vec3(0.0f, -1.0f, -0.5f), glm::vec3(1.0f), 15.0f, 25.0f, 45.0f, 1024, 1024);
+        directional_light = Light::create_directional(glm::vec3(0.0f, -0.25f, 0.25f), glm::vec3(1.0f), 0.1f);
+
         // SHADERS
         Shader_manager::init("../resources/shaders/");
+
         pbr_shader = Shader_manager::load_from_paths("pbr", "vertex.glsl", "fragment.glsl");
         skybox_shader = Shader_manager::load_from_name("skybox");
-
         debug_shader = Shader_manager::load_from_name("debug");
         editor_shader = Shader_manager::load_from_name("editor");
+        shadow_map_shader = Shader_manager::load_from_name("shadow_map");
         //debug_shader.init("../resources/shaders/debug_v.glsl", "../resources/shaders/debug_f.glsl");
         
         //setup_buffers(); // defferd g buffer setup
@@ -376,53 +384,132 @@ public:
         return true;
     }
 
-    void draw_player_model(Player& player, Model_ass& player_model) {
-        Shader* shader = Shader_manager::get_shader(pbr_shader);
+    //void draw_player_model(Player& player, Model_ass& player_model) {
+    //    Shader* shader = Shader_manager::get_shader(pbr_shader);
+    //    shader->use();
+
+    //    shader->setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
+    //    shader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+    //    shader->setVec3("viewPos", player.camera.position);
+
+    //    glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, FAR_PLANE);
+    //    shader->setMat4("projection", projection);
+    //    glm::mat4 view = player.camera.get_view_matrix();
+    //    shader->setMat4("view", view);
+
+    //    glm::mat4 model = player.get_model_matrix();
+    //    shader->setMat4("model", model);
+    //
+    //    shader->setVec3("objectColor", glm::vec3(0.0f, 0.5f, 0.0f));
+    //
+    //    player_model.draw(shader);
+    //}
+
+    void shadow_pass(Scene& scene) {
+        spotlight.bind_fbo_write();
+        glEnable(GL_DEPTH_TEST);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        // use shadow shader
+        Shader* shader = Shader_manager::get_shader(shadow_map_shader);
         shader->use();
-
-        shader->setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
-        shader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-
-        shader->setVec3("viewPos", player.camera.position);
-
-        glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, FAR_PLANE);
+        glm::mat4 projection = glm::perspective(glm::radians(spotlight.outer_fov * 2.0f), (float)spotlight.width / (float)spotlight.height, 0.1f, 50.0f);
         shader->setMat4("projection", projection);
-        glm::mat4 view = player.camera.get_view_matrix();
+        glm::mat4 view = glm::lookAt(spotlight.position, spotlight.position + spotlight.direction, glm::vec3(0.0f, 1.0f, 0.0f));
         shader->setMat4("view", view);
+        
+        // frusutm cull objects + check move?
+        for (Entity& entity : scene.entities) {
+            glm::mat4 model = entity.get_model_matrix();
+            shader->setMat4("model", model);
 
-        glm::mat4 model = player.get_model_matrix();
-        shader->setMat4("model", model);
-    
-        shader->setVec3("objectColor", glm::vec3(0.0f, 0.5f, 0.0f));
-    
-        player_model.draw(shader);
+            bool shadow_pass = true;
+            entity.draw(shader, shadow_pass);
+        }
+
+        // dir light, maybe scene BB
+        directional_light.bind_fbo_write();
+        glEnable(GL_DEPTH_TEST);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        float scene_size = 25.0f;
+        float light_distance = 50.0f;
+        glm::vec3 scene_center = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 light_pos = scene_center - directional_light.direction * light_distance;
+        glm::mat4 dir_projection = glm::ortho(-scene_size, scene_size, -scene_size, scene_size, 0.1f, 60.0f);
+        shader->setMat4("projection", dir_projection);
+        glm::mat4 dir_view = glm::lookAt(light_pos, light_pos + directional_light.direction, glm::vec3(0.0f, 1.0f, 0.0f));
+        shader->setMat4("view", dir_view);
+
+        // frusutm cull objects + check move?
+        for (Entity& entity : scene.entities) {
+            glm::mat4 model = entity.get_model_matrix();
+            shader->setMat4("model", model);
+
+            bool shadow_pass = true;
+            entity.draw(shader, shadow_pass);
+        }
+
+        // point light shadow mapping
+        // frustum culling stuff
     }
 
     void render(Player& player, Scene& scene, float delta_time) {
-        glClearColor(0.2f, 0.5f, 0.5f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (editor_mode)
+        if (editor_mode) {
             render_scene_editor(player, scene, delta_time);
-        else
+        }
+        else {
+            shadow_pass(scene);
             render_scene(player, scene, delta_time);
+        }
     }
 
     void render_scene(Player& player, Scene& scene, float delta_time) {
         //Shader used_shader = toon;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, scr_width, scr_height);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         Shader* shader = Shader_manager::get_shader(pbr_shader);
         shader->use();
 
-        //used_shader.setFloat("toon_steps", 3.0f);          // More steps = smoother
-        //used_shader.setFloat("toon_specular_steps", 2.0f); // Usually 1-3 for toon
-        //used_shader.setFloat("rim_power", 2.5f);           // Higher = sharper rim
-        //used_shader.setFloat("rim_intensity", 2.0f);       // Rim brightness
-        //used_shader.setVec3("rim_color", glm::vec3(0.0f, 0.0f, 0.0f)); // Warm rim
-        
-        shader->setVec3("light_position", light.position);
-        shader->setVec3("light_color", light.color);
-        shader->setFloat("light_intensity", light.intensity);
-        debug_renderer.add_sphere(light.position, 0.1f, light.color);
+        // spotlight
+        spotlight.bind_fbo_read(3);
+        shader->setInt("shadow_map", 3);
+        glm::mat4 lprojection = glm::perspective(glm::radians(spotlight.outer_fov * 2.0f), (float)spotlight.width / (float)spotlight.height, 0.1f, 50.0f);
+        shader->setMat4("light_projection", lprojection);
+        glm::mat4 lview = glm::lookAt(spotlight.position, spotlight.position + spotlight.direction, glm::vec3(0.0f, 1.0f, 0.0f));
+        shader->setMat4("light_view", lview);
+
+        // dir light
+        float scene_size = 25.0f;
+        float light_distance = 50.0f;
+        glm::vec3 scene_center = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 light_pos = scene_center - directional_light.direction * light_distance;
+        glm::mat4 dir_projection = glm::ortho(-scene_size, scene_size, -scene_size, scene_size, 0.1f, 60.0f);
+        shader->setMat4("dir_light_projection", dir_projection);
+        glm::mat4 dir_view = glm::lookAt(light_pos, light_pos + directional_light.direction, glm::vec3(0.0f, 1.0f, 0.0f));
+        shader->setMat4("dir_light_view", dir_view);
+        directional_light.bind_fbo_read(4);
+        shader->setInt("directional_shadow_map", 4);
+        ///////////
+
+        shader->setVec3("spot_light_position", spotlight.position);
+        shader->setVec3("spot_light_direction", spotlight.direction);
+        shader->setVec3("spot_light_color", spotlight.color);
+        shader->setFloat("spot_light_intensity", spotlight.intensity);
+        shader->setFloat("spot_light_inner_cone", glm::cos(glm::radians(spotlight.inner_fov)));
+        shader->setFloat("spot_light_outer_cone", glm::cos(glm::radians(spotlight.outer_fov)));
+        debug_renderer.add_sphere(spotlight.position, 0.1f, spotlight.color);
+        debug_renderer.add_line(spotlight.position, spotlight.position + spotlight.direction, spotlight.color);
+
+        shader->setVec3("directional_light_direction", directional_light.direction);
+        shader->setVec3("directional_light_color", directional_light.color);
+        shader->setFloat("directional_light_intensity", directional_light.intensity);
+        debug_renderer.add_line(glm::vec3(0.0f, 10.f, 0.0f), glm::vec3(0.0f, 10.f, 0.0f) + directional_light.direction, spotlight.color);
 
         // Setup camera matrices
         glm::mat4 projection = glm::perspective(glm::radians(player.camera.zoom), (float)scr_width / (float)scr_height, 0.1f, FAR_PLANE);
@@ -984,11 +1071,13 @@ public:
     int scr_width, scr_height;
     Renderer_debug debug_renderer;
 
-    Light light;
+    Light spotlight;
+    Light directional_light;
 
     shader_handle pbr_shader;
     shader_handle skybox_shader;
     shader_handle debug_shader;
+    shader_handle shadow_map_shader;
     //Shader weapon_shader, disney_shader;
 
     shader_handle crosshair_shader;

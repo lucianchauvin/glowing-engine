@@ -53,27 +53,30 @@ void Mesh::setup_mesh() {
 }
 
 // todo gonna be way different
-void Mesh::draw(const Shader* shader) const {
+void Mesh::draw(const Shader* shader, bool shadow_pass) const {
 
-    //shader.setBool("has_diffuse", material.has_albedo);
-    //if (material.has_albedo) {
+    if (!shadow_pass) {
+
+        //shader.setBool("has_diffuse", material.has_albedo);
+        //if (material.has_albedo) {
         Texture_manager::bind(material.albedo_map, 0);
         shader->setInt("diffuse", 0);
         //printf("bound diffuse: %s\n", Texture_manager::get_name(material.albedo_map).c_str());
     //}
 
-    shader->setBool("has_normal", material.has_normal);
-    if (material.has_normal) {
-        Texture_manager::bind(material.normal_map, 1);
-        shader->setInt("normal", 1);
-        //printf("bound normal: %s\n", Texture_manager::get_name(material.normal_map).c_str());
-    }
+        shader->setBool("has_normal", material.has_normal);
+        if (material.has_normal) {
+            Texture_manager::bind(material.normal_map, 1);
+            shader->setInt("normal", 1);
+            //printf("bound normal: %s\n", Texture_manager::get_name(material.normal_map).c_str());
+        }
 
-    // Add metallic-roughness texture
-    shader->setBool("has_metallic_roughness", material.metallic_roughness_map != 0);
-    if (material.metallic_roughness_map != 0) {
-        Texture_manager::bind(material.metallic_roughness_map, 2);
-        shader->setInt("metallic_roughness", 2);
+        // Add metallic-roughness texture
+        shader->setBool("has_metallic_roughness", material.metallic_roughness_map != 0);
+        if (material.metallic_roughness_map != 0) {
+            Texture_manager::bind(material.metallic_roughness_map, 2);
+            shader->setInt("metallic_roughness", 2);
+        }
     }
 
     // draw mesh

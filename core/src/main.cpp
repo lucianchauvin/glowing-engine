@@ -32,7 +32,7 @@ int main() {
     Audio::init();
     Physics::init();
 
-    Texture_manager::init();
+    //Texture_manager::init();
     Model_manager::init("../resources/models/");
 
     Player player;
@@ -86,7 +86,7 @@ int main() {
     //scene.include(fdfsdfsdfsdfsdf);
 
     for (int i = 0; i < 10; i++) {
-        Entity dsadasdasdasda("die", glm::vec3(0.0f, 1.0f + i, -5.0f), true, glm::vec3(0.005f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+        Entity dsadasdasdasda("die", glm::vec3(0.0f, 1.05f + i, -5.0f), true, glm::vec3(0.003f), 1.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
         scene.include(dsadasdasdasda);
     }
 
@@ -172,9 +172,15 @@ int main() {
         ImGui::NewFrame();
 
         ImGui::Begin("Light");
-        ImGui::SliderFloat3("pos", &renderer.light.position.x, -20.0f, 200.0f);
-        ImGui::SliderFloat3("color", &renderer.light.color.x, 0.0f, 1.0f); // 1.0f;     
-        ImGui::SliderFloat("itensity", &renderer.light.intensity, 0.0f, 10000.0f); // 1.0f;        
+        ImGui::SliderFloat3("pos", &renderer.spotlight.position.x, -10.0f, 10.0f);
+        ImGui::SliderFloat3("dir", &renderer.spotlight.direction.x, -1.0f, 1.0f);
+        ImGui::SliderFloat3("color", &renderer.spotlight.color.x, 0.0f, 1.0f); // 1.0f;     
+        ImGui::SliderFloat("itensity", &renderer.spotlight.intensity, 0.0f, 10000.0f); // 1.0f;  
+        ImGui::SliderFloat("FOV outer", &renderer.spotlight.outer_fov, 0.0f, 180.0f); // 1.0f;     
+        ImGui::SliderFloat("FOV inner", &renderer.spotlight.inner_fov, 0.0f, 180.0f); // 1.0f;        
+        ImGui::SliderFloat3("directional_light_direction", &renderer.directional_light.direction.x, -1.0f, 1.0f);
+        ImGui::SliderFloat3("directional_light_color", &renderer.directional_light.color.x, -1.0f, 1.0f);
+        ImGui::SliderFloat("directional_light_intensity", &renderer.directional_light.intensity, 0.0f, 2.0f);
         ImGui::End();
 
         //player.debug_hud();

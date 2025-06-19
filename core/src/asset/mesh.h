@@ -24,7 +24,7 @@ class Mesh {
 
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, Material material);
         
-        void draw(const Shader* shader) const;
+        void draw(const Shader* shader, bool shadow_pass) const;
         void update_vertex_buffer();
 
     private:

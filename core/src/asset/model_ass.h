@@ -21,7 +21,7 @@ class Model_ass {
         }
         
         int load_model(const std::string &meshName, float scale = 1.0f);
-        void draw(const Shader* shader);	
+        void draw(const Shader* shader, bool shadow_pass);	
 
         glm::vec3 aabb_min;
         glm::vec3 aabb_max;

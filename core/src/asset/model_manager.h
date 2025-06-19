@@ -18,7 +18,7 @@ namespace Model_manager {
     Model_ass& get_model(const model_handle model_id);
 
     //Model_ass& get_model_by_name_load(const std::string& model_name);
-    void draw(const Shader* shader, const model_handle model_id);
+    void draw(const Shader* shader, const model_handle model_id, bool shadow_pass = false);
 
     size_t get_model_count();
     std::string get_name(const model_handle& model_id);

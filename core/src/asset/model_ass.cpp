@@ -14,9 +14,9 @@
     } \
 }
 
-void Model_ass::draw(const Shader* shader) {
+void Model_ass::draw(const Shader* shader, bool shadow_pass) {
     for(unsigned int i = 0; i < meshes.size(); i++)
-        meshes[i].draw(shader);
+        meshes[i].draw(shader, shadow_pass);
 }  
 
 int Model_ass::load_model(const std::string &path, float scale) {

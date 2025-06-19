@@ -1,86 +1,40 @@
-/*
-#version 330 core
-
+#version 430 core
 out vec4 FragColor;
 
 in vec3 FragPos;
+in vec4 FragPosLight;
+in vec4 FragPosLightDirectional;
 in vec3 Normal;
 in vec2 TexCoord;
 in vec3 Tangentout;
 in vec3 Bitangentout;
 
-// Light & camera uniforms
-uniform vec3 light_position;
+uniform vec3 point_light_position;
+uniform vec3 point_light_color;
+uniform float point_light_intensity;
+
+uniform vec3 directional_light_direction;
+uniform vec3 directional_light_color;
+uniform float directional_light_intensity;
+
+uniform vec3 spot_light_position;
+uniform vec3 spot_light_direction;
+uniform vec3 spot_light_color;
+uniform float spot_light_intensity;
+uniform float spot_light_inner_cone;
+uniform float spot_light_outer_cone;
+
 uniform vec3 viewPos;
-uniform vec3 light_color;
-uniform float light_intensity;
 
-uniform bool has_diffuse;
-uniform bool has_normal;
-uniform sampler2D diffuse;
-uniform sampler2D normal;
-
-void main() {
-    vec3 norm = normalize(Normal);
-
-    if (has_normal) {
-        vec3 normalMap = texture(normal, TexCoord).rgb;
-        normalMap = normalMap * 2.0 - 1.0; // [0,1] -> [-1,1]
-        
-        // TBN matrix
-        vec3 T = normalize(Tangentout);
-        vec3 B = normalize(Bitangentout);
-        vec3 N = normalize(Normal);
-        mat3 TBN = mat3(T, B, N);
-        norm = normalize(TBN * normalMap);
-
-     //   vec3 normalSample = texture(normal, TexCoord).rgb;
-     //   FragColor = vec4(normalSample, 1.0); // Should show normal map visually
-      //  return ;
-
-  }
-
-    // Basic Phong/Blinn-Phong lighting inputs
-    vec3 lightDir   = normalize(light_position - FragPos);
-    vec3 viewDir    = normalize(viewPos - FragPos);
-    
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse_light = diff * light_color * light_intensity;
-    vec3 ambient = 0.15 * light_color;
-    
-    // Combine them
-    vec3 diffuseTex = texture(diffuse, TexCoord).rgb;
-    vec3 result = (ambient + diffuse_light) * diffuseTex;
-
-    FragColor = vec4(result, 1.0);
-}
-*/
-
-
-#version 330 core
-out vec4 FragColor;
-
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoord;
-in vec3 Tangentout;
-in vec3 Bitangentout;
-
-// Light & camera uniforms
-uniform vec3 light_position;
-uniform vec3 viewPos;
-uniform vec3 light_color;
-uniform float light_intensity;
-
-// Texture uniforms
 uniform bool has_diffuse;
 uniform bool has_normal;
 uniform bool has_metallic_roughness;
 uniform sampler2D diffuse;
 uniform sampler2D normal;
 uniform sampler2D metallic_roughness;
+uniform sampler2D shadow_map; // spotlight
+uniform sampler2D directional_shadow_map;
 
-// PBR constants
 const float PI = 3.14159265359;
 
 // Normal Distribution Function (GGX/Trowbridge-Reitz)
@@ -122,17 +76,108 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-void main() { 
-    FragColor = vec4(texture(diffuse, TexCoord).rgb, 1.0f);
-    return ;
+// todo point light shadow calc
 
-    // Get normal
+float SpotShadowCalculation(vec4 fragPosLightSpace) {
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    
+    if(projCoords.z > 1.0)
+        return 0.0;
+    
+    float closestDepth = texture(shadow_map, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    
+    float bias = 0.005;
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    
+    return shadow;
+}
+
+float DirectionalShadowCalculation(vec4 fragPosLightSpace) {
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    
+    if(projCoords.z > 1.0)
+        return 0.0;
+    
+    float closestDepth = texture(directional_shadow_map, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    
+    float bias = 0.005;
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    
+    return shadow;
+}
+
+vec3 CalculateLighting(vec3 L, vec3 radiance, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
+    vec3 H = normalize(V + L);
+    
+    // cook-torrance brdf
+    float NDF = DistributionGGX(N, H, roughness);
+    float G = GeometrySmith(N, V, L, roughness);
+    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+    
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;
+    
+    vec3 numerator = NDF * G * F;
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+    vec3 specular = numerator / denominator;
+    
+    float NdotL = max(dot(N, L), 0.0);
+    return (kD * albedo / PI + specular) * radiance * NdotL;
+}
+
+vec3 CalculatePointLight(vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
+    vec3 L = normalize(point_light_position - FragPos);
+    float distance = length(point_light_position - FragPos);
+    float attenuation = point_light_intensity / (distance * distance);
+    vec3 radiance = point_light_color * attenuation;
+    
+    return CalculateLighting(L, radiance, N, V, F0, albedo, metallic, roughness);
+}
+
+vec3 CalculateDirectionalLight(vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
+    vec3 L = normalize(-directional_light_direction); // Light direction points towards the light
+    vec3 radiance = directional_light_color * directional_light_intensity;
+    
+    vec3 lighting = CalculateLighting(L, radiance, N, V, F0, albedo, metallic, roughness);
+    
+    float shadow = DirectionalShadowCalculation(FragPosLightDirectional);
+    return lighting * (1.0 - shadow);
+}
+
+vec3 CalculateSpotLight(vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
+    vec3 L = normalize(spot_light_position - FragPos);
+    float distance = length(spot_light_position - FragPos);
+    
+    vec3 spotDir = normalize(spot_light_direction);
+    float theta = dot(L, -spotDir);
+    
+    float epsilon = spot_light_inner_cone - spot_light_outer_cone;
+    float intensity = clamp((theta - spot_light_outer_cone) / epsilon, 0.0, 1.0);
+    
+    float attenuation = spot_light_intensity / (distance * distance);
+    vec3 radiance = spot_light_color * attenuation * intensity;
+    
+    vec3 lighting = CalculateLighting(L, radiance, N, V, F0, albedo, metallic, roughness);
+    
+    float shadow = SpotShadowCalculation(FragPosLight);
+    return lighting * (1.0 - shadow);
+}
+
+void main() { 
+
+//    FragColor = vec4(texture(diffuse, TexCoord).rgb, 1.0);
+//    return ;
+
     vec3 N = normalize(Normal);
     if (has_normal) {
         vec3 normalMap = texture(normal, TexCoord).rgb;
-        normalMap = normalMap * 2.0 - 1.0; // [0,1] -> [-1,1]
+        normalMap = normalMap * 2.0 - 1.0;
         
-        // TBN matrix
         vec3 T = normalize(Tangentout);
         vec3 B = normalize(Bitangentout);
         vec3 Norm = normalize(Normal);
@@ -140,51 +185,30 @@ void main() {
         N = normalize(TBN * normalMap);
     }
     
-    // Get material properties
     vec3 albedo = texture(diffuse, TexCoord).rgb;
     float metallic = 0.0;
-    float roughness = 0.5; // Default values
+    float roughness = 0.5;
     
     if (has_metallic_roughness) {
         vec3 mrSample = texture(metallic_roughness, TexCoord).rgb;
-        // Assuming standard glTF format: R=unused, G=roughness, B=metallic
-        // Or adjust based on your texture format
-        metallic = mrSample.b;   // Blue channel = metallic
-        roughness = mrSample.g;  // Green channel = roughness
+        metallic = mrSample.b;
+        roughness = mrSample.g;
     }
     
-    // Calculate lighting vectors
+    // view direction
     vec3 V = normalize(viewPos - FragPos);
-    vec3 L = normalize(light_position - FragPos);
-    vec3 H = normalize(V + L);
     
-    // Calculate distance and attenuation
-    float distance = length(light_position - FragPos);
-    float attenuation = light_intensity / (distance * distance);
-    vec3 radiance = light_color * attenuation;
+    // F0
+    vec3 F0 = vec3(0.04);
+    F0 = mix(F0, albedo, metallic);
     
-    // Calculate F0 (surface reflection at zero incidence)
-    vec3 F0 = vec3(0.04); // Default dielectric F0
-    F0 = mix(F0, albedo, metallic); // Metals use albedo as F0
+    vec3 Lo = vec3(0.0);
     
-    // Cook-Torrance BRDF
-    float NDF = DistributionGGX(N, H, roughness);
-    float G = GeometrySmith(N, V, L, roughness);
-    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+    // Add point light contribution
+    //Lo += CalculatePointLight(N, V, F0, albedo, metallic, roughness);
+    Lo += CalculateDirectionalLight(N, V, F0, albedo, metallic, roughness);
+    Lo += CalculateSpotLight(N, V, F0, albedo, metallic, roughness);
     
-    vec3 kS = F; // Specular contribution
-    vec3 kD = vec3(1.0) - kS; // Diffuse contribution
-    kD *= 1.0 - metallic; // Metals have no diffuse reflection
-    
-    vec3 numerator = NDF * G * F;
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-    vec3 specular = numerator / denominator;
-    
-    // Add to outgoing radiance
-    float NdotL = max(dot(N, L), 0.0);
-    vec3 Lo = (kD * albedo / PI + specular) * radiance * NdotL;
-    
-    // Ambient lighting (simple approximation)
     vec3 ambient = vec3(0.0001) * albedo;
     
     vec3 color = ambient + Lo;
